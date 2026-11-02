@@ -242,13 +242,40 @@ def guard_fix(prop: dict) -> str | None:
 
 
 def apply_change(prop: dict, ticket: str, approver: str, ctx: Ctx) -> dict:
-    r = requests.patch(ctx.mission.lab_url + prop["path"], json=prop["body"], timeout=15,
-                       headers={"Authorization": f"Bearer {config.CHANGE_TOKEN}",
-                                "X-Change-Ticket": ticket, "X-Approved-By": approver})
-    journal = requests.get(ctx.mission.lab_url + "/api/journal", timeout=10,
-                           headers={"Authorization": f"Bearer {config.AUDIT_TOKEN}"}).json()
-    entry = next((j for j in reversed(journal) if j["ticket"] == ticket), None)
-    return {"applied": r.ok, "http": r.status_code, "journal": entry}
+    """Applique un changement APPROUVÉ, puis vérifie qu'il figure au journal du système audité."""
+    try:
+        r = requests.patch(ctx.mission.lab_url + prop["path"], json=prop["body"], timeout=15,
+                           headers={"Authorization": f"Bearer {config.CHANGE_TOKEN}",
+                                    "X-Change-Ticket": ticket, "X-Approved-By": approver})
+    except requests.RequestException as ex:
+        return {"applied": False, "http": None, "journal": None, "error": str(ex)}
+    entry = None
+    try:
+        j = requests.get(ctx.mission.lab_url + "/api/journal", timeout=10,
+                         headers={"Authorization": f"Bearer {config.AUDIT_TOKEN}"})
+        if j.ok:
+            entry = next((x for x in reversed(j.json()) if x.get("ticket") == ticket), None)
+    except (requests.RequestException, ValueError):
+        pass                                        # changement non retrouvé au journal : signalé dans le rapport
+    out = {"applied": r.ok, "http": r.status_code, "journal": entry}
+    if not r.ok:
+        out["error"] = r.text[:200]
+    return out
+
+
+def preflight(mission) -> None:
+    """Avant toute mission : le système répond, refuse l'accès anonyme, et le compte d'audit fonctionne."""
+    url = mission.lab_url
+    try:
+        anon = requests.get(url + "/api/security", timeout=5)
+    except requests.RequestException:
+        sys.exit(f"Système audité injoignable sur {url} : lance « python -m lab.app » dans un autre terminal.")
+    if anon.status_code != 401:
+        sys.exit("Le système audité accepte les requêtes sans authentification : c'est une ancienne version de la "
+                 "console. Arrête-la (Ctrl+C dans son terminal) puis relance « python -m lab.app ».")
+    ro = requests.get(url + "/api/journal", timeout=5, headers={"Authorization": f"Bearer {config.AUDIT_TOKEN}"})
+    if ro.status_code != 200:
+        sys.exit(f"Le compte d'audit est refusé (HTTP {ro.status_code}) : vérifie LAB_AUDIT_TOKEN.")
 
 
 def remediation(entries: list, ctx: Ctx, approve_all: bool, approver: str) -> list:
@@ -349,6 +376,7 @@ def raise_findings(entries: list, mission) -> None:
 def run(mission, out_dir: Path, remediate: bool = False, approve_all: bool = False,
         approver: str = "", fresh: bool = False, replan: bool = False, reset_lab: bool = False):
     t0 = time.time()
+    preflight(mission)
     for d in ("evidence", "scripts"):
         (out_dir / d).mkdir(parents=True, exist_ok=True)
     trail = Trail(out_dir / "trail.jsonl")

@@ -65,7 +65,10 @@ def load():
     with _lock:
         if not STATE_FILE.exists():
             STATE_FILE.write_text(json.dumps(DEFAULT_STATE, indent=2, ensure_ascii=False))
-        return json.loads(STATE_FILE.read_text())
+        state = json.loads(STATE_FILE.read_text())
+    for key, value in DEFAULT_STATE.items():        # état créé par une version antérieure de la console
+        state.setdefault(key, copy.deepcopy(value))
+    return state
 
 
 def save(state):

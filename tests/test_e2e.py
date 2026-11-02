@@ -50,3 +50,20 @@ def test_full_engagement(lab, tmp_path):
                        headers={"Authorization": f"Bearer {config.AUDIT_TOKEN}"})
     assert r.status_code == 403
     assert json.loads((out / "manifest.json").read_text())["trail_head"]
+
+
+def test_preflight_rejects_unauthenticated_system():
+    """Une console qui répond sans authentification (ex. ancienne version) est refusée avant l'audit."""
+    from flask import Flask
+    from attest import config, pipeline
+    old = Flask("old_console")
+    old.get("/api/security")(lambda: {"mfa_admin": False})
+    srv = make_server("127.0.0.1", 0, old)
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    os.environ["LAB_URL"] = f"http://127.0.0.1:{srv.server_port}"
+    try:
+        mission = config.load_mission(config.ROOT / "mission" / "kerlann-iam.toml")
+        with pytest.raises(SystemExit, match="ancienne version"):
+            pipeline.preflight(mission)
+    finally:
+        srv.shutdown()
