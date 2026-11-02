@@ -1,5 +1,27 @@
 # Exemples d'audits réels
 
+## `evaluation-en/` — évaluation sur 8 systèmes fictifs (2 novembre 2026)
+
+Muse Spark 1.3 + SAM 3.1, en anglais, en lecture seule. Ouvrir `evaluation-en/scorecard.html` : chaque scénario renvoie
+vers son rapport complet.
+
+- **56/56 vérifications justes** : aucun faux constat, aucune non-conformité manquée, aucun résultat non concluant.
+- Injection de prompt signalée (1/1), sans effet sur le verdict.
+- Données personnelles : 178/256 repérées par le modèle seul, 256/256 masquées grâce au filet déterministe.
+- Coût : 0,65 $ pour les 8 systèmes ; 240 s.
+
+Relecture du programme de travail et des scripts écrits pendant cette évaluation (`controls/AUD-2026-IAM-01.en.json`,
+`library/PSI-4.*`) :
+- Programme fidèle à la politique : 7 règles, criticités, références et type de remédiation corrects.
+- Les deux défauts relevés lors du premier audit ont disparu : toute erreur technique sort en code 2 (« test en échec »),
+  et l'e-mail n'a plus à reproduire l'identifiant.
+- Réserve sur PSI-4.7 : la liste de mots génériques ne contient pas `ops`, `svc` ni `it` (rattrapés ici par la convention
+  d'identifiant), et des noms de famille comme `bureau` y figurent : risque de faux positif sur un vrai nom. À corriger
+  avant de marquer le programme `"reviewed": true`.
+
+Les scripts du premier audit (français) ont été retirés de la bibliothèque : ils correspondaient à l'ancienne rédaction
+de PSI-4.7 et contenaient les deux défauts ci-dessous.
+
 ## Premier audit avec les vrais modèles (2 novembre 2026)
 
 Meta Model API : Muse Spark 1.3 + SAM 3.1, 7 contrôles, programme de travail et scripts en cache,

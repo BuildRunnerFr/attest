@@ -38,6 +38,9 @@ remediation with interactive approval — see [`examples/README.md`](../examples
 | SAM 3.1 | 12 images, 15 s in total; price not public |
 | Wall-clock | 29 s to test and evidence 7 controls · 8 s to re-test 5 fixes · 108 s end to end including about a minute of human approvals |
 
+Measured on the evaluation run (8 systems, read-only, English): **$0.19** for the first system (work programme and 7
+test scripts written), then **$0.056–0.086 per system** with the programme and scripts reused — about 30 seconds each.
+
 Estimates for other runs, scaled from those measurements:
 
 | Scenario | Model calls | Muse Spark cost |

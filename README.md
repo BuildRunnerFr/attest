@@ -100,6 +100,11 @@ We do not fine-tune anything: the model is not the judge, and a bank cannot hand
 edge cases, generic accounts, prompt injection, a 56-account directory) and reports accuracy, false findings, missed
 non-compliances, privacy masking and cost. See [docs/EVALUATION.md](docs/EVALUATION.md).
 
+**First real run (Muse Spark 1.3 + SAM 3.1): 56/56 checks correct, 0 false finding, 0 missed non-compliance, the
+injection flagged, 256/256 personal-data items masked (70 % spotted by the model, the rest by the safety net),
+$0.65 and 4 minutes for 8 systems** — [scorecard](examples/evaluation-en/scorecard.md). A small, self-built test set:
+encouraging, not a proof of general accuracy.
+
 ## Repository
 
 ```
