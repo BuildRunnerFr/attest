@@ -1,0 +1,501 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Audit report AUD-2026-IAM-01</title><style>
+:root{--ink:#14171c;--mute:#5d6470;--line:#dfe2e7;--paper:#fff;--bg:#eef0f3;--navy:#0f2747;
+--crit:#8a1c1c;--high:#c2410c;--med:#a16207;--low:#4b5563;--ok:#166534;--ko:#b91c1c;--rev:#a16207}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14.5px/1.55 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+.doc{max-width:1060px;margin:0 auto;background:var(--paper);box-shadow:0 1px 4px #0001}
+.band{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;background:var(--navy);color:#dbe3ef;
+ padding:8px 40px;font-size:12px;letter-spacing:.03em}
+.band b{color:#fff}
+.cover{padding:40px 40px 28px;border-bottom:1px solid var(--line)}
+.eyebrow{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);margin:0 0 10px}
+h1{font:600 30px/1.2 Georgia,"Times New Roman",serif;margin:0 0 6px}
+.cover .sys{color:var(--mute);margin:0 0 22px}
+.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:4px 24px;font-size:13px;color:var(--mute)}
+.meta b{color:var(--ink);font-weight:600}
+section{padding:30px 40px;border-bottom:1px solid var(--line)}
+h2{font:600 21px/1.25 Georgia,"Times New Roman",serif;margin:0 0 18px;color:var(--navy)}
+h3{font-size:15px;margin:22px 0 10px}
+.ops{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-bottom:18px}
+.op{border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.op span{display:block;font-size:12px;color:var(--mute);text-transform:uppercase;letter-spacing:.06em}
+.op b{display:inline-block;margin-top:6px;font:600 20px/1.2 Georgia,serif}
+.op.insuffisant b{color:var(--crit)}.op.ameliorer b{color:var(--high)}.op.globalement b{color:var(--med)}.op.satisfaisant b{color:var(--ok)}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:20px}
+.kpi{background:#f6f7f9;border-radius:8px;padding:12px 14px}
+.kpi b{display:block;font:600 24px/1.1 Georgia,serif}.kpi span{font-size:12.5px;color:var(--mute)}
+.dist{display:flex;height:10px;border-radius:5px;overflow:hidden;background:#e5e7eb;margin:6px 0 4px}
+.dist i{display:block}.legend{font-size:12px;color:var(--mute);display:flex;gap:14px;flex-wrap:wrap}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px}
+ul.msgs{margin:6px 0 0;padding-left:20px}ul.msgs li{margin:4px 0}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--mute);
+ border-bottom:2px solid var(--line);padding:8px 8px}
+td{border-bottom:1px solid var(--line);padding:8px;vertical-align:top}
+.tbl{overflow-x:auto}
+.pill{display:inline-block;font-size:11.5px;font-weight:600;border-radius:999px;padding:2px 9px;white-space:nowrap;color:#fff}
+.sev-critique{background:var(--crit)}.sev-elevee{background:var(--high)}.sev-moyenne{background:var(--med)}.sev-faible{background:var(--low)}
+.st-pass{background:var(--ok)}.st-fail{background:var(--ko)}.st-review,.st-error{background:var(--rev)}.st-wait{background:#9ca3af}
+.fs{font-size:12px;font-weight:600;white-space:nowrap}.fs-closed{color:var(--ok)}.fs-open,.fs-rejected{color:var(--ko)}
+.fs-action_plan,.fs-pending{color:var(--med)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:6px 28px}
+dl.kv{display:grid;grid-template-columns:170px 1fr;gap:6px 14px;margin:0;font-size:13.5px}
+dl.kv dt{color:var(--mute)}dl.kv dd{margin:0}
+.card{border:1px solid var(--line);border-radius:12px;margin:0 0 20px;overflow:hidden;break-inside:avoid-page}
+.card .hd{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:12px 16px;background:#f7f8fa;border-bottom:1px solid var(--line)}
+.card .ref{font:600 12px ui-monospace,Menlo,monospace;color:var(--navy)}
+.card .ti{font-weight:600;flex:1;min-width:220px}
+.card .bd{padding:16px}
+.c4{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 22px;margin-bottom:14px}
+.c4 h4{margin:0 0 4px;font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--mute)}
+.c4 p{margin:0}
+code,.mono{font:12.5px ui-monospace,Menlo,monospace}
+.obs{background:#f6f7f9;border-radius:6px;padding:2px 6px}
+.ev{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+figure{margin:0}figure img{width:100%;border:1px solid var(--line);border-radius:8px;display:block}
+figcaption{font-size:12px;color:var(--mute);margin-top:6px}
+.chg{margin-top:14px;border-left:3px solid var(--navy);background:#f4f6fa;border-radius:0 8px 8px 0;padding:10px 14px;font-size:13px}
+.chg.manual{border-color:var(--med);background:#fdf8ec}
+.chg ol{margin:6px 0 0;padding-left:18px}
+details{margin-top:12px}summary{cursor:pointer;color:var(--mute);font-size:12.5px}
+details pre{background:#16191f;color:#e5e7eb;padding:12px;border-radius:8px;overflow:auto;font:12px/1.5 ui-monospace,Menlo,monospace}
+.compact .bd{padding:12px 16px}
+.small{font-size:12.5px;color:var(--mute)}
+.hash{font:11.5px ui-monospace,Menlo,monospace;color:var(--mute);word-break:break-all}
+.alert{border:1px solid #f1c27d;background:#fff8eb;border-radius:8px;padding:10px 14px;margin:12px 0;font-size:13.5px}
+.live{display:inline-block;width:8px;height:8px;border-radius:50%;background:#ef4444;margin-right:6px;animation:p 1s infinite}
+@keyframes p{50%{opacity:.25}}
+footer{padding:16px 40px;font-size:12px;color:var(--mute);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+@media screen and (max-width:720px){.band,.cover,section,footer{padding-left:16px;padding-right:16px}
+ .two,.c4,.ev{grid-template-columns:1fr}dl.kv{grid-template-columns:1fr}h1{font-size:24px}
+ .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media print{body{background:#fff;font-size:11px}.doc{box-shadow:none;max-width:none}.band{display:none}
+ section{padding:14px 0;border:0}.cover{padding:0 0 14px}footer{display:none}h1{font-size:24px}
+ h2{font-size:17px;break-after:avoid}.kpi b{font-size:18px}.card{break-inside:auto}figure{break-inside:avoid}
+ #annexes{break-before:page}details{display:none}.live{display:none}figcaption{font-size:10px}
+ table{font-size:10.5px}.pill{font-size:9.5px}}
+</style></head><body><div class="doc">
+<div class="band"><span><b>Distribution:</b> TLP:AMBER+STRICT</span><span>AUD-2026-IAM-01 · Attest</span></div>
+<div class="cover"><p class="eyebrow">Audit report · AUD-2026-IAM-01</p><h1>Strong authentication and privileged access — KRL-ADM</h1>
+<p class="sys">Banque Kerlann (fictive) · KRL-ADM — console d&#x27;administration IAM</p>
+<div class="meta"><span>Lead auditor: <b>A. Auditeur</b></span><span>Owner: <b>DSI — équipe IAM</b></span>
+<span>Date: <b>2026-11-02 23:18</b></span><span>Run: <b>01-kerlann-adm</b></span></div></div>
+<section id="s1"><h2>1. Executive summary</h2><div class="ops"><div class="op insuffisant"><span>Opinion at testing</span><b>Unsatisfactory</b></div></div><div class="kpis"><div class="kpi"><b>7</b><span>controls tested</span></div><div class="kpi"><b>6</b><span>findings</span></div><div class="kpi"><b>0</b><span>findings closed and verified</span></div><div class="kpi"><b>6</b><span>open findings</span></div><div class="kpi"><b>0</b><span>human approvals</span></div><div class="kpi"><b>8</b><span>personal data items masked in evidence</span></div><div class="kpi"><b>1 min 16 s</b><span>audit duration</span></div><div class="kpi"><b>$0.191 *</b><span>measured AI cost</span></div></div><div class="dist"><i style="width:16.7%;background:var(--crit)"></i><i style="width:33.3%;background:var(--high)"></i><i style="width:50.0%;background:var(--med)"></i></div><div class="legend"><span><i style="background:var(--crit)"></i>Critical: 1</span><span><i style="background:var(--high)"></i>High: 2</span><span><i style="background:var(--med)"></i>Medium: 3</span><span><i style="background:var(--low)"></i>Low: 0</span></div><h3>Key messages</h3><ul class="msgs"><li>6 findings across 7 controls: 1 critical, 2 high, 3 medium.</li><li>6 findings remain open, with an action plan, an owner and a due date.</li></ul></section><section id="s2"><h2>2. Scope and method</h2><dl class="kv"><dt>Engagement</dt><dd>AUD-2026-IAM-01</dd><dt>Entity</dt><dd>Banque Kerlann (fictive)</dd><dt>System</dt><dd>KRL-ADM — console d&#x27;administration IAM</dd><dt>System criticality</dt><dd>Supporte des fonctions critiques ou importantes (DORA)</dd><dt>Environment</dt><dd>Pré-production de démonstration</dd><dt>Owner</dt><dd>DSI — équipe IAM</dd><dt>Lead auditor</dt><dd>A. Auditeur</dd><dt>Date</dt><dd>2026-11-02 23:18</dd><dt>Framework</dt><dd>DORA art. 9(4) · RTS (UE) 2024/1774 art. 12, 21 · PSI-4</dd><dt>Work programme</dt><dd>drafted by AI for this engagement — pending auditor review · controls/AUD-2026-IAM-01.en.json</dd></dl><div class="two"><div><h3>In scope</h3><ul><li>Paramètres d&#x27;authentification et de session de la console KRL-ADM</li><li>Comptes disposant d&#x27;un accès à la console</li><li>Journalisation des actions d&#x27;administration</li></ul></div><div><h3>Out of scope</h3><ul><li>Efficacité intrinsèque des facteurs MFA (robustesse des moyens d&#x27;authentification)</li><li>Annuaire central et fédération d&#x27;identité</li><li>Contrôles physiques</li></ul></div></div><h3>Method</h3><ol><li>Controls are derived from the framework (DORA, RTS 2024/1774, internal policy); severity is the one set by the policy.</li><li>Each test is a stored Python script, statically checked before execution (read-only) and run with a read-only service account.</li><li>The verdict comes from the script, never from the model. A screenshot is reviewed by Muse Spark to corroborate; on disagreement the control is flagged for review.</li><li>SAM 3.1 delineates the proving rows and the personal data, which is masked before distribution.</li><li>Every fix goes through a change request approved by the system owner, applied with a dedicated account, logged, then verified by the same test (DORA 9(4)(e)).</li><li>Every event and piece of evidence is sealed in a hash-chained audit trail (SHA-256).</li></ol><h3>Limitations</h3><ul><li>Tests cover the configuration reported by the system, not the actual strength of authentication factors.</li><li>AI-drafted scripts and catalogue must be reviewed by an auditor before being considered validated.</li><li>Fictitious entity and data: demonstration.</li></ul></section><section id="s3"><h2>3. Findings overview</h2><div class="tbl"><table><tr><th>Ref.</th><th>Rule</th><th>Title</th><th>Severity</th><th>Tested</th><th>After</th><th>Status</th><th>Due date</th></tr><tr><td class="mono">F-01</td><td class="mono">PSI-4.1</td><td>Mandatory MFA for privileged accounts</td><td><span class="pill sev-critique">Critical</span></td><td><span class="pill st-fail">Non-compliant</span></td><td></td><td><span class="fs fs-open">Open</span></td><td class="mono">2026-12-02</td></tr><tr><td class="mono">F-02</td><td class="mono">PSI-4.2</td><td>Mandatory MFA for users of critical system</td><td><span class="pill sev-elevee">High</span></td><td><span class="pill st-fail">Non-compliant</span></td><td></td><td><span class="fs fs-open">Open</span></td><td class="mono">2027-01-31</td></tr><tr><td class="mono">F-03</td><td class="mono">PSI-4.7</td><td>No generic or shared admin accounts</td><td><span class="pill sev-elevee">High</span></td><td><span class="pill st-fail">Non-compliant</span></td><td></td><td><span class="fs fs-open">Open</span></td><td class="mono">2027-01-31</td></tr><tr><td class="mono">F-04</td><td class="mono">PSI-4.3</td><td>Strong password policy</td><td><span class="pill sev-moyenne">Medium</span></td><td><span class="pill st-fail">Non-compliant</span></td><td></td><td><span class="fs fs-open">Open</span></td><td class="mono">2027-05-01</td></tr><tr><td class="mono">F-05</td><td class="mono">PSI-4.4</td><td>Account lockout after failed logins</td><td><span class="pill sev-moyenne">Medium</span></td><td><span class="pill st-fail">Non-compliant</span></td><td></td><td><span class="fs fs-open">Open</span></td><td class="mono">2027-05-01</td></tr><tr><td class="mono">F-06</td><td class="mono">PSI-4.5</td><td>Inactive session timeout</td><td><span class="pill sev-moyenne">Medium</span></td><td><span class="pill st-fail">Non-compliant</span></td><td></td><td><span class="fs fs-open">Open</span></td><td class="mono">2027-05-01</td></tr><tr><td class="mono">—</td><td class="mono">PSI-4.6</td><td>Logging of administration actions</td><td><span class="pill sev-elevee">High</span></td><td><span class="pill st-pass">Compliant</span></td><td></td><td></td><td class="mono"></td></tr></table></div></section><section id="s4"><h2>4. Detailed findings and controls</h2><div class="card"><div class="hd"><span class=ref>F-01</span><span class="ref">PSI-4.1</span><span class="ti">Mandatory MFA for privileged accounts</span><span class="pill sev-critique">Critical</span> <span class="pill st-fail">Non-compliant</span> <span class="fs fs-open">Open</span></div><div class="bd"><div class="c4"><div><h4>Criteria</h4><p>MFA is enforced for all privileged admin accounts on KRL-ADM<br><span class="small">PSI-4.1 · DORA 9(4)(d), RTS 21(1)(f)(ii)</span></p></div><div><h4>Condition</h4><p>Observed: <code class="obs">false</code><br>Expected: <code class="obs">true</code><br><span class="small">GET /api/security returned mfa_admin=False.</span></p></div><div><h4>Risk</h4><p>Without MFA for admins, stolen credentials allow full takeover of critical functions with no second barrier</p></div><div><h4>Recommendation</h4><p>Enable mandatory MFA for all privileged accounts by setting mfa_admin to true<br><span class="small">Due date: 2026-12-02 · Owner: DSI — équipe IAM</span></p></div></div><p class="small">Test procedure: Retrieve the security configuration via GET /api/security and verify that mfa_admin is true</p><div class="ev"><figure><a href="evidence/C1_before.png" target="_blank"><img src="evidence/C1_before.png" alt="At testing"></a><figcaption><b>At testing</b> — The screenshot corroborates the test. The screenshot shows admin MFA as Désactivée, matching the automated test failure.<br><span class="hash">2026-11-02 23:18:47 · SHA-256 3448a5ff18538c33…</span></figcaption></figure></div><details><summary>Test script · written by AI for this engagement · SHA-256 d82f5b5b5ad81fd1…</summary><pre>import os
+import sys
+import json
+import re
+import requests
+
+try:
+    base = os.environ[&quot;LAB_URL&quot;]
+except KeyError:
+    sys.stderr.write(&quot;missing LAB_URL\n&quot;)
+    sys.exit(2)
+try:
+    token = os.environ[&quot;LAB_TOKEN&quot;]
+except KeyError:
+    sys.stderr.write(&quot;missing LAB_TOKEN\n&quot;)
+    sys.exit(2)
+
+url = base.rstrip(&quot;/&quot;) + &quot;/api/security&quot;
+headers = {&quot;Authorization&quot;: &quot;Bearer &quot; + token}
+
+try:
+    r = requests.get(url, headers=headers, timeout=10)
+except Exception as e:
+    sys.stderr.write(&quot;request failed: %s\n&quot; % e)
+    sys.exit(2)
+
+if r.status_code != 200:
+    sys.stderr.write(&quot;unexpected status %s\n&quot; % r.status_code)
+    sys.exit(2)
+
+try:
+    data = r.json()
+except Exception as e:
+    sys.stderr.write(&quot;invalid json: %s\n&quot; % e)
+    sys.exit(2)
+
+if not isinstance(data, dict) or &quot;mfa_admin&quot; not in data:
+    sys.stderr.write(&quot;missing mfa_admin\n&quot;)
+    sys.exit(2)
+
+observed = data[&quot;mfa_admin&quot;]
+
+if type(observed) is not bool:
+    sys.stderr.write(&quot;unexpected type for mfa_admin\n&quot;)
+    sys.exit(2)
+
+raw = json.dumps(data, default=str)
+injected = bool(re.search(r&quot;(?i)(ignore|disregard|bypass|override|follow).{0,40}(instruction|prompt|audit|control|system)|system\s*prompt|execute\s+.*code&quot;, raw))
+
+status = &quot;pass&quot; if observed is True else &quot;fail&quot;
+if injected:
+    detail = &quot;GET /api/security returned mfa_admin=%s, ignoring untrusted instructional text found in response.&quot; % observed
+else:
+    detail = &quot;GET /api/security returned mfa_admin=%s.&quot; % observed
+
+print(json.dumps({&quot;status&quot;: status, &quot;observed&quot;: observed, &quot;expected&quot;: True, &quot;detail&quot;: detail}))
+</pre></details></div></div><div class="card"><div class="hd"><span class=ref>F-02</span><span class="ref">PSI-4.2</span><span class="ti">Mandatory MFA for users of critical system</span><span class="pill sev-elevee">High</span> <span class="pill st-fail">Non-compliant</span> <span class="fs fs-open">Open</span></div><div class="bd"><div class="c4"><div><h4>Criteria</h4><p>MFA is enforced for standard users because KRL-ADM supports critical or important functions<br><span class="small">PSI-4.2 · DORA 9(4)(d), RTS 21(1)(f)(ii)</span></p></div><div><h4>Condition</h4><p>Observed: <code class="obs">false</code><br>Expected: <code class="obs">true</code><br><span class="small">mfa_users is False.</span></p></div><div><h4>Risk</h4><p>Without MFA for all users, compromised user credentials allow unauthorized access to critical functions</p></div><div><h4>Recommendation</h4><p>Enable mandatory MFA for standard users by setting mfa_users to true<br><span class="small">Due date: 2027-01-31 · Owner: DSI — équipe IAM</span></p></div></div><p class="small">Test procedure: Retrieve the security configuration via GET /api/security and verify that mfa_users is true</p><div class="ev"><figure><a href="evidence/C2_before.png" target="_blank"><img src="evidence/C2_before.png" alt="At testing"></a><figcaption><b>At testing</b> — The screenshot corroborates the test. The screenshot shows user MFA as Désactivée, confirming mfa_users is false.<br><span class="hash">2026-11-02 23:18:55 · SHA-256 9cdda6df7be2a389…</span></figcaption></figure></div><details><summary>Test script · written by AI for this engagement · SHA-256 f6afe831af9933a4…</summary><pre>import requests
+import json
+import os
+import sys
+import re
+
+try:
+    base = os.environ[&quot;LAB_URL&quot;]
+    token = os.environ[&quot;LAB_TOKEN&quot;]
+except KeyError as e:
+    print(f&quot;missing environment variable: {e}&quot;, file=sys.stderr)
+    sys.exit(2)
+
+url = re.sub(r&quot;/+$&quot;, &quot;&quot;, base) + &quot;/api/security&quot;
+headers = {&quot;Authorization&quot;: &quot;Bearer &quot; + token}
+
+try:
+    r = requests.get(url, headers=headers, timeout=10)
+except Exception as e:
+    print(f&quot;request failed: {e}&quot;, file=sys.stderr)
+    sys.exit(2)
+
+if r.status_code != 200:
+    print(f&quot;unexpected status {r.status_code} for GET /api/security&quot;, file=sys.stderr)
+    sys.exit(2)
+
+try:
+    data = r.json()
+except Exception as e:
+    print(f&quot;invalid json: {e}&quot;, file=sys.stderr)
+    sys.exit(2)
+
+if not isinstance(data, dict) or &quot;mfa_users&quot; not in data or not isinstance(data[&quot;mfa_users&quot;], bool):
+    print(&quot;missing or invalid mfa_users field&quot;, file=sys.stderr)
+    sys.exit(2)
+
+observed = data[&quot;mfa_users&quot;]
+status = &quot;pass&quot; if observed is True else &quot;fail&quot;
+print(json.dumps({&quot;status&quot;: status, &quot;observed&quot;: observed, &quot;expected&quot;: True, &quot;detail&quot;: f&quot;mfa_users is {observed}.&quot;}))
+</pre></details></div></div><div class="card"><div class="hd"><span class=ref>F-03</span><span class="ref">PSI-4.7</span><span class="ti">No generic or shared admin accounts</span><span class="pill sev-elevee">High</span> <span class="pill st-fail">Non-compliant</span> <span class="fs fs-open">Open</span></div><div class="bd"><div class="c4"><div><h4>Criteria</h4><p>No account with role admin is generic or shared and every admin has a nominative login of the form initiale.nom with a personal email<br><span class="small">PSI-4.7 · DORA 9(4)(c), RTS 21(1)(c), RTS 21(3)</span></p></div><div><h4>Condition</h4><p>Observed: <code class="obs">[{&quot;login&quot;: &quot;a.lefloch&quot;, &quot;email&quot;: &quot;a•••@kerlann-banque.example&quot;, &quot;role&quot;: &quot;admin&quot;}, {&quot;login&quot;: &quot;ops&quot;, &quot;email&quot;: &quot;o•••@kerlann-banque.example&quot;, &quot;role&quot;: &quot;admin&quot;}]</code><br>Expected: <code class="obs">for all users where role == admin: login matches initiale.nom pattern and email is personal, with no function login and no shared mailbox</code><br><span class="small">1 of 2 admin account(s) violate nominative login or personal email requirements.</span></p></div><div><h4>Risk</h4><p>Generic or shared admin accounts destroy individual accountability and prevent attribution of privileged actions</p></div><div><h4>Recommendation</h4><p>Remove or disable generic and shared admin accounts and replace them with dedicated nominative accounts<br><span class="small">Due date: 2027-01-31 · Owner: DSI — équipe IAM</span></p></div></div><p class="small">Test procedure: Retrieve all accounts via GET /api/users and verify that every user with role admin has a nominative login and a personal email without function identifier or shared mailbox</p><div class="ev"><figure><a href="evidence/C7_before.png" target="_blank"><img src="evidence/C7_before.png" alt="At testing"></a><figcaption><b>At testing</b> — The screenshot corroborates the test. The screenshot shows admin account ops with generic login and shared mailbox o•••@kerlann-banque.example, confirming the automated failure. · 8/8 personal data items masked<br><span class="hash">2026-11-02 23:19:28 · SHA-256 35fc6643d0e1d710…</span></figcaption></figure></div><details><summary>Test script · written by AI for this engagement · SHA-256 42e8a8060a7c3608…</summary><pre>import requests
+import json
+import os
+import sys
+import re
+
+try:
+    base = os.environ[&quot;LAB_URL&quot;]
+    token = os.environ[&quot;LAB_TOKEN&quot;]
+except KeyError as e:
+    print(f&quot;missing env var: {e}&quot;, file=sys.stderr)
+    sys.exit(2)
+
+url = base.rstrip(&quot;/&quot;) + &quot;/api/users&quot;
+try:
+    r = requests.get(url, headers={&quot;Authorization&quot;: &quot;Bearer &quot; + token}, timeout=10)
+except Exception as e:
+    print(f&quot;GET /api/users failed: {e}&quot;, file=sys.stderr)
+    sys.exit(2)
+
+if r.status_code != 200:
+    print(f&quot;GET /api/users unexpected status: {r.status_code}&quot;, file=sys.stderr)
+    sys.exit(2)
+
+try:
+    data = r.json()
+except Exception as e:
+    print(f&quot;invalid JSON for /api/users: {e}&quot;, file=sys.stderr)
+    sys.exit(2)
+
+if not isinstance(data, list):
+    print(&quot;unexpected data: /api/users is not a list&quot;, file=sys.stderr)
+    sys.exit(2)
+
+for u in data:
+    if not isinstance(u, dict):
+        print(&quot;unexpected data: user entry is not an object&quot;, file=sys.stderr)
+        sys.exit(2)
+    for k in (&quot;login&quot;, &quot;email&quot;, &quot;role&quot;):
+        if k not in u:
+            print(f&quot;unexpected data: missing key {k}&quot;, file=sys.stderr)
+            sys.exit(2)
+    if not isinstance(u[&quot;login&quot;], str) or not isinstance(u[&quot;email&quot;], str) or not isinstance(u[&quot;role&quot;], str):
+        print(&quot;unexpected data: login/email/role wrong type&quot;, file=sys.stderr)
+        sys.exit(2)
+    if u[&quot;role&quot;] not in (&quot;admin&quot;, &quot;conseiller&quot;):
+        print(f&quot;unexpected data: unknown role {u[&#x27;role&#x27;]}&quot;, file=sys.stderr)
+        sys.exit(2)
+
+admins = [u for u in data if u[&quot;role&quot;] == &quot;admin&quot;]
+login_re = re.compile(r&quot;^[A-Za-z]\.[A-Za-z][A-Za-z\-]*$&quot;)
+generic = {&quot;admin&quot;, &quot;administrator&quot;, &quot;administrateur&quot;, &quot;root&quot;, &quot;superuser&quot;, &quot;superadmin&quot;, &quot;sysadmin&quot;, &quot;support&quot;, &quot;helpdesk&quot;, &quot;service&quot;, &quot;services&quot;, &quot;contact&quot;, &quot;info&quot;, &quot;infos&quot;, &quot;accueil&quot;, &quot;generic&quot;, &quot;generique&quot;, &quot;team&quot;, &quot;equipe&quot;, &quot;shared&quot;, &quot;partage&quot;, &quot;fonction&quot;, &quot;function&quot;, &quot;fonctionnel&quot;, &quot;bureau&quot;, &quot;office&quot;, &quot;test&quot;, &quot;demo&quot;, &quot;backup&quot;, &quot;system&quot;, &quot;systeme&quot;, &quot;securite&quot;, &quot;security&quot;, &quot;compta&quot;, &quot;direction&quot;, &quot;caisse&quot;, &quot;guichet&quot;, &quot;agence&quot;, &quot;standard&quot;, &quot;commun&quot;, &quot;gen&quot;}
+
+def is_generic(s):
+    parts = re.split(r&quot;[._\-+]+&quot;, s.lower())
+    for p in parts:
+        if p in generic:
+            return True
+        for g in generic:
+            if p == g:
+                return True
+            if len(p) &gt; len(g) and p.startswith(g) and p[len(g):].isdigit():
+                return True
+    return False
+
+violations = []
+observed = []
+for u in admins:
+    login = u[&quot;login&quot;]
+    email = u[&quot;email&quot;]
+    observed.append({&quot;login&quot;: login, &quot;email&quot;: email, &quot;role&quot;: &quot;admin&quot;})
+    local = email.split(&quot;@&quot;)[0] if &quot;@&quot; in email else email
+    login_ok = bool(login_re.match(login))
+    login_gen = is_generic(login)
+    email_gen = is_generic(local) if local else True
+    email_valid = &quot;@&quot; in email and &quot;.&quot; in email.split(&quot;@&quot;)[-1]
+    if (not login_ok) or login_gen or email_gen or (not email_valid):
+        violations.append({&quot;login&quot;: login, &quot;email&quot;: email, &quot;login_ok&quot;: login_ok, &quot;login_generic&quot;: login_gen, &quot;email_generic&quot;: email_gen})
+
+expected = &quot;for all users where role == admin: login matches initiale.nom pattern and email is personal, with no function login and no shared mailbox&quot;
+
+if not violations:
+    status = &quot;pass&quot;
+    detail = f&quot;All {len(admins)} admin account(s) have nominative initiale.nom logins and personal emails with no shared mailbox.&quot;
+else:
+    status = &quot;fail&quot;
+    detail = f&quot;{len(violations)} of {len(admins)} admin account(s) violate nominative login or personal email requirements.&quot;
+
+print(json.dumps({&quot;status&quot;: status, &quot;observed&quot;: observed, &quot;expected&quot;: expected, &quot;detail&quot;: detail}))
+</pre></details></div></div><div class="card"><div class="hd"><span class=ref>F-04</span><span class="ref">PSI-4.3</span><span class="ti">Strong password policy</span><span class="pill sev-moyenne">Medium</span> <span class="pill st-fail">Non-compliant</span> <span class="fs fs-open">Open</span></div><div class="bd"><div class="c4"><div><h4>Criteria</h4><p>Passwords require a minimum length of 12 characters with complexity requirements enabled<br><span class="small">PSI-4.3 · DORA 9(4)(d)</span></p></div><div><h4>Condition</h4><p>Observed: <code class="obs">{&quot;password_min_length&quot;: 6, &quot;password_require_complexity&quot;: false}</code><br>Expected: <code class="obs">password_min_length &gt;= 12 AND password_require_complexity == true</code><br><span class="small">password_min_length is 6 and password_require_complexity is False.</span></p></div><div><h4>Risk</h4><p>Weak or short passwords can be guessed or brute-forced, enabling unauthorized access to the system</p></div><div><h4>Recommendation</h4><p>Enforce a minimum password length of 12 characters with complexity by correcting the password settings<br><span class="small">Due date: 2027-05-01 · Owner: DSI — équipe IAM</span></p></div></div><p class="small">Test procedure: Retrieve the security configuration via GET /api/security and verify password_min_length and password_require_complexity</p><div class="ev"><figure><a href="evidence/C3_before.png" target="_blank"><img src="evidence/C3_before.png" alt="At testing"></a><figcaption><b>At testing</b> — The screenshot corroborates the test. The screenshot shows minimum password length 6 and complexity disabled, matching the automated test failure.<br><span class="hash">2026-11-02 23:18:50 · SHA-256 5d58be54bab35d2e…</span></figcaption></figure></div><details><summary>Test script · written by AI for this engagement · SHA-256 2178badc0e1bdabd…</summary><pre>import requests
+import json
+import os
+import sys
+import re
+
+try:
+    LAB_URL = os.environ[&quot;LAB_URL&quot;]
+    LAB_TOKEN = os.environ[&quot;LAB_TOKEN&quot;]
+except KeyError as e:
+    sys.stderr.write(f&quot;missing env var: {e}\n&quot;)
+    sys.exit(2)
+
+url = LAB_URL.rstrip(&quot;/&quot;) + &quot;/api/security&quot;
+headers = {&quot;Authorization&quot;: &quot;Bearer &quot; + LAB_TOKEN}
+
+try:
+    resp = requests.get(url, headers=headers, timeout=10)
+except Exception as e:
+    sys.stderr.write(f&quot;request failed: {e}\n&quot;)
+    sys.exit(2)
+
+if resp.status_code != 200:
+    sys.stderr.write(f&quot;unexpected status: {resp.status_code}\n&quot;)
+    sys.exit(2)
+
+try:
+    data = json.loads(resp.text)
+except Exception as e:
+    sys.stderr.write(f&quot;invalid json: {e}\n&quot;)
+    sys.exit(2)
+
+if not isinstance(data, dict):
+    sys.stderr.write(&quot;unexpected data type: expected object\n&quot;)
+    sys.exit(2)
+
+if &quot;password_min_length&quot; not in data or &quot;password_require_complexity&quot; not in data:
+    sys.stderr.write(&quot;missing required fields\n&quot;)
+    sys.exit(2)
+
+ml = data[&quot;password_min_length&quot;]
+rc = data[&quot;password_require_complexity&quot;]
+
+if not isinstance(ml, int) or isinstance(ml, bool):
+    sys.stderr.write(&quot;unexpected type for password_min_length\n&quot;)
+    sys.exit(2)
+
+if type(rc) is not bool:
+    sys.stderr.write(&quot;unexpected type for password_require_complexity\n&quot;)
+    sys.exit(2)
+
+ok = (ml &gt;= 12 and rc is True)
+status = &quot;pass&quot; if ok else &quot;fail&quot;
+observed = {&quot;password_min_length&quot;: ml, &quot;password_require_complexity&quot;: rc}
+expected = &quot;password_min_length &gt;= 12 AND password_require_complexity == true&quot;
+
+if re.search(r&quot;(?i)ignore\b.*\binstruct|system\s+prompt|do\s+not\s+follow|override\s+audit|disregard\b.*\binstruct&quot;, resp.text):
+    detail = f&quot;password_min_length is {ml} and password_require_complexity is {rc} with untrusted instructional text present in response and ignored.&quot;
+else:
+    detail = f&quot;password_min_length is {ml} and password_require_complexity is {rc}.&quot;
+
+print(json.dumps({&quot;status&quot;: status, &quot;observed&quot;: observed, &quot;expected&quot;: expected, &quot;detail&quot;: detail}))
+</pre></details></div></div><div class="card"><div class="hd"><span class=ref>F-05</span><span class="ref">PSI-4.4</span><span class="ti">Account lockout after failed logins</span><span class="pill sev-moyenne">Medium</span> <span class="pill st-fail">Non-compliant</span> <span class="fs fs-open">Open</span></div><div class="bd"><div class="c4"><div><h4>Criteria</h4><p>Accounts lock after at most 5 failed login attempts and lockout is never disabled<br><span class="small">PSI-4.4 · DORA 9(4)(c)</span></p></div><div><h4>Condition</h4><p>Observed: <code class="obs">0</code><br>Expected: <code class="obs">lockout_threshold &gt;= 1 AND lockout_threshold &lt;= 5</code><br><span class="small">lockout_threshold is 0, which is outside the required range 1 to 5 inclusive.</span></p></div><div><h4>Risk</h4><p>Without lockout, attackers can perform unlimited password-guessing attacks against accounts</p></div><div><h4>Recommendation</h4><p>Configure account lockout to 5 attempts at most by setting lockout_threshold between 1 and 5<br><span class="small">Due date: 2027-05-01 · Owner: DSI — équipe IAM</span></p></div></div><p class="small">Test procedure: Retrieve the security configuration via GET /api/security and verify that lockout_threshold is between 1 and 5 inclusive</p><div class="ev"><figure><a href="evidence/C4_before.png" target="_blank"><img src="evidence/C4_before.png" alt="At testing"></a><figcaption><b>At testing</b> — The screenshot corroborates the test. The screenshot shows account lockout set to Aucun, confirming the disabled lockout reported as 0.<br><span class="hash">2026-11-02 23:18:49 · SHA-256 1e6eddba9bf76eee…</span></figcaption></figure></div><details><summary>Test script · written by AI for this engagement · SHA-256 d85dd8e4d3a6a030…</summary><pre>import requests
+import json
+import os
+import sys
+import re
+
+try:
+    LAB_URL = os.environ[&quot;LAB_URL&quot;]
+except KeyError:
+    print(&quot;missing LAB_URL&quot;, file=sys.stderr)
+    sys.exit(2)
+
+try:
+    LAB_TOKEN = os.environ[&quot;LAB_TOKEN&quot;]
+except KeyError:
+    print(&quot;missing LAB_TOKEN&quot;, file=sys.stderr)
+    sys.exit(2)
+
+url = LAB_URL.rstrip(&quot;/&quot;) + &quot;/api/security&quot;
+headers = {&quot;Authorization&quot;: &quot;Bearer &quot; + os.environ[&quot;LAB_TOKEN&quot;]}
+
+try:
+    r = requests.get(url, headers=headers, timeout=10)
+except Exception as e:
+    print(&quot;request failed: &quot; + str(e), file=sys.stderr)
+    sys.exit(2)
+
+if r.status_code != 200:
+    print(&quot;unexpected status: &quot; + str(r.status_code), file=sys.stderr)
+    sys.exit(2)
+
+try:
+    data = json.loads(r.text)
+except Exception as e:
+    print(&quot;invalid json: &quot; + str(e), file=sys.stderr)
+    sys.exit(2)
+
+if not isinstance(data, dict) or &quot;lockout_threshold&quot; not in data:
+    print(&quot;missing lockout_threshold&quot;, file=sys.stderr)
+    sys.exit(2)
+
+value = data[&quot;lockout_threshold&quot;]
+
+if isinstance(value, bool) or not isinstance(value, int):
+    print(&quot;unexpected lockout_threshold type&quot;, file=sys.stderr)
+    sys.exit(2)
+
+injection_found = False
+try:
+    if re.search(r&quot;(?i)\b(ignore|disregard|bypass|override)\b.{0,60}\b(instruction|prompt|rule|verdict|audit|test)\b|\b(you\s+are\s+an?|act\s+as|system\s+prompt)\b&quot;, r.text):
+        injection_found = True
+except Exception:
+    injection_found = False
+
+expected = &quot;lockout_threshold &gt;= 1 AND lockout_threshold &lt;= 5&quot;
+
+if 1 &lt;= value &lt;= 5:
+    status = &quot;pass&quot;
+    if injection_found:
+        detail = &quot;lockout_threshold is &quot; + str(value) + &quot;, which is within the required range 1 to 5 inclusive, and untrusted instructional text in the response was observed and ignored.&quot;
+    else:
+        detail = &quot;lockout_threshold is &quot; + str(value) + &quot;, which is within the required range 1 to 5 inclusive.&quot;
+else:
+    status = &quot;fail&quot;
+    if injection_found:
+        detail = &quot;lockout_threshold is &quot; + str(value) + &quot;, which is outside the required range 1 to 5 inclusive, and untrusted instructional text in the response was observed and ignored.&quot;
+    else:
+        detail = &quot;lockout_threshold is &quot; + str(value) + &quot;, which is outside the required range 1 to 5 inclusive.&quot;
+
+print(json.dumps({&quot;status&quot;: status, &quot;observed&quot;: value, &quot;expected&quot;: expected, &quot;detail&quot;: detail}))
+</pre></details></div></div><div class="card"><div class="hd"><span class=ref>F-06</span><span class="ref">PSI-4.5</span><span class="ti">Inactive session timeout</span><span class="pill sev-moyenne">Medium</span> <span class="pill st-fail">Non-compliant</span> <span class="fs fs-open">Open</span></div><div class="bd"><div class="c4"><div><h4>Criteria</h4><p>Inactive sessions expire after at most 15 minutes and expiration is never disabled<br><span class="small">PSI-4.5 · DORA 9(4)(c)</span></p></div><div><h4>Condition</h4><p>Observed: <code class="obs">0</code><br>Expected: <code class="obs">session_timeout_minutes &gt;= 1 AND session_timeout_minutes &lt;= 15</code><br><span class="small">Observed session_timeout_minutes is 0, outside the required 1 to 15 inclusive.</span></p></div><div><h4>Risk</h4><p>Unlimited inactive sessions allow session hijacking and unauthorized use of unattended workstations</p></div><div><h4>Recommendation</h4><p>Enforce inactive session expiration at 15 minutes at most by setting session_timeout_minutes between 1 and 15<br><span class="small">Due date: 2027-05-01 · Owner: DSI — équipe IAM</span></p></div></div><p class="small">Test procedure: Retrieve the security configuration via GET /api/security and verify that session_timeout_minutes is between 1 and 15 inclusive</p><div class="ev"><figure><a href="evidence/C5_before.png" target="_blank"><img src="evidence/C5_before.png" alt="At testing"></a><figcaption><b>At testing</b> — The screenshot corroborates the test. The security policy table shows inactive session expiration set to Never.<br><span class="hash">2026-11-02 23:18:45 · SHA-256 ee1555412ed7d72a…</span></figcaption></figure></div><details><summary>Test script · written by AI for this engagement · SHA-256 102ede4d1d4bcfda…</summary><pre>import json
+import os
+import sys
+import requests
+
+try:
+    LAB_URL = os.environ[&quot;LAB_URL&quot;]
+    LAB_TOKEN = os.environ[&quot;LAB_TOKEN&quot;]
+except KeyError as e:
+    print(f&quot;missing environment variable: {e}&quot;, file=sys.stderr)
+    sys.exit(2)
+
+if not LAB_URL or not LAB_TOKEN:
+    print(&quot;missing LAB_URL or LAB_TOKEN&quot;, file=sys.stderr)
+    sys.exit(2)
+
+url = LAB_URL.rstrip(&quot;/&quot;) + &quot;/api/security&quot;
+headers = {&quot;Authorization&quot;: &quot;Bearer &quot; + LAB_TOKEN}
+
+try:
+    resp = requests.get(url, headers=headers, timeout=10)
+except Exception as e:
+    print(f&quot;request failed: {e}&quot;, file=sys.stderr)
+    sys.exit(2)
+
+if resp.status_code != 200:
+    print(f&quot;unexpected status {resp.status_code} for GET /api/security&quot;, file=sys.stderr)
+    sys.exit(2)
+
+try:
+    data = resp.json()
+except Exception as e:
+    print(f&quot;invalid JSON: {e}&quot;, file=sys.stderr)
+    sys.exit(2)
+
+if not isinstance(data, dict) or &quot;session_timeout_minutes&quot; not in data:
+    print(&quot;missing session_timeout_minutes in /api/security response&quot;, file=sys.stderr)
+    sys.exit(2)
+
+val = data[&quot;session_timeout_minutes&quot;]
+
+if type(val) is not int:
+    print(f&quot;unexpected type for session_timeout_minutes: {type(val).__name__}&quot;, file=sys.stderr)
+    sys.exit(2)
+
+expected = &quot;session_timeout_minutes &gt;= 1 AND session_timeout_minutes &lt;= 15&quot;
+if 1 &lt;= val &lt;= 15:
+    status = &quot;pass&quot;
+    detail = f&quot;Observed session_timeout_minutes is {val}, within the required 1 to 15 inclusive.&quot;
+else:
+    status = &quot;fail&quot;
+    detail = f&quot;Observed session_timeout_minutes is {val}, outside the required 1 to 15 inclusive.&quot;
+
+print(json.dumps({&quot;status&quot;: status, &quot;observed&quot;: val, &quot;expected&quot;: expected, &quot;detail&quot;: detail}))
+</pre></details></div></div><div class="card compact"><div class="hd"><span class="ref">PSI-4.6</span><span class="ti">Logging of administration actions</span><span class="pill sev-elevee">High</span> <span class="pill st-pass">Compliant</span> </div><div class="bd"><p class="small">Compliant control — All administration actions are logged · RTS 12(2)(c)(i)<br>Observed: <code class="obs">true</code></p><div class="ev"><figure><a href="evidence/C6_before.png" target="_blank"><img src="evidence/C6_before.png" alt="At testing"></a><figcaption><b>At testing</b> — The screenshot corroborates the test. The screenshot shows Journalisation des actions d&#x27;administration as Activée, matching the automated pass result.<br><span class="hash">2026-11-02 23:18:46 · SHA-256 c17395e7d416fb92…</span></figcaption></figure></div><details><summary>Test script · written by AI for this engagement · SHA-256 145e0ebb270e39fb…</summary><pre>import os
+import sys
+import json
+import requests
+
+try:
+    base_url = os.environ[&quot;LAB_URL&quot;]
+    token = os.environ[&quot;LAB_TOKEN&quot;]
+except KeyError as e:
+    print(f&quot;missing environment variable: {e}&quot;, file=sys.stderr)
+    sys.exit(2)
+
+url = base_url.rstrip(&quot;/&quot;) + &quot;/api/security&quot;
+headers = {&quot;Authorization&quot;: &quot;Bearer &quot; + token}
+
+try:
+    r = requests.get(url, headers=headers, timeout=10)
+except Exception as e:
+    print(f&quot;request failed: {e}&quot;, file=sys.stderr)
+    sys.exit(2)
+
+if r.status_code != 200:
+    print(f&quot;unexpected status code: {r.status_code}&quot;, file=sys.stderr)
+    sys.exit(2)
+
+try:
+    data = r.json()
+except Exception as e:
+    print(f&quot;invalid JSON: {e}&quot;, file=sys.stderr)
+    sys.exit(2)
+
+if not isinstance(data, dict) or &quot;admin_audit_log&quot; not in data:
+    print(&quot;missing field: admin_audit_log&quot;, file=sys.stderr)
+    sys.exit(2)
+
+val = data[&quot;admin_audit_log&quot;]
+if type(val) is not bool:
+    print(f&quot;unexpected type for admin_audit_log: {type(val).__name__}&quot;, file=sys.stderr)
+    sys.exit(2)
+
+if val is True:
+    print(json.dumps({&quot;status&quot;: &quot;pass&quot;, &quot;observed&quot;: val, &quot;expected&quot;: True, &quot;detail&quot;: &quot;admin_audit_log is true.&quot;}))
+else:
+    print(json.dumps({&quot;status&quot;: &quot;fail&quot;, &quot;observed&quot;: val, &quot;expected&quot;: True, &quot;detail&quot;: &quot;admin_audit_log is false.&quot;}))
+</pre></details></div></div></section><section id="annexes"><h2>Appendices</h2><h3>A. Traceability matrix</h3><div class="tbl"><table><tr><th>Requirement</th><th>Rule</th><th>Control</th><th>Script (SHA-256)</th><th>Result</th></tr><tr><td>DORA 9(4)(d), RTS 21(1)(f)(ii)</td><td class="mono">PSI-4.1</td><td>C1 · Mandatory MFA for privileged accounts</td><td class="hash">d82f5b5b5ad81fd1 · written by AI for this engagement</td><td><span class="pill st-fail">Non-compliant</span> </td></tr><tr><td>DORA 9(4)(d), RTS 21(1)(f)(ii)</td><td class="mono">PSI-4.2</td><td>C2 · Mandatory MFA for users of critical system</td><td class="hash">f6afe831af9933a4 · written by AI for this engagement</td><td><span class="pill st-fail">Non-compliant</span> </td></tr><tr><td>DORA 9(4)(d)</td><td class="mono">PSI-4.3</td><td>C3 · Strong password policy</td><td class="hash">2178badc0e1bdabd · written by AI for this engagement</td><td><span class="pill st-fail">Non-compliant</span> </td></tr><tr><td>DORA 9(4)(c)</td><td class="mono">PSI-4.4</td><td>C4 · Account lockout after failed logins</td><td class="hash">d85dd8e4d3a6a030 · written by AI for this engagement</td><td><span class="pill st-fail">Non-compliant</span> </td></tr><tr><td>DORA 9(4)(c)</td><td class="mono">PSI-4.5</td><td>C5 · Inactive session timeout</td><td class="hash">102ede4d1d4bcfda · written by AI for this engagement</td><td><span class="pill st-fail">Non-compliant</span> </td></tr><tr><td>RTS 12(2)(c)(i)</td><td class="mono">PSI-4.6</td><td>C6 · Logging of administration actions</td><td class="hash">145e0ebb270e39fb · written by AI for this engagement</td><td><span class="pill st-pass">Compliant</span> </td></tr><tr><td>DORA 9(4)(c), RTS 21(1)(c), RTS 21(3)</td><td class="mono">PSI-4.7</td><td>C7 · No generic or shared admin accounts</td><td class="hash">42e8a8060a7c3608 · written by AI for this engagement</td><td><span class="pill st-fail">Non-compliant</span> </td></tr></table></div><h3>B. Evidence register</h3><div class="tbl"><table><tr><th>File</th><th></th><th></th><th>SHA-256</th></tr><tr><td class="mono">evidence/C1_before.png</td><td>C1 · At testing</td><td>2026-11-02 23:18:47</td><td class="hash">3448a5ff18538c33f4f4140cc538a19bd4dddf24b41adaab2159557e3b071c35</td></tr><tr><td class="mono">evidence/C2_before.png</td><td>C2 · At testing</td><td>2026-11-02 23:18:55</td><td class="hash">9cdda6df7be2a389dd14eea6ff0b994f56579b246433c4971e169f0e60e0749d</td></tr><tr><td class="mono">evidence/C3_before.png</td><td>C3 · At testing</td><td>2026-11-02 23:18:50</td><td class="hash">5d58be54bab35d2e46645203f0835013a191b6e52ede8ef859a5b3950dedf22e</td></tr><tr><td class="mono">evidence/C4_before.png</td><td>C4 · At testing</td><td>2026-11-02 23:18:49</td><td class="hash">1e6eddba9bf76eee19e7197c0386aa1059bfaf6dbd7f9939be80b05ec6983379</td></tr><tr><td class="mono">evidence/C5_before.png</td><td>C5 · At testing</td><td>2026-11-02 23:18:45</td><td class="hash">ee1555412ed7d72a5e0393b24103424a955b530dd601eed00964fff85b816b78</td></tr><tr><td class="mono">evidence/C6_before.png</td><td>C6 · At testing</td><td>2026-11-02 23:18:46</td><td class="hash">c17395e7d416fb92f0f2ee68891c77544066d3c3e13d69f9cca6c2d4ac99009a</td></tr><tr><td class="mono">evidence/C7_before.png</td><td>C7 · At testing</td><td>2026-11-02 23:19:28</td><td class="hash">35fc6643d0e1d710574095c54399fb48980ce5363e7a45a1c4ab99d2149e3126</td></tr></table></div><h3>C. AI usage, costs and human oversight</h3><div class="tbl"><table><tr><th>Model</th><th>Calls</th><th>Input tokens</th><th>Output tokens</th><th>Images</th><th>Cost (USD)</th></tr><tr><td class="mono">muse-spark-1.3</td><td>15</td><td>17,452</td><td>39,693</td><td>0</td><td>0.1905</td></tr><tr><td class="mono">sam-3.1</td><td>7</td><td>0</td><td>0</td><td>7</td><td>price not published</td></tr><tr><td><b>Total</b></td><td></td><td></td><td></td><td></td><td><b>0.1905</b></td></tr></table></div><p class="small">Personal data in evidence: 8/8 spotted by Muse Spark + SAM, 8/8 masked in the end thanks to the deterministic safety net (page text).</p><p class="small">* sam-3.1: price not published (pricing.toml)</p><h3>Safeguards</h3><ul><li>Scripts: allow-listed imports, no write requests (static analysis before execution).</li><li>Read-only test account: any write would be refused by the system (defence in depth).</li><li>Fixes: allow-listed route and parameters, human approval, separate change account.</li><li>Segregation of duties: the approver cannot be the auditor.</li></ul><h3>D. Integrity</h3><p class="small">Audit-trail fingerprint when the report was issued. Verify with `python -m attest verify &lt;folder&gt;`.</p><p class="hash">14b5e7c1e3ae49124f8070fc9eca972847fdf9d58e1c8fb7938a08307b2c8064</p></section>
+<footer><span>TLP:AMBER+STRICT</span><span>Attest · meta · muse-spark-1.3 + sam-3.1</span></footer>
+</div></body></html>

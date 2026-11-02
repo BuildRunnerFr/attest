@@ -1,0 +1,126 @@
+{
+  "mission": "AUD-2026-IAM-01",
+  "framework_sha256": "620bd5611e0af9ed1eed32a3f16410e7484bd3d0ea47e97644eb03e542e13b07",
+  "generated_by": "muse-spark-1.3",
+  "generated_at": "2026-11-02 23:18",
+  "reviewed": false,
+  "review_note": "Passer 'reviewed' à true après relecture par un auditeur.",
+  "controls": [
+    {
+      "id": "C1",
+      "rule": "PSI-4.1",
+      "title": "Mandatory MFA for privileged accounts",
+      "objective": "MFA is enforced for all privileged admin accounts on KRL-ADM",
+      "test_procedure": "Retrieve the security configuration via GET /api/security and verify that mfa_admin is true",
+      "expected": "mfa_admin == true",
+      "severity": "critique",
+      "references": [
+        "DORA 9(4)(d)",
+        "RTS 21(1)(f)(ii)"
+      ],
+      "risk": "Without MFA for admins, stolen credentials allow full takeover of critical functions with no second barrier",
+      "recommendation": "Enable mandatory MFA for all privileged accounts by setting mfa_admin to true",
+      "evidence_page": "/admin/security",
+      "remediation": "config"
+    },
+    {
+      "id": "C2",
+      "rule": "PSI-4.2",
+      "title": "Mandatory MFA for users of critical system",
+      "objective": "MFA is enforced for standard users because KRL-ADM supports critical or important functions",
+      "test_procedure": "Retrieve the security configuration via GET /api/security and verify that mfa_users is true",
+      "expected": "mfa_users == true",
+      "severity": "elevee",
+      "references": [
+        "DORA 9(4)(d)",
+        "RTS 21(1)(f)(ii)"
+      ],
+      "risk": "Without MFA for all users, compromised user credentials allow unauthorized access to critical functions",
+      "recommendation": "Enable mandatory MFA for standard users by setting mfa_users to true",
+      "evidence_page": "/admin/security",
+      "remediation": "config"
+    },
+    {
+      "id": "C3",
+      "rule": "PSI-4.3",
+      "title": "Strong password policy",
+      "objective": "Passwords require a minimum length of 12 characters with complexity requirements enabled",
+      "test_procedure": "Retrieve the security configuration via GET /api/security and verify password_min_length and password_require_complexity",
+      "expected": "password_min_length >= 12 AND password_require_complexity == true",
+      "severity": "moyenne",
+      "references": [
+        "DORA 9(4)(d)"
+      ],
+      "risk": "Weak or short passwords can be guessed or brute-forced, enabling unauthorized access to the system",
+      "recommendation": "Enforce a minimum password length of 12 characters with complexity by correcting the password settings",
+      "evidence_page": "/admin/security",
+      "remediation": "config"
+    },
+    {
+      "id": "C4",
+      "rule": "PSI-4.4",
+      "title": "Account lockout after failed logins",
+      "objective": "Accounts lock after at most 5 failed login attempts and lockout is never disabled",
+      "test_procedure": "Retrieve the security configuration via GET /api/security and verify that lockout_threshold is between 1 and 5 inclusive",
+      "expected": "lockout_threshold >= 1 AND lockout_threshold <= 5",
+      "severity": "moyenne",
+      "references": [
+        "DORA 9(4)(c)"
+      ],
+      "risk": "Without lockout, attackers can perform unlimited password-guessing attacks against accounts",
+      "recommendation": "Configure account lockout to 5 attempts at most by setting lockout_threshold between 1 and 5",
+      "evidence_page": "/admin/security",
+      "remediation": "config"
+    },
+    {
+      "id": "C5",
+      "rule": "PSI-4.5",
+      "title": "Inactive session timeout",
+      "objective": "Inactive sessions expire after at most 15 minutes and expiration is never disabled",
+      "test_procedure": "Retrieve the security configuration via GET /api/security and verify that session_timeout_minutes is between 1 and 15 inclusive",
+      "expected": "session_timeout_minutes >= 1 AND session_timeout_minutes <= 15",
+      "severity": "moyenne",
+      "references": [
+        "DORA 9(4)(c)"
+      ],
+      "risk": "Unlimited inactive sessions allow session hijacking and unauthorized use of unattended workstations",
+      "recommendation": "Enforce inactive session expiration at 15 minutes at most by setting session_timeout_minutes between 1 and 15",
+      "evidence_page": "/admin/security",
+      "remediation": "config"
+    },
+    {
+      "id": "C6",
+      "rule": "PSI-4.6",
+      "title": "Logging of administration actions",
+      "objective": "All administration actions are logged",
+      "test_procedure": "Retrieve the security configuration via GET /api/security and verify that admin_audit_log is true",
+      "expected": "admin_audit_log == true",
+      "severity": "elevee",
+      "references": [
+        "RTS 12(2)(c)(i)"
+      ],
+      "risk": "Without admin audit logging, privileged actions cannot be traced, preventing detection and investigation of abuse",
+      "recommendation": "Enable logging of all administration actions by setting admin_audit_log to true",
+      "evidence_page": "/admin/security",
+      "remediation": "config"
+    },
+    {
+      "id": "C7",
+      "rule": "PSI-4.7",
+      "title": "No generic or shared admin accounts",
+      "objective": "No account with role admin is generic or shared and every admin has a nominative login of the form initiale.nom with a personal email",
+      "test_procedure": "Retrieve all accounts via GET /api/users and verify that every user with role admin has a nominative login and a personal email without function identifier or shared mailbox",
+      "expected": "for all users where role == admin: login matches initiale.nom pattern and email is personal, with no function login and no shared mailbox",
+      "severity": "elevee",
+      "references": [
+        "DORA 9(4)(c)",
+        "RTS 21(1)(c)",
+        "RTS 21(3)"
+      ],
+      "risk": "Generic or shared admin accounts destroy individual accountability and prevent attribution of privileged actions",
+      "recommendation": "Remove or disable generic and shared admin accounts and replace them with dedicated nominative accounts",
+      "evidence_page": "/admin/users",
+      "remediation": "manual"
+    }
+  ]
+}
