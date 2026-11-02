@@ -28,7 +28,7 @@ Muse Spark 1.3 **$1.25 / $4.25 per million input / output tokens** (source cited
 SAM 3.1 price was not found in public sources: fill it in from the Meta console.
 
 **Measured on the first real run** (2 November 2026, Meta Model API, 7 controls, cached work programme and scripts,
-remediation with interactive approval — see [`examples/rapport-reel-fr`](../examples/rapport-reel-fr/report.html)):
+remediation with interactive approval — see [`examples/README.md`](../examples/README.md)):
 
 | Item | Measured |
 |---|---|

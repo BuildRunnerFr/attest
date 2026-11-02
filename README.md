@@ -10,8 +10,6 @@ Attest is an AI agent that runs that audit the way a bank's second line of defen
 it **tests** the system read-only, **seals** the evidence, **masks** personal data, drafts **change requests**
 that a human owner approves, **re-tests** after the fix, and issues an audit report a CISO can sign.
 
-
-
 ![Executive summary of an Attest report](docs/img/report-summary.png)
 
 ## What happens in one run
@@ -63,8 +61,8 @@ python -m attest verify runs/<run-folder>              # integrity check
 ```
 
 The report (`runs/<run>/report.html`) refreshes live during the audit; `report.pdf` is written at the end.
-A real report produced with Muse Spark and SAM 3.1 is in [`examples/rapport-reel-fr`](examples/rapport-reel-fr/report.html)
-(cost: $0.135 for the whole engagement — see [docs/BUSINESS_CASE.md](docs/BUSINESS_CASE.md)).
+What the first real run with Muse Spark and SAM 3.1 measured and revealed ($0.135 for the whole engagement) is in
+[`examples/README.md`](examples/README.md) and [docs/BUSINESS_CASE.md](docs/BUSINESS_CASE.md).
 Useful flags: `--lang en`, `--approve-all --approver "IAM owner"` (pre-approved, demo only), `--fresh`
 (rewrite tests instead of replaying the library), `--replan` (redo the work programme).
 

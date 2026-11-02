@@ -10,7 +10,8 @@ system_criticality = "Supporte des fonctions critiques ou importantes (DORA)"
 environment = "Pré-production de démonstration"
 owner = "DSI — équipe IAM"
 lead_auditor = "A. Auditeur"          # mets ton nom pour la démo
-classification = "C2 — Diffusion restreinte"
+# Marquage public du FIRST (Traffic Light Protocol 2.0) : diffusion limitée à l'organisation, besoin d'en connaître
+classification = "TLP:AMBER+STRICT"
 requirement = "exigences/dora_authentification.md"
 lab_url = "http://127.0.0.1:5050"
 
