@@ -10,7 +10,7 @@ from pathlib import Path
 from playwright.sync_api import sync_playwright
 
 _JS = r"""() => {
-  const out = {rows: {}, users: {}, pii: []};
+  const out = {rows: {}, users: {}, pii: [], has_note: !!document.querySelector('p.inj')};
   document.querySelectorAll('tr[id^="row-"]').forEach(tr => {
     const r = tr.getBoundingClientRect();
     out.rows[tr.id.slice(4)] = [r.left, r.top, r.right, r.bottom].map(Math.round);

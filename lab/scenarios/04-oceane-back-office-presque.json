@@ -1,0 +1,121 @@
+{
+  "id": "04-oceane-back-office-presque",
+  "label": "Back-office, juste au-delà des seuils",
+  "brand": "Crédit Océane · BO",
+  "entity": "Crédit Océane (fictif)",
+  "system": "Back-office crédits",
+  "tests": "Valeurs à un cran du seuil (11, 6, 16) : non conformes.",
+  "security": {
+    "mfa_admin": true,
+    "mfa_users": true,
+    "password_min_length": 11,
+    "password_require_complexity": true,
+    "lockout_threshold": 6,
+    "session_timeout_minutes": 16,
+    "admin_audit_log": true
+  },
+  "users": [
+    {
+      "login": "j.simon",
+      "email": "julie.simon@credit-oceane.example",
+      "role": "admin",
+      "last_ip": "10.33.210.38",
+      "mfa": true
+    },
+    {
+      "login": "p.lefloch",
+      "email": "pauline.lefloch@credit-oceane.example",
+      "role": "admin",
+      "last_ip": "10.12.0.116",
+      "mfa": true
+    },
+    {
+      "login": "t.simon",
+      "email": "thomas.simon@credit-oceane.example",
+      "role": "admin",
+      "last_ip": "10.17.61.159",
+      "mfa": true
+    },
+    {
+      "login": "m.riou",
+      "email": "maela.riou@credit-oceane.example",
+      "role": "conseiller",
+      "last_ip": "10.40.137.172",
+      "mfa": true
+    },
+    {
+      "login": "s.durand",
+      "email": "sarah.durand@credit-oceane.example",
+      "role": "conseiller",
+      "last_ip": "10.10.160.171",
+      "mfa": true
+    },
+    {
+      "login": "e.petit",
+      "email": "erwan.petit@credit-oceane.example",
+      "role": "conseiller",
+      "last_ip": "10.27.114.122",
+      "mfa": true
+    },
+    {
+      "login": "s.kerbrat",
+      "email": "sophie.kerbrat@credit-oceane.example",
+      "role": "conseiller",
+      "last_ip": "10.19.43.107",
+      "mfa": true
+    },
+    {
+      "login": "c.petit",
+      "email": "camille.petit@credit-oceane.example",
+      "role": "conseiller",
+      "last_ip": "10.35.156.130",
+      "mfa": true
+    },
+    {
+      "login": "m.mercier",
+      "email": "marie.mercier@credit-oceane.example",
+      "role": "conseiller",
+      "last_ip": "10.35.76.134",
+      "mfa": true
+    },
+    {
+      "login": "e.mercier",
+      "email": "emma.mercier@credit-oceane.example",
+      "role": "conseiller",
+      "last_ip": "10.10.54.100",
+      "mfa": true
+    },
+    {
+      "login": "c.martin",
+      "email": "claire.martin@credit-oceane.example",
+      "role": "conseiller",
+      "last_ip": "10.36.177.166",
+      "mfa": true
+    },
+    {
+      "login": "s.morvan",
+      "email": "sarah.morvan@credit-oceane.example",
+      "role": "conseiller",
+      "last_ip": "10.10.243.84",
+      "mfa": true
+    },
+    {
+      "login": "a.le-goff",
+      "email": "arthur.le-goff@credit-oceane.example",
+      "role": "conseiller",
+      "last_ip": "10.20.62.128",
+      "mfa": true
+    }
+  ],
+  "notes": [],
+  "expected": {
+    "PSI-4.1": "pass",
+    "PSI-4.2": "pass",
+    "PSI-4.3": "fail",
+    "PSI-4.4": "fail",
+    "PSI-4.5": "fail",
+    "PSI-4.6": "pass",
+    "PSI-4.7": "pass"
+  },
+  "expected_generic_admins": []
+}

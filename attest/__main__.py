@@ -4,6 +4,7 @@
   python -m attest run mission/kerlann-iam.toml --remediate           # + changements sur approbation
   python -m attest run mission/kerlann-iam.toml --remediate --approve-all --approver "Responsable IAM"
   python -m attest verify runs/<dossier>                              # intégrité des preuves et de la piste
+  python -m attest bench                                              # évaluation sur 8 systèmes fictifs
 """
 import argparse
 import os
@@ -16,7 +17,7 @@ from . import config
 
 def main():
     argv = sys.argv[1:]
-    if argv and argv[0] not in ("run", "verify", "-h", "--help"):
+    if argv and argv[0] not in ("run", "verify", "bench", "-h", "--help"):
         argv = ["run"] + argv                    # « python -m attest <fichier> » = run
     ap = argparse.ArgumentParser(prog="attest", description="Agent d'audit de conformité (DORA).")
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -34,6 +35,11 @@ def main():
     r.add_argument("--lang", choices=["fr", "en"], help="langue du rapport (sinon ATTEST_LANG)")
     r.add_argument("--out", type=Path)
 
+    b = sub.add_parser("bench", help="évaluer Attest sur les scénarios synthétiques (vérité terrain)")
+    b.add_argument("--only", help="préfixes de scénarios, séparés par des virgules (ex. 02,05)")
+    b.add_argument("--lang", choices=["fr", "en"])
+    b.add_argument("--out", type=Path)
+
     v = sub.add_parser("verify", help="vérifier l'intégrité d'un dossier d'audit")
     v.add_argument("run_dir", type=Path)
     a = ap.parse_args(argv)
@@ -49,6 +55,13 @@ def main():
     if a.lang:
         os.environ["ATTEST_LANG"] = a.lang
     from . import pipeline                       # après le choix de la langue
+
+    if a.cmd == "bench":
+        from .bench import run_bench
+        mission = config.load_mission(config.ROOT / "mission" / "kerlann-iam.toml")
+        run_bench(mission, a.out or Path("runs") / time.strftime("bench-%Y%m%d-%H%M%S"),
+                  only=a.only.split(",") if a.only else None)
+        return
 
     if a.mission.suffix == ".md":
         mission = config.load_mission(config.ROOT / "mission" / "kerlann-iam.toml", requirement_override=a.mission)

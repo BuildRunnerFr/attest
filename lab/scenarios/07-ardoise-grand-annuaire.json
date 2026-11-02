@@ -1,0 +1,424 @@
+{
+  "id": "07-ardoise-grand-annuaire",
+  "label": "Grand annuaire : 56 comptes, un générique noyé",
+  "brand": "Banque Ardoise · ANNUAIRE",
+  "entity": "Banque Ardoise (fictive)",
+  "system": "Annuaire des accès",
+  "tests": "Un seul compte générique parmi 56 ; 112 données personnelles à masquer sur une longue page.",
+  "security": {
+    "mfa_admin": true,
+    "mfa_users": true,
+    "password_min_length": 14,
+    "password_require_complexity": true,
+    "lockout_threshold": 5,
+    "session_timeout_minutes": 10,
+    "admin_audit_log": true
+  },
+  "users": [
+    {
+      "login": "e.dupont",
+      "email": "erwan.dupont@banque-ardoise.example",
+      "role": "conseiller",
+      "last_ip": "10.20.90.51",
+      "mfa": true
+    },
+    {
+      "login": "r.lefebvre",
+      "email": "romain.lefebvre@banque-ardoise.example",
+      "role": "conseiller",
+      "last_ip": "10.37.178.195",
+      "mfa": true
+    },
+    {
+      "login": "g.le-goff",
+      "email": "gabriel.le-goff@banque-ardoise.example",
+      "role": "conseiller",
+      "last_ip": "10.18.74.140",
+      "mfa": true
+    },
+    {
+      "login": "r.bonnet",
+      "email": "romain.bonnet@banque-ardoise.example",
+      "role": "conseiller",
+      "last_ip": "10.31.61.176",
+      "mfa": true
+    },
+    {
+      "login": "g.fournier",
+      "email": "gabriel.fournier@banque-ardoise.example",
+      "role": "conseiller",
+      "last_ip": "10.36.60.82",
+      "mfa": true
+    },
+    {
+      "login": "a.morvan",
+      "email": "arthur.morvan@banque-ardoise.example",
+      "role": "conseiller",
+      "last_ip": "10.23.64.92",
+      "mfa": true
+    },
+    {
+      "login": "y.riou",
+      "email": "yann.riou@banque-ardoise.example",
+      "role": "conseiller",
+      "last_ip": "10.40.175.51",
+      "mfa": true
+    },
+    {
+      "login": "a.kerbrat",
+      "email": "antoine.kerbrat@banque-ardoise.example",
+      "role": "conseiller",
+      "last_ip": "10.31.128.100",
+      "mfa": true
+    },
+    {
+      "login": "m.garcia",
+      "email": "maxime.garcia@banque-ardoise.example",
+      "role": "conseiller",
+      "last_ip": "10.35.75.59",
+      "mfa": true
+    },
+    {
+      "login": "a.quere",
+      "email": "arthur.quere@banque-ardoise.example",
+      "role": "conseiller",
+      "last_ip": "10.40.201.98",
+      "mfa": true
+    },
+    {
+      "login": "j.morvan",
+      "email": "julie.morvan@banque-ardoise.example",
+      "role": "conseiller",
+      "last_ip": "10.27.111.218",
+      "mfa": true
+    },
+    {
+      "login": "i.martin",
+      "email": "ines.martin@banque-ardoise.example",
+      "role": "conseiller",
+      "last_ip": "10.31.5.161",
+      "mfa": true
+    },
+    {
+      "login": "g.lefebvre",
+      "email": "gabriel.lefebvre@banque-ardoise.example",
+      "role": "conseiller",
+      "last_ip": "10.20.73.144",
+      "mfa": true
+    },
+    {
+      "login": "l.quere",
+      "email": "lucas.quere@banque-ardoise.example",
+      "role": "conseiller",
+      "last_ip": "10.30.135.88",
+      "mfa": true
+    },
+    {
+      "login": "i.tanguy",
+      "email": "ines.tanguy@banque-ardoise.example",
+      "role": "conseiller",
+      "last_ip": "10.13.37.98",
+      "mfa": true
+    },
+    {
+      "login": "r.quere",
+      "email": "romain.quere@banque-ardoise.example",
+      "role": "admin",
+      "last_ip": "10.39.206.81",
+      "mfa": true
+    },
+    {
+      "login": "i.bonnet",
+      "email": "ines.bonnet@banque-ardoise.example",
+      "role": "conseiller",
+      "last_ip": "10.26.169.83",
+      "mfa": true
+    },
+    {
+      "login": "e.girard",
+      "email": "emma.girard@banque-ardoise.example",
+      "role": "conseiller",
+      "last_ip": "10.21.235.164",
+      "mfa": true
+    },
+    {
+      "login": "a.bernard",
+      "email": "antoine.bernard@banque-ardoise.example",
+      "role": "conseiller",
+      "last_ip": "10.21.154.56",
+      "mfa": true
+    },
+    {
+      "login": "m.lefebvre",
+      "email": "marie.lefebvre@banque-ardoise.example",
+      "role": "conseiller",
+      "last_ip": "10.34.64.47",
+      "mfa": true
+    },
+    {
+      "login": "c.morel",
+      "email": "chloe.morel@banque-ardoise.example",
+      "role": "conseiller",
+      "last_ip": "10.11.223.225",
+      "mfa": true
+    },
+    {
+      "login": "m.simon",
+      "email": "maela.simon@banque-ardoise.example",
+      "role": "conseiller",
+      "last_ip": "10.15.149.76",
+      "mfa": true
+    },
+    {
+      "login": "j.richard",
+      "email": "jean.richard@banque-ardoise.example",
+      "role": "conseiller",
+      "last_ip": "10.15.62.31",
+      "mfa": true
+    },
+    {
+      "login": "y.richard",
+      "email": "yann.richard@banque-ardoise.example",
+      "role": "conseiller",
+      "last_ip": "10.26.1.216",
+      "mfa": true
+    },
+    {
+      "login": "l.fournier",
+      "email": "laura.fournier@banque-ardoise.example",
+      "role": "conseiller",
+      "last_ip": "10.27.133.80",
+      "mfa": true
+    },
+    {
+      "login": "m.fournier",
+      "email": "marie.fournier@banque-ardoise.example",
+      "role": "conseiller",
+      "last_ip": "10.13.253.233",
+      "mfa": true
+    },
+    {
+      "login": "l.guillou",
+      "email": "louis.guillou@banque-ardoise.example",
+      "role": "conseiller",
+      "last_ip": "10.11.113.174",
+      "mfa": true
+    },
+    {
+      "login": "y.bertrand",
+      "email": "yann.bertrand@banque-ardoise.example",
+      "role": "conseiller",
+      "last_ip": "10.32.169.75",
+      "mfa": true
+    },
+    {
+      "login": "r.guillou",
+      "email": "romain.guillou@banque-ardoise.example",
+      "role": "conseiller",
+      "last_ip": "10.38.159.49",
+      "mfa": true
+    },
+    {
+      "login": "a.richard",
+      "email": "arthur.richard@banque-ardoise.example",
+      "role": "admin",
+      "last_ip": "10.13.179.81",
+      "mfa": true
+    },
+    {
+      "login": "n.david",
+      "email": "nicolas.david@banque-ardoise.example",
+      "role": "conseiller",
+      "last_ip": "10.19.234.163",
+      "mfa": true
+    },
+    {
+      "login": "p.michel",
+      "email": "pierre.michel@banque-ardoise.example",
+      "role": "conseiller",
+      "last_ip": "10.14.54.253",
+      "mfa": true
+    },
+    {
+      "login": "p.le-goff",
+      "email": "pierre.le-goff@banque-ardoise.example",
+      "role": "conseiller",
+      "last_ip": "10.33.65.111",
+      "mfa": true
+    },
+    {
+      "login": "c.kerbrat",
+      "email": "camille.kerbrat@banque-ardoise.example",
+      "role": "conseiller",
+      "last_ip": "10.13.43.37",
+      "mfa": true
+    },
+    {
+      "login": "a.morel",
+      "email": "anne.morel@banque-ardoise.example",
+      "role": "conseiller",
+      "last_ip": "10.36.209.204",
+      "mfa": true
+    },
+    {
+      "login": "a.garcia",
+      "email": "arthur.garcia@banque-ardoise.example",
+      "role": "conseiller",
+      "last_ip": "10.34.115.44",
+      "mfa": true
+    },
+    {
+      "login": "n.roux",
+      "email": "nicolas.roux@banque-ardoise.example",
+      "role": "conseiller",
+      "last_ip": "10.34.213.82",
+      "mfa": true
+    },
+    {
+      "login": "y.morvan",
+      "email": "yann.morvan@banque-ardoise.example",
+      "role": "conseiller",
+      "last_ip": "10.18.245.107",
+      "mfa": true
+    },
+    {
+      "login": "y.moreau",
+      "email": "yann.moreau@banque-ardoise.example",
+      "role": "conseiller",
+      "last_ip": "10.20.74.42",
+      "mfa": true
+    },
+    {
+      "login": "m.vincent",
+      "email": "manon.vincent@banque-ardoise.example",
+      "role": "conseiller",
+      "last_ip": "10.14.45.215",
+      "mfa": true
+    },
+    {
+      "login": "a.martin",
+      "email": "anne.martin@banque-ardoise.example",
+      "role": "admin",
+      "last_ip": "10.13.120.6",
+      "mfa": true
+    },
+    {
+      "login": "m.petit",
+      "email": "maela.petit@banque-ardoise.example",
+      "role": "conseiller",
+      "last_ip": "10.26.181.153",
+      "mfa": true
+    },
+    {
+      "login": "c.lambert",
+      "email": "camille.lambert@banque-ardoise.example",
+      "role": "conseiller",
+      "last_ip": "10.14.248.229",
+      "mfa": true
+    },
+    {
+      "login": "exploit",
+      "email": "exploitation@banque-ardoise.example",
+      "role": "admin",
+      "last_ip": "10.29.110.153",
+      "mfa": true
+    },
+    {
+      "login": "n.durand",
+      "email": "nolwenn.durand@banque-ardoise.example",
+      "role": "conseiller",
+      "last_ip": "10.39.204.182",
+      "mfa": true
+    },
+    {
+      "login": "g.tanguy",
+      "email": "gwen.tanguy@banque-ardoise.example",
+      "role": "conseiller",
+      "last_ip": "10.13.126.213",
+      "mfa": true
+    },
+    {
+      "login": "a.lefebvre",
+      "email": "antoine.lefebvre@banque-ardoise.example",
+      "role": "conseiller",
+      "last_ip": "10.27.141.88",
+      "mfa": true
+    },
+    {
+      "login": "m.moreau",
+      "email": "maela.moreau@banque-ardoise.example",
+      "role": "conseiller",
+      "last_ip": "10.12.153.96",
+      "mfa": true
+    },
+    {
+      "login": "m.mercier",
+      "email": "marie.mercier@banque-ardoise.example",
+      "role": "conseiller",
+      "last_ip": "10.22.122.199",
+      "mfa": true
+    },
+    {
+      "login": "s.mercier",
+      "email": "sophie.mercier@banque-ardoise.example",
+      "role": "conseiller",
+      "last_ip": "10.16.4.217",
+      "mfa": true
+    },
+    {
+      "login": "g.bonnet",
+      "email": "gwen.bonnet@banque-ardoise.example",
+      "role": "conseiller",
+      "last_ip": "10.21.87.185",
+      "mfa": true
+    },
+    {
+      "login": "s.lambert",
+      "email": "sarah.lambert@banque-ardoise.example",
+      "role": "conseiller",
+      "last_ip": "10.36.195.55",
+      "mfa": true
+    },
+    {
+      "login": "s.le-gall",
+      "email": "sarah.le-gall@banque-ardoise.example",
+      "role": "conseiller",
+      "last_ip": "10.39.176.22",
+      "mfa": true
+    },
+    {
+      "login": "m.roux",
+      "email": "manon.roux@banque-ardoise.example",
+      "role": "conseiller",
+      "last_ip": "10.30.60.90",
+      "mfa": true
+    },
+    {
+      "login": "m.dupont",
+      "email": "maxime.dupont@banque-ardoise.example",
+      "role": "conseiller",
+      "last_ip": "10.10.168.173",
+      "mfa": true
+    },
+    {
+      "login": "c.dubois",
+      "email": "claire.dubois@banque-ardoise.example",
+      "role": "conseiller",
+      "last_ip": "10.35.253.200",
+      "mfa": true
+    }
+  ],
+  "notes": [],
+  "expected": {
+    "PSI-4.1": "pass",
+    "PSI-4.2": "pass",
+    "PSI-4.3": "pass",
+    "PSI-4.4": "pass",
+    "PSI-4.5": "pass",
+    "PSI-4.6": "pass",
+    "PSI-4.7": "fail"
+  },
+  "expected_generic_admins": [
+    "exploit"
+  ]
+}

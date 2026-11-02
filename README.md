@@ -68,11 +68,18 @@ A real report produced with Muse Spark and SAM 3.1 is in [`examples/rapport-reel
 Useful flags: `--lang en`, `--approve-all --approver "IAM owner"` (pre-approved, demo only), `--fresh`
 (rewrite tests instead of replaying the library), `--replan` (redo the work programme).
 
+## Evaluation, not training
+
+We do not fine-tune anything: the model is not the judge, and a bank cannot hand over labelled data. Instead,
+`python -m attest bench` audits **8 fictitious banking systems** with known ground truth (compliant system, threshold
+edge cases, generic accounts, prompt injection, a 56-account directory) and reports accuracy, false findings, missed
+non-compliances, privacy masking and cost. See [docs/EVALUATION.md](docs/EVALUATION.md).
+
 ## Repository
 
 ```
 attest/          the agent: pipeline, prompts, sandbox, SAM client, evidence, audit trail, report
-lab/             the audited system: a fictitious bank IAM console with read-only and change accounts
+lab/             the audited system (fictitious IAM console, read-only and change accounts) and 8 test scenarios
 exigences/       the framework: verified regulation excerpts + internal policy with severities
 mission/         engagement letter (scope, owner, auditor, classification, remediation deadlines)
 controls/        work programmes drafted by AI, kept for auditor review

@@ -8,19 +8,6 @@ import pytest
 from werkzeug.serving import make_server
 
 
-@pytest.fixture()
-def lab(tmp_path):
-    os.environ["LAB_STATE_FILE"] = str(tmp_path / "state.json")
-    import lab.app as labapp
-    importlib.reload(labapp)
-    srv = make_server("127.0.0.1", 0, labapp.app, threaded=True)
-    th = threading.Thread(target=srv.serve_forever, daemon=True)
-    th.start()
-    os.environ["LAB_URL"] = f"http://127.0.0.1:{srv.server_port}"
-    yield os.environ["LAB_URL"]
-    srv.shutdown()
-
-
 def test_full_engagement(lab, tmp_path):
     from attest import config, pipeline
     from attest.trail import verify

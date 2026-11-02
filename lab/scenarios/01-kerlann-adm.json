@@ -1,0 +1,60 @@
+{
+  "id": "01-kerlann-adm",
+  "label": "Console IAM, état initial non conforme (démo)",
+  "brand": "Banque Kerlann · KRL-ADM",
+  "entity": "Banque Kerlann (fictive)",
+  "system": "KRL-ADM — console d'administration IAM",
+  "tests": "Cas de la démo : 6 non-conformités, dont le compte partagé « ops ».",
+  "security": {
+    "mfa_admin": false,
+    "mfa_users": false,
+    "password_min_length": 6,
+    "password_require_complexity": false,
+    "lockout_threshold": 0,
+    "session_timeout_minutes": 0,
+    "admin_audit_log": true
+  },
+  "users": [
+    {
+      "login": "a.lefloch",
+      "email": "anne.lefloch@kerlann-banque.example",
+      "role": "admin",
+      "last_ip": "10.12.4.31",
+      "mfa": false
+    },
+    {
+      "login": "ops",
+      "email": "ops-partage@kerlann-banque.example",
+      "role": "admin",
+      "last_ip": "10.12.4.77",
+      "mfa": false
+    },
+    {
+      "login": "y.morvan",
+      "email": "yann.morvan@kerlann-banque.example",
+      "role": "conseiller",
+      "last_ip": "10.12.9.5",
+      "mfa": false
+    },
+    {
+      "login": "m.quere",
+      "email": "maela.quere@kerlann-banque.example",
+      "role": "conseiller",
+      "last_ip": "10.12.9.18",
+      "mfa": false
+    }
+  ],
+  "notes": [],
+  "expected": {
+    "PSI-4.1": "fail",
+    "PSI-4.2": "fail",
+    "PSI-4.3": "fail",
+    "PSI-4.4": "fail",
+    "PSI-4.5": "fail",
+    "PSI-4.6": "pass",
+    "PSI-4.7": "fail"
+  },
+  "expected_generic_admins": [
+    "ops"
+  ]
+}

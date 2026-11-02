@@ -1,0 +1,132 @@
+{
+  "id": "05-menhir-tresorerie-generiques",
+  "label": "Trésorerie, comptes génériques variés",
+  "brand": "Banque du Menhir · TRESO",
+  "entity": "Banque du Menhir (fictive)",
+  "system": "Trésorerie",
+  "tests": "Trois formes de compte générique (admin, compte de service, boîte partagée) + journalisation coupée.",
+  "security": {
+    "mfa_admin": true,
+    "mfa_users": true,
+    "password_min_length": 14,
+    "password_require_complexity": true,
+    "lockout_threshold": 5,
+    "session_timeout_minutes": 10,
+    "admin_audit_log": false
+  },
+  "users": [
+    {
+      "login": "r.leroy",
+      "email": "romain.leroy@banque-menhir.example",
+      "role": "admin",
+      "last_ip": "10.14.105.112",
+      "mfa": true
+    },
+    {
+      "login": "admin",
+      "email": "admin@banque-menhir.example",
+      "role": "admin",
+      "last_ip": "10.29.172.118",
+      "mfa": true
+    },
+    {
+      "login": "svc-backup",
+      "email": "svc-backup@banque-menhir.example",
+      "role": "admin",
+      "last_ip": "10.29.119.174",
+      "mfa": true
+    },
+    {
+      "login": "p.martin",
+      "email": "it-support@banque-menhir.example",
+      "role": "admin",
+      "last_ip": "10.32.35.141",
+      "mfa": true
+    },
+    {
+      "login": "j.dupont",
+      "email": "jean.dupont@banque-menhir.example",
+      "role": "admin",
+      "last_ip": "10.22.17.51",
+      "mfa": true
+    },
+    {
+      "login": "l.quere",
+      "email": "lucas.quere@banque-menhir.example",
+      "role": "conseiller",
+      "last_ip": "10.30.24.116",
+      "mfa": true
+    },
+    {
+      "login": "e.guillou",
+      "email": "emma.guillou@banque-menhir.example",
+      "role": "conseiller",
+      "last_ip": "10.32.10.34",
+      "mfa": true
+    },
+    {
+      "login": "h.jaouen",
+      "email": "hugo.jaouen@banque-menhir.example",
+      "role": "conseiller",
+      "last_ip": "10.38.70.42",
+      "mfa": true
+    },
+    {
+      "login": "l.mercier",
+      "email": "lucas.mercier@banque-menhir.example",
+      "role": "conseiller",
+      "last_ip": "10.18.217.137",
+      "mfa": true
+    },
+    {
+      "login": "m.dubois",
+      "email": "marie.dubois@banque-menhir.example",
+      "role": "conseiller",
+      "last_ip": "10.22.156.48",
+      "mfa": true
+    },
+    {
+      "login": "s.moreau",
+      "email": "sarah.moreau@banque-menhir.example",
+      "role": "conseiller",
+      "last_ip": "10.18.237.128",
+      "mfa": true
+    },
+    {
+      "login": "m.bertrand",
+      "email": "marie.bertrand@banque-menhir.example",
+      "role": "conseiller",
+      "last_ip": "10.24.90.84",
+      "mfa": true
+    },
+    {
+      "login": "g.le-goff",
+      "email": "gwen.le-goff@banque-menhir.example",
+      "role": "conseiller",
+      "last_ip": "10.13.140.209",
+      "mfa": true
+    },
+    {
+      "login": "j.laurent",
+      "email": "julie.laurent@banque-menhir.example",
+      "role": "conseiller",
+      "last_ip": "10.17.2.245",
+      "mfa": true
+    }
+  ],
+  "notes": [],
+  "expected": {
+    "PSI-4.1": "pass",
+    "PSI-4.2": "pass",
+    "PSI-4.3": "pass",
+    "PSI-4.4": "pass",
+    "PSI-4.5": "pass",
+    "PSI-4.6": "fail",
+    "PSI-4.7": "fail"
+  },
+  "expected_generic_admins": [
+    "admin",
+    "svc-backup",
+    "p.martin"
+  ]
+}

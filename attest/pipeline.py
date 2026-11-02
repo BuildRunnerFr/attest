@@ -143,9 +143,11 @@ def annotate(shot: Path, insp: dict, status: str, out: Path, net_boxes=()) -> di
 
     # couche 1 : boîte du modèle ∪ masque SAM dilaté (en rédaction, mieux vaut trop que pas assez)
     pii_model = np.zeros((H, W), dtype=bool)
-    for (x1, y1, x2, y2), m in zip(pboxes, pmasks):
+    if pmasks:                                      # une seule dilatation pour l'union des masques SAM
+        union = np.logical_or.reduce(pmasks)
+        pii_model |= np.asarray(Image.fromarray(union.astype(np.uint8) * 255).filter(ImageFilter.MaxFilter(11))) > 127
+    for x1, y1, x2, y2 in pboxes:
         pii_model[max(0, y1 - 3):y2 + 3, max(0, x1 - 3):x2 + 3] = True
-        pii_model |= np.asarray(Image.fromarray(m.astype(np.uint8) * 255).filter(ImageFilter.MaxFilter(11))) > 127
     # couche 2 : filet déterministe
     pii = pii_model.copy()
     for x1, y1, x2, y2 in net_boxes:
@@ -400,7 +402,15 @@ def run(mission, out_dir: Path, remediate: bool = False, approve_all: bool = Fal
                       headers={"Authorization": f"Bearer {config.CHANGE_TOKEN}"})
         trail.log("demo_environment_reset")
 
-    state = {"mission": {k: (str(v) if isinstance(v, Path) else v) for k, v in asdict(mission).items()},
+    def portable(v):                     # jamais de chemin absolu (nom d'utilisateur, arborescence locale)
+        if isinstance(v, Path):
+            try:
+                return str(v.resolve().relative_to(config.ROOT))
+            except ValueError:
+                return v.name
+        return v
+
+    state = {"mission": {k: portable(v) for k, v in asdict(mission).items()},
              "run_id": out_dir.name, "started": time.strftime("%Y-%m-%d %H:%M"), "lang": config.lang(),
              "backend": llm.BACKEND, "models": {"reason": llm.model_for(False), "code": llm.model_for(True),
                                                  "segmentation": "sam-3.1"},

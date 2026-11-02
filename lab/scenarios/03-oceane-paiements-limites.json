@@ -1,0 +1,100 @@
+{
+  "id": "03-oceane-paiements-limites",
+  "label": "Passerelle de paiements, valeurs aux limites",
+  "brand": "Crédit Océane · PAY-GW",
+  "entity": "Crédit Océane (fictif)",
+  "system": "Passerelle de paiements",
+  "tests": "Valeurs exactement aux seuils (12, 1, 15) : conformes. Seul le MFA utilisateurs manque.",
+  "security": {
+    "mfa_admin": true,
+    "mfa_users": false,
+    "password_min_length": 12,
+    "password_require_complexity": true,
+    "lockout_threshold": 1,
+    "session_timeout_minutes": 15,
+    "admin_audit_log": true
+  },
+  "users": [
+    {
+      "login": "m.roux",
+      "email": "maxime.roux@credit-oceane.example",
+      "role": "admin",
+      "last_ip": "10.27.245.207",
+      "mfa": true
+    },
+    {
+      "login": "m.bonnet",
+      "email": "maxime.bonnet@credit-oceane.example",
+      "role": "admin",
+      "last_ip": "10.16.150.213",
+      "mfa": true
+    },
+    {
+      "login": "g.lefloch",
+      "email": "gabriel.lefloch@credit-oceane.example",
+      "role": "conseiller",
+      "last_ip": "10.11.76.168",
+      "mfa": false
+    },
+    {
+      "login": "r.jaouen",
+      "email": "romain.jaouen@credit-oceane.example",
+      "role": "conseiller",
+      "last_ip": "10.39.250.93",
+      "mfa": false
+    },
+    {
+      "login": "e.garcia",
+      "email": "emma.garcia@credit-oceane.example",
+      "role": "conseiller",
+      "last_ip": "10.32.248.120",
+      "mfa": false
+    },
+    {
+      "login": "n.tanguy",
+      "email": "nolwenn.tanguy@credit-oceane.example",
+      "role": "conseiller",
+      "last_ip": "10.35.222.143",
+      "mfa": false
+    },
+    {
+      "login": "m.bertrand",
+      "email": "maela.bertrand@credit-oceane.example",
+      "role": "conseiller",
+      "last_ip": "10.20.234.235",
+      "mfa": false
+    },
+    {
+      "login": "j.le-goff",
+      "email": "julie.le-goff@credit-oceane.example",
+      "role": "conseiller",
+      "last_ip": "10.32.132.116",
+      "mfa": false
+    },
+    {
+      "login": "l.bonnet",
+      "email": "lucas.bonnet@credit-oceane.example",
+      "role": "conseiller",
+      "last_ip": "10.36.245.241",
+      "mfa": false
+    },
+    {
+      "login": "c.david",
+      "email": "claire.david@credit-oceane.example",
+      "role": "conseiller",
+      "last_ip": "10.38.255.95",
+      "mfa": false
+    }
+  ],
+  "notes": [],
+  "expected": {
+    "PSI-4.1": "pass",
+    "PSI-4.2": "fail",
+    "PSI-4.3": "pass",
+    "PSI-4.4": "pass",
+    "PSI-4.5": "pass",
+    "PSI-4.6": "pass",
+    "PSI-4.7": "pass"
+  },
+  "expected_generic_admins": []
+}
