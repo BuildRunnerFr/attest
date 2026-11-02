@@ -113,3 +113,11 @@ def test_report_text_is_pseudonymised():
     assert "anne.lefloch" not in out and "a•••@kerlann-banque.example" in out
     assert "10.12.•.•" in out and "4.31" not in out
     assert "FR76 •••• ••••" in out and "7890" not in out
+
+
+def test_no_finding_without_observed_value():
+    """Un script qui conclut « fail » sans valeur constatée (ex. API injoignable) donne « test en échec »."""
+    code = 'import json\nprint(json.dumps({"status": "fail", "observed": None, "expected": "x", "detail": "API KO"}))'
+    assert sandbox.run(code, "http://127.0.0.1:9", "t")["status"] == "error"
+    code = 'import sys\nsys.exit(2)'
+    assert sandbox.run(code, "http://127.0.0.1:9", "t")["status"] == "error"

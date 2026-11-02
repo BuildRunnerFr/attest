@@ -36,7 +36,7 @@ par le propriétaire de la politique (RSSI) et s'applique aux constats.
 | PSI-4.4 | Verrouillage du compte après 5 échecs de connexion au plus (et jamais désactivé). | Moyenne | DORA 9(4)(c) |
 | PSI-4.5 | Expiration des sessions inactives après 15 minutes au plus (et jamais désactivée). | Moyenne | DORA 9(4)(c) |
 | PSI-4.6 | Journalisation de toutes les actions d'administration. | Élevée | RTS 12(2)(c)(i) |
-| PSI-4.7 | Aucun compte générique ou partagé ne dispose de droits d'administration. Les comptes nominatifs suivent la convention `initiale.nom` et une adresse e-mail personnelle. | Élevée | DORA 9(4)(c) ; RTS 21(1)(c) et 21(3) |
+| PSI-4.7 | Aucun compte générique ou partagé ne dispose de droits d'administration. Un compte nominatif a un identifiant de la forme `initiale.nom` (ex. `a.lefloch`) et une adresse e-mail personnelle, généralement `prenom.nom@` (ex. `anne.lefloch@…`) : l'adresse n'a pas à reproduire l'identifiant. Une boîte partagée (`ops-partage@`, `admin@`…) ou un identifiant de fonction (`ops`, `admin`, `root`…) caractérise un compte générique. | Élevée | DORA 9(4)(c) ; RTS 21(1)(c) et 21(3) |
 
 ## 3. Délais de remédiation (politique interne)
 Critique : 30 jours · Élevée : 90 jours · Moyenne : 180 jours · Faible : 365 jours, à compter de la date du rapport.

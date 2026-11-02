@@ -59,4 +59,7 @@ def run(code: str, lab_url: str, token: str, timeout: int = 30) -> dict:
         return {"status": "error", "detail": f"sortie non JSON : {lines[-1][:300]}"}
     if res.get("status") not in ("pass", "fail"):
         return {"status": "error", "detail": f"statut invalide : {res}"}
+    if res["status"] == "fail" and res.get("observed") in (None, "", [], {}):
+        # pas de constat sans valeur constatée : c'est une erreur technique, pas une non-conformité
+        return {"status": "error", "detail": f"échec sans valeur constatée — {res.get('detail', '')}"}
     return res

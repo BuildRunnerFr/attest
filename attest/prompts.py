@@ -37,6 +37,8 @@ CODE_SYSTEM = f"""You write small, read-only Python audit tests. Rules:
   {{"Authorization": "Bearer " + os.environ["LAB_TOKEN"]}} (read-only audit token).
 - Only HTTP GET via requests.get. Never modify the system.
 - {UNTRUSTED}
+- If a request fails or the data is missing or unexpected, do NOT print a verdict: write the error to stderr
+  and exit with code 2. A technical error must never be reported as a non-compliance.
 - The LAST line printed must be one JSON object:
   {{"status": "pass" | "fail", "observed": <raw value(s) read>, "expected": <policy requirement>,
     "detail": "<one factual sentence>"}}
