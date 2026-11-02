@@ -1,0 +1,33 @@
+# Lettre de mission (engagement letter) — tout ce que le rapport affiche sur le périmètre vient d'ici.
+
+[mission]
+id = "AUD-2026-IAM-01"
+title_fr = "Authentification forte et accès à privilèges — KRL-ADM"
+title_en = "Strong authentication and privileged access — KRL-ADM"
+entity = "Banque Kerlann (fictive)"
+system = "KRL-ADM — console d'administration IAM"
+system_criticality = "Supporte des fonctions critiques ou importantes (DORA)"
+environment = "Pré-production de démonstration"
+owner = "DSI — équipe IAM"
+lead_auditor = "A. Auditeur"          # mets ton nom pour la démo
+classification = "C2 — Diffusion restreinte"
+requirement = "exigences/dora_authentification.md"
+lab_url = "http://127.0.0.1:5050"
+
+[scope]
+in = [
+  "Paramètres d'authentification et de session de la console KRL-ADM",
+  "Comptes disposant d'un accès à la console",
+  "Journalisation des actions d'administration",
+]
+out = [
+  "Efficacité intrinsèque des facteurs MFA (robustesse des moyens d'authentification)",
+  "Annuaire central et fédération d'identité",
+  "Contrôles physiques",
+]
+
+[sla_days]   # délais de remédiation par criticité (politique interne)
+critique = 30
+elevee = 90
+moyenne = 180
+faible = 365

@@ -29,12 +29,16 @@ _JS = """() => {
 }"""
 
 
-def capture(url: str, out: Path) -> dict:
+def capture(url: str, out: Path, token: str) -> dict:
     out.parent.mkdir(parents=True, exist_ok=True)
     with sync_playwright() as p:
         browser = p.chromium.launch()
-        page = browser.new_page(viewport={"width": 1100, "height": 640})
-        page.goto(url)
+        page = browser.new_page(viewport={"width": 1100, "height": 640},
+                                extra_http_headers={"Authorization": f"Bearer {token}"})
+        resp = page.goto(url)
+        if resp is None or resp.status != 200:
+            browser.close()
+            raise RuntimeError(f"capture impossible : {url} → HTTP {resp.status if resp else '?'}")
         page.screenshot(path=str(out), full_page=True)
         dom = page.evaluate(_JS)
         browser.close()

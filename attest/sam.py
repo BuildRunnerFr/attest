@@ -86,7 +86,11 @@ def _call_sam(image: Path, boxes, size) -> list[dict]:
 
     if llm.BACKEND == "mock" or not os.getenv("MODEL_API_KEY"):
         from . import mock
+        llm.USAGE.add("sam-3.1 (mock)", "segment", images=1)
         return parse(mock.sam_output(boxes, size))
+
+    import time
+    t0 = time.time()
 
     public = os.getenv("PUBLIC_EVIDENCE_BASE_URL")  # si l'API refuse les data: URL
     image_url = f"{public.rstrip('/')}/{image.parent.name}/{image.name}" if public else llm.data_url(image)
@@ -98,4 +102,5 @@ def _call_sam(image: Path, boxes, size) -> list[dict]:
         ]}],
         metadata={"mask_encoding": "one_bit", "include_confidence": "true"},
     )
+    llm.USAGE.add("sam-3.1", "segment", seconds=time.time() - t0, images=1)
     return parse(r.output_text)

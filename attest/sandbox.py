@@ -39,14 +39,15 @@ def check(code: str) -> None:
                 raise UnsafeCode(f"appel interdit : .{f.attr}()")
 
 
-def run(code: str, lab_url: str, timeout: int = 20) -> dict:
+def run(code: str, lab_url: str, token: str, timeout: int = 30) -> dict:
     """Exécute le script ; il doit imprimer en dernière ligne un JSON {status, observed, expected, detail}."""
     check(code)
     with tempfile.TemporaryDirectory() as d:
         path = os.path.join(d, "check.py")
         with open(path, "w") as f:
             f.write(code)
-        env = {"LAB_URL": lab_url, "PATH": os.environ.get("PATH", ""), "NO_PROXY": "127.0.0.1,localhost"}
+        env = {"LAB_URL": lab_url, "LAB_TOKEN": token, "PATH": os.environ.get("PATH", ""),
+               "NO_PROXY": "127.0.0.1,localhost"}
         p = subprocess.run([sys.executable, "-I", path], capture_output=True, text=True,
                            timeout=timeout, cwd=d, env=env)
     lines = [l for l in p.stdout.strip().splitlines() if l.strip()]
