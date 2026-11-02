@@ -1,0 +1,126 @@
+{
+  "mission": "AUD-2026-IAM-01",
+  "framework_sha256": "a0bd3e6d8a6b1bbe88cd177cdc4d103b2cf02ea475a233f86566871b9bebc8ca",
+  "generated_by": "muse-spark-1.3",
+  "generated_at": "2026-11-02 22:30",
+  "reviewed": true,
+  "review_note": "Passer 'reviewed' à true après relecture par un auditeur.",
+  "controls": [
+    {
+      "id": "C1",
+      "rule": "PSI-4.1",
+      "title": "MFA obligatoire pour les comptes à privilèges",
+      "objective": "L'authentification multifacteur est exigée pour tout compte à privilèges (administrateur).",
+      "test_procedure": "Interroger GET /api/security et vérifier que le champ mfa_admin est à true.",
+      "expected": "mfa_admin = true",
+      "severity": "critique",
+      "references": [
+        "DORA 9(4)(d)",
+        "RTS 21(1)(f)(ii)"
+      ],
+      "risk": "Sans MFA sur les comptes administrateurs, la compromission d'un seul mot de passe permet la prise de contrôle totale du système.",
+      "recommendation": "Activer l'exigence MFA pour les administrateurs via le processus de gestion des changements.",
+      "evidence_page": "/admin/security",
+      "remediation": "config"
+    },
+    {
+      "id": "C2",
+      "rule": "PSI-4.2",
+      "title": "MFA obligatoire pour les utilisateurs du système critique",
+      "objective": "L'authentification multifacteur est exigée pour tous les utilisateurs du système KRL-ADM qui supporte une fonction critique ou importante.",
+      "test_procedure": "Interroger GET /api/security et vérifier que le champ mfa_users est à true.",
+      "expected": "mfa_users = true",
+      "severity": "elevee",
+      "references": [
+        "DORA 9(4)(d)",
+        "RTS 21(1)(f)(ii)"
+      ],
+      "risk": "Sans MFA généralisée sur un système critique, le vol d'identifiants standards expose les fonctions critiques ou importantes.",
+      "recommendation": "Activer l'exigence MFA pour les utilisateurs standards via le processus de gestion des changements.",
+      "evidence_page": "/admin/security",
+      "remediation": "config"
+    },
+    {
+      "id": "C3",
+      "rule": "PSI-4.3",
+      "title": "Complexité et longueur minimale des mots de passe",
+      "objective": "Le mot de passe doit comporter au moins 12 caractères avec exigence de complexité activée.",
+      "test_procedure": "Interroger GET /api/security et vérifier les champs password_min_length et password_require_complexity.",
+      "expected": "password_min_length >= 12 et password_require_complexity = true",
+      "severity": "moyenne",
+      "references": [
+        "DORA 9(4)(d)"
+      ],
+      "risk": "Des mots de passe courts ou simples peuvent être devinés ou cassés par force brute, permettant un accès non autorisé.",
+      "recommendation": "Configurer une longueur minimale de 12 caractères et activer la complexité via le processus de gestion des changements.",
+      "evidence_page": "/admin/security",
+      "remediation": "config"
+    },
+    {
+      "id": "C4",
+      "rule": "PSI-4.4",
+      "title": "Verrouillage des comptes après échecs de connexion",
+      "objective": "Le compte est verrouillé après 5 échecs de connexion au plus et le verrouillage n'est jamais désactivé.",
+      "test_procedure": "Interroger GET /api/security et vérifier que le champ lockout_threshold est compris entre 1 et 5 inclus.",
+      "expected": "lockout_threshold != 0 et lockout_threshold <= 5",
+      "severity": "moyenne",
+      "references": [
+        "DORA 9(4)(c)"
+      ],
+      "risk": "Sans verrouillage, un attaquant peut mener des attaques par force brute ou bourrage d'identifiants sans limite.",
+      "recommendation": "Configurer le seuil de verrouillage à 5 échecs au plus via le processus de gestion des changements.",
+      "evidence_page": "/admin/security",
+      "remediation": "config"
+    },
+    {
+      "id": "C5",
+      "rule": "PSI-4.5",
+      "title": "Expiration des sessions inactives",
+      "objective": "Les sessions inactives expirent après 15 minutes au plus et l'expiration n'est jamais désactivée.",
+      "test_procedure": "Interroger GET /api/security et vérifier que le champ session_timeout_minutes est compris entre 1 et 15 inclus.",
+      "expected": "session_timeout_minutes != 0 et session_timeout_minutes <= 15",
+      "severity": "moyenne",
+      "references": [
+        "DORA 9(4)(c)"
+      ],
+      "risk": "Des sessions inactives persistantes permettent la réutilisation abusive d'un poste déverrouillé ou d'un jeton volé.",
+      "recommendation": "Configurer le délai d'expiration d'inactivité à 15 minutes au plus via le processus de gestion des changements.",
+      "evidence_page": "/admin/security",
+      "remediation": "config"
+    },
+    {
+      "id": "C6",
+      "rule": "PSI-4.6",
+      "title": "Journalisation des actions d'administration",
+      "objective": "Toutes les actions d'administration sont journalisées.",
+      "test_procedure": "Interroger GET /api/security et vérifier que le champ admin_audit_log est à true.",
+      "expected": "admin_audit_log = true",
+      "severity": "elevee",
+      "references": [
+        "RTS 12(2)(c)(i)"
+      ],
+      "risk": "Sans journalisation des actions d'administration, les modifications malveillantes ou erronées sont indétectables et non imputables.",
+      "recommendation": "Activer la journalisation des actions d'administration via le processus de gestion des changements.",
+      "evidence_page": "/admin/security",
+      "remediation": "config"
+    },
+    {
+      "id": "C7",
+      "rule": "PSI-4.7",
+      "title": "Absence de comptes génériques ou partagés administrateurs",
+      "objective": "Aucun compte de rôle admin n'est générique ou partagé et chaque compte nominatif respecte la convention login initiale.nom avec une adresse e-mail personnelle.",
+      "test_procedure": "Interroger GET /api/users et contrôler pour chaque objet de role admin les champs login et email au regard de la convention initiale.nom et de l'absence de compte générique ou partagé.",
+      "expected": "pour tout user avec role = admin : login respecte initiale.nom sans valeur générique et email personnel correspondant",
+      "severity": "elevee",
+      "references": [
+        "DORA 9(4)(c)",
+        "RTS 21(1)(c)",
+        "RTS 21(3)"
+      ],
+      "risk": "Un compte d'administration générique ou partagé empêche l'imputabilité et augmente le risque d'usage non autorisé et de fuite de privilèges.",
+      "recommendation": "Supprimer ou désactiver les comptes administrateurs génériques et renommer les comptes nominatifs selon la convention via le processus de gestion des changements.",
+      "evidence_page": "/admin/users",
+      "remediation": "manual"
+    }
+  ]
+}
