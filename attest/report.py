@@ -73,6 +73,9 @@ figcaption{font-size:12px;color:var(--mute);margin-top:6px}
 details{margin-top:12px}summary{cursor:pointer;color:var(--mute);font-size:12.5px}
 details pre{background:#16191f;color:#e5e7eb;padding:12px;border-radius:8px;overflow:auto;font:12px/1.5 ui-monospace,Menlo,monospace}
 .compact .bd{padding:12px 16px}
+blockquote{margin:8px 0 0;padding:6px 10px;border-left:3px solid var(--line);color:var(--mute);font-size:12.5px;font-style:italic}
+.tb{display:inline-block;font-size:11px;font-weight:600;border-radius:4px;padding:1px 7px;background:#eef1f5;color:var(--navy)}
+.tb.document,.tb.interview{background:#fdf3e1;color:#8a5a00}.tb.rejected{background:#fde8e8;color:var(--ko)}
 .small{font-size:12.5px;color:var(--mute)}
 .hash{font:11.5px ui-monospace,Menlo,monospace;color:var(--mute);word-break:break-all}
 .alert{border:1px solid #f1c27d;background:#fff8eb;border-radius:8px;padding:10px 14px;margin:12px 0;font-size:13.5px}
@@ -117,9 +120,13 @@ _IPV4 = re.compile(r"\b(\d{1,3})\.(\d{1,3})\.\d{1,3}\.\d{1,3}\b")
 _IBAN = re.compile(r"\b([A-Z]{2}\d{2})(?: ?[A-Z0-9]{4}){3,7}(?: ?[A-Z0-9]{1,3})?\b")
 
 
+_SECRET = re.compile(r"(?i)((?:password|passwd|secret|api_key|token)\w*\s*=\s*\\?[\"'])([^\"'\\]{4,})(\\?[\"'])")
+
+
 def redact(s: str) -> str:
     """Pseudonymise les données personnelles dans le texte distribué (la piste d'audit, à accès
     restreint, conserve les valeurs brutes pour leur valeur probante)."""
+    s = _SECRET.sub(lambda m: f"{m.group(1)}{m.group(2)[:2]}••••{m.group(3)}", s)
     s = _EMAIL.sub(lambda m: f"{m.group(1)}•••@{m.group(2)}", s)
     s = _IPV4.sub(lambda m: f"{m.group(1)}.{m.group(2)}.•.•", s)
     return _IBAN.sub(lambda m: f"{m.group(1)} •••• ••••", s)
@@ -189,8 +196,11 @@ def card(en):
                 f'<div class="ev">{figure(en.get("evidence_before"), t("f.before"))}</div>{script}</div></div>')
 
     detail = redact(str(before.get("detail", "")))
+    quote = (f'<blockquote>« {e(c["quote"])} »</blockquote>' if c.get("quote") else "")
+    source = (f'<br><span class="small">{e(t("f.threshold"))}{colon()}{e(c["threshold_source"])}</span>'
+              if c.get("threshold_source") else "")
     return (f'<div class="card">{head}<div class="bd"><div class="c4">'
-            f'<div><h4>{e(t("f.criteria"))}</h4><p>{e(c["objective"])}<br><span class="small">{e(c["rule"])} · {e(refs)}</span></p></div>'
+            f'<div><h4>{e(t("f.criteria"))}</h4><p>{e(c["objective"])}<br><span class="small">{e(c["rule"])} · {e(refs)}</span>{source}</p>{quote}</div>'
             f'<div><h4>{e(t("f.condition"))}</h4><p>{e(t("f.observed"))}{colon()}<code class="obs">{e(compact(before.get("observed", "")))}</code><br>'
             f'{e(t("f.expected"))}{colon()}<code class="obs">{e(compact(before.get("expected", c.get("expected", ""))))}</code><br>'
             f'<span class="small">{e(detail)}</span></p></div>'
@@ -239,6 +249,24 @@ def key_messages(lang, total, n, sev, closed, still_open, review) -> list:
     return out
 
 
+def coverage(state: dict) -> str:
+    """Annexe : ce que l'interprétation du référentiel a retenu, et surtout ce qu'Attest N'A PAS testé."""
+    it = state.get("interpretation")
+    if not it:
+        return ""
+    k = it["counts"]
+    rows = "".join(
+        f'<tr><td class="mono">{e(r["ref"])}</td><td>« {e(r["quote"][:220])} »</td>'
+        f'<td><span class="tb {"rejected" if not r["quote_verified"] else r["testability"]}">'
+        f'{e(t("cov.rejected") if not r["quote_verified"] else t("cov." + r["testability"]))}</span></td>'
+        f'<td>{len(r["controls"])}</td><td class="small">{e(r["why"])}</td></tr>' for r in it["requirements"])
+    summary = t("cov.summary").format(n=k["requirements"], a=k["automated"], d=k["document"], i=k["interview"],
+                                      r=k["rejected"], c=k["controls"])
+    return (f'<h3>{e(t("a.coverage"))}</h3><p class="small">{e(summary)}</p><div class="tbl"><table><tr>'
+            f'<th>Réf.</th><th>{e(t("cov.quote"))}</th><th>{e(t("cov.test"))}</th><th>{e(t("a.control"))}</th>'
+            f'<th></th></tr>{rows}</table></div>')
+
+
 def write(state: dict, out: Path):
     m = state["mission"]
     entries = state.get("entries", [])
@@ -278,12 +306,14 @@ def write(state: dict, out: Path):
 
     # ---- 2. périmètre et méthode
     cat = state.get("catalogue", {})
-    cat_txt = (t("cat.reviewed") if cat.get("reviewed") else t("cat.planned") if cat.get("source") == "planned"
-               else t("cat.reused")) + (f" · {cat.get('path', '')}" if cat else "")
+    cat_txt = ((t("cat.reviewed") + (f" ({cat['reviewer']})" if cat.get("reviewer") else "")) if cat.get("reviewed")
+               else t("cat.planned") if cat.get("source") == "planned" else t("cat.reused")) \
+        + (f" · {cat.get('path', '')}" if cat else "")
     kv = [("m.mission", m["id"]), ("m.entity", m["entity"]), ("m.system", m["system"]),
           ("m.crit", m["system_criticality"]), ("m.env", m["environment"]), ("m.owner", m["owner"]),
           ("m.auditor", m["lead_auditor"]), ("m.date", state["started"]),
-          ("m.framework", "DORA art. 9(4) · RTS (UE) 2024/1774 art. 12, 21 · PSI-4"), ("m.catalogue", cat_txt)]
+          ("m.framework", m.get("framework_label") or "DORA art. 9(4) · RTS (UE) 2024/1774 art. 12, 21 · PSI-4"),
+          ("m.target", state.get("target_label", "")), ("m.catalogue", cat_txt)]
     s2 = (f'<section id="s2"><h2>{e(t("s2"))}</h2><dl class="kv">'
           + "".join(f"<dt>{e(t(k))}</dt><dd>{e(v)}</dd>" for k, v in kv) + "</dl>"
           f'<div class="two"><div><h3>{e(t("m.in"))}</h3><ul>' + "".join(f"<li>{e(x)}</li>" for x in m["scope_in"]) + "</ul></div>"
@@ -354,7 +384,7 @@ def write(state: dict, out: Path):
                   f'<th>{e(t("f.approved"))}</th><th>Mode</th><th>{e(t("m.date"))}</th></tr>{dec}</table></div>' if dec else "")
                + f'<h3>{e(t("a.guards"))}</h3><ul>' + "".join(f"<li>{e(x)}</li>" for x in t("a.guards_list")) + "</ul>"
                f'<h3>{e(t("a.integrity"))}</h3><p class="small">{e(t("a.integrity_text"))}</p>'
-               f'<p class="hash">{e(state.get("trail_head", "…"))}</p>{journal}</section>')
+               f'<p class="hash">{e(state.get("trail_head", "…"))}</p>{journal}{coverage(state)}</section>')
 
     live = f'<span class="live"></span>{e(t("running"))} · ' if running else ""
     refresh = '<meta http-equiv="refresh" content="3">' if running else ""

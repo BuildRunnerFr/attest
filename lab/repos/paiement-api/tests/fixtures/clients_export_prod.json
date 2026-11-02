@@ -1,0 +1,37 @@
+{
+  "export": "production",
+  "date": "2026-09-30",
+  "source": "base clients paiement (prod)",
+  "clients": [
+    {
+      "nom": "Claire Morel",
+      "email": "claire.morel@kerlann-banque.example",
+      "iban": "FR23 2561 3518 7598 0976 0773 923",
+      "plafond_virement_eur": 3000
+    },
+    {
+      "nom": "Erwan Kerbrat",
+      "email": "erwan.kerbrat@kerlann-banque.example",
+      "iban": "FR33 8877 8914 5968 2249 7764 183",
+      "plafond_virement_eur": 10000
+    },
+    {
+      "nom": "Nolwenn Jaouen",
+      "email": "nolwenn.jaouen@kerlann-banque.example",
+      "iban": "FR72 7434 3868 7641 9592 5965 810",
+      "plafond_virement_eur": 10000
+    },
+    {
+      "nom": "Hugo Riou",
+      "email": "hugo.riou@kerlann-banque.example",
+      "iban": "FR80 2058 0245 1470 5506 7065 011",
+      "plafond_virement_eur": 10000
+    },
+    {
+      "nom": "Pauline Tanguy",
+      "email": "pauline.tanguy@kerlann-banque.example",
+      "iban": "FR68 7426 2990 4837 1194 2478 260",
+      "plafond_virement_eur": 5000
+    }
+  ]
+}

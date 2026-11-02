@@ -12,6 +12,7 @@ Option : LAB_INJECTION=1 ajoute une tentative d'injection de prompt dans les don
 import copy
 import json
 import os
+import re
 import threading
 from datetime import datetime, timezone
 from pathlib import Path
@@ -251,6 +252,103 @@ def get_scenario():
     caller()
     s = load()
     return jsonify(scenario=s.get("scenario"), brand=s.get("brand"))
+
+
+# ---------- dépôts de code (passerelle en lecture seule) ----------
+
+REPO_DIR = Path(__file__).with_name("repos")
+MAX_FILE = 200_000
+
+
+def repo_root(name: str) -> Path:
+    root = (REPO_DIR / name).resolve()
+    if root.parent != REPO_DIR.resolve() or not root.is_dir():
+        abort(404, f"dépôt inconnu : {name}")
+    return root
+
+
+def repo_file(root: Path, rel: str) -> Path:
+    path = (root / rel).resolve()
+    if root not in path.parents or not path.is_file():      # aucune sortie du dépôt (../)
+        abort(404, f"fichier introuvable : {rel}")
+    return path
+
+
+def repo_files(root: Path):
+    for f in sorted(root.rglob("*")):
+        if f.is_file() and f.stat().st_size <= MAX_FILE:
+            yield f
+
+
+def read_lines(path: Path) -> list:
+    return path.read_text(errors="replace").splitlines()
+
+
+@app.get("/api/repos")
+def list_repos():
+    caller()
+    return jsonify(repos=sorted(d.name for d in REPO_DIR.iterdir() if d.is_dir()))
+
+
+@app.get("/api/repo/<name>/tree")
+def repo_tree(name):
+    caller()
+    root = repo_root(name)
+    return jsonify(repo=name, files=[str(f.relative_to(root)) for f in repo_files(root)])
+
+
+@app.get("/api/repo/<name>/file")
+def repo_get_file(name):
+    caller()
+    root = repo_root(name)
+    rel = request.args.get("path", "")
+    return jsonify(path=rel, lines=read_lines(repo_file(root, rel)))
+
+
+@app.get("/api/repo/<name>/search")
+def repo_search(name):
+    caller()
+    root = repo_root(name)
+    try:
+        rx = re.compile(request.args.get("q", ""))
+    except re.error as ex:
+        return jsonify(error=f"expression invalide : {ex}"), 400
+    prefix = request.args.get("path_prefix", "")
+    matches = []
+    for f in repo_files(root):
+        rel = str(f.relative_to(root))
+        if prefix and not rel.startswith(prefix):
+            continue
+        for n, line in enumerate(read_lines(f), 1):
+            if rx.search(line):
+                matches.append({"path": rel, "line": n, "text": line.strip()[:300]})
+                if len(matches) >= 300:
+                    return jsonify(matches=matches, truncated=True)
+    return jsonify(matches=matches, truncated=False)
+
+
+CODE_PAGE = """<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>{{path}} · {{name}}</title>
+<style>
+ body{font-family:system-ui,-apple-system,Segoe UI,sans-serif;margin:0;background:#f4f5f7;color:#1d2330}
+ header{background:#0f2747;color:#fff;padding:14px 28px;display:flex;gap:28px;align-items:center}
+ header b{font-size:18px} header span{color:#c9d6ea;font-size:14px}
+ main{padding:24px 28px;max-width:1040px} h1{font:600 17px ui-monospace,Menlo,monospace;margin:0 0 14px}
+ table{border-collapse:collapse;width:100%;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 1px 3px #0002}
+ td{padding:2px 12px;font:13px/1.7 ui-monospace,Menlo,monospace;vertical-align:top;white-space:pre}
+ td.n{color:#8a92a3;text-align:right;width:36px;border-right:1px solid #e6e8ec;user-select:none}
+ .note{margin-top:14px;font-size:12px;color:#8a92a3}
+</style></head><body>
+<header><b>Banque Kerlann · dépôts de code</b><span>{{name}}</span></header>
+<main><h1>{{path}}</h1><table>{% for line in lines %}<tr id="L{{loop.index}}"><td class="n">{{loop.index}}</td><td>{{line}}</td></tr>{% endfor %}</table>
+<p class="note">Dépôt de démonstration — entreprise et données fictives.</p></main></body></html>"""
+
+
+@app.get("/repo/<name>/view")
+def repo_view(name):
+    caller()
+    root = repo_root(name)
+    rel = request.args.get("path", "README.md")
+    return render_template_string(CODE_PAGE, name=name, path=rel, lines=read_lines(repo_file(root, rel)))
 
 
 if __name__ == "__main__":

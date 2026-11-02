@@ -35,6 +35,11 @@ class Usage:
         self.by_task = defaultdict(lambda: {"calls": 0, "input": 0, "output": 0})
         self.estimated = BACKEND == "mock"
 
+    def reset(self):
+        with self._lock:
+            self.by_model.clear()
+            self.by_task.clear()
+
     def add(self, model, task, inp=0, out=0, seconds=0.0, images=0):
         with self._lock:
             m = self.by_model[model]

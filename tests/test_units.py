@@ -113,6 +113,9 @@ def test_report_text_is_pseudonymised():
     assert "anne.lefloch" not in out and "a•••@kerlann-banque.example" in out
     assert "10.12.•.•" in out and "4.31" not in out
     assert "FR76 •••• ••••" in out and "7890" not in out
+    import json
+    out = redact(json.dumps({"text": 'DB_PASSWORD = "Azerty123!"  # TODO'}))     # guillemets échappés (JSON)
+    assert "Azerty123" not in out and "Az••••" in out
 
 
 def test_no_finding_without_observed_value():

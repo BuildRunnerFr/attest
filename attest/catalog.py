@@ -14,7 +14,7 @@ from pathlib import Path
 from . import config, llm, prompts
 from .trail import sha256_text
 
-API_DOC = (config.ROOT / "lab" / "API.md").read_text()
+API_DOC = (config.ROOT / "lab" / "API.md").read_text()      # cible par défaut (console IAM)
 
 _SEV_ALIASES = {
     "critique": "critique", "critical": "critique",
@@ -35,7 +35,7 @@ def _ascii(s: str) -> str:
     return unicodedata.normalize("NFKD", str(s)).encode("ascii", "ignore").decode().lower().strip()
 
 
-def normalize(controls: list) -> list:
+def normalize(controls: list, default_page: str = "/admin/security") -> list:
     out = []
     for i, c in enumerate(controls, 1):
         c = dict(c)
@@ -44,7 +44,7 @@ def normalize(controls: list) -> list:
         refs = c.get("references") or []
         c["references"] = [refs] if isinstance(refs, str) else list(refs)
         c["remediation"] = "manual" if _ascii(c.get("remediation", "config")).startswith("man") else "config"
-        page = str(c.get("evidence_page") or "/admin/security")
+        page = str(c.get("evidence_page") or default_page)
         c["evidence_page"] = page if page.startswith("/") else "/" + page
         for k in ("title", "objective", "test_procedure", "expected", "risk", "recommendation", "rule"):
             c[k] = str(c.get(k, "")).strip()
@@ -53,7 +53,9 @@ def normalize(controls: list) -> list:
 
 
 def load_or_plan(mission, trail, replan: bool = False) -> tuple[list, dict]:
-    framework_sha = sha256_text(mission.requirement + API_DOC + config.lang())
+    from . import targets
+    doc = targets.api_doc(mission.target)
+    framework_sha = sha256_text(mission.requirement + doc + config.lang())
     path = _dir("controls") / f"{mission.id}.{config.lang()}.json"
     if path.exists() and not replan:
         data = json.loads(path.read_text())
@@ -64,9 +66,9 @@ def load_or_plan(mission, trail, replan: bool = False) -> tuple[list, dict]:
                                       "path": str(path.relative_to(config.ROOT))}
 
     txt = llm.ask("plan", prompts.PLAN_SYSTEM,
-                  prompts.PLAN_USER.format(requirement=mission.requirement, api_doc=API_DOC,
+                  prompts.PLAN_USER.format(requirement=mission.requirement, api_doc=doc,
                                            lang=config.lang_name()))
-    controls = normalize(llm.extract_json(txt))
+    controls = normalize(llm.extract_json(txt), targets.get(mission.target)["default_page"])
     data = {"mission": mission.id, "framework_sha256": framework_sha,
             "generated_by": llm.model_for(False), "generated_at": time.strftime("%Y-%m-%d %H:%M"),
             "reviewed": False,
@@ -80,18 +82,22 @@ def load_or_plan(mission, trail, replan: bool = False) -> tuple[list, dict]:
 
 # ---------- bibliothèque de scripts ----------
 
-def script_key(control: dict) -> str:
+def _safe(rule: str) -> str:
+    return "".join(ch if ch.isalnum() or ch in ".-" else "_" for ch in rule)[:40]
+
+
+def script_key(control: dict, doc: str = API_DOC) -> str:
     spec = {k: control.get(k) for k in ("rule", "objective", "expected", "test_procedure", "evidence_page")}
-    return sha256_text(json.dumps(spec, sort_keys=True, ensure_ascii=False) + API_DOC)[:12]
+    return sha256_text(json.dumps(spec, sort_keys=True, ensure_ascii=False) + doc)[:12]
 
 
-def library_get(control: dict) -> str | None:
-    p = _dir("library") / f"{control['rule']}-{script_key(control)}.py"
+def library_get(control: dict, doc: str = API_DOC) -> str | None:
+    p = _dir("library") / f"{_safe(control['rule'])}-{script_key(control, doc)}.py"
     return p.read_text() if p.exists() else None
 
 
-def library_put(control: dict, code: str):
-    p = _dir("library") / f"{control['rule']}-{script_key(control)}.py"
+def library_put(control: dict, code: str, doc: str = API_DOC):
+    p = _dir("library") / f"{_safe(control['rule'])}-{script_key(control, doc)}.py"
     header = (f"# Attest — test {control['rule']} ({control['title']})\n"
               f"# Écrit par {llm.model_for(True)} le {time.strftime('%Y-%m-%d')} — à relire avant validation.\n")
     p.write_text(code if code.startswith("# Attest") else header + code)

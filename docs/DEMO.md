@@ -11,21 +11,22 @@ export ATTEST_LANG=en ATTEST_AUDITOR="<your name>" ATTEST_APPROVER="IAM owner"
 python -m attest run --reset-lab --remediate --approve-all --out runs/warmup   # warm-up: caches programme + scripts
 ```
 
-Arrange the screen: terminal on the left, the browser on the right with `runs/demo/report.html` ready to open.
+Also start the Studio: `python -m attest.studio` (http://127.0.0.1:8000).
+Arrange the screen: terminal on the left, the browser on the right.
 Record the live run once at normal speed; speed up the waiting parts in editing.
 
 ## Script
 
 | Time | Screen | Voice-over |
 |---|---|---|
-| 0:00–0:15 | Report filling live, red rows outlined, e-mails masked | "Banks prove DORA compliance with screenshots and spreadsheets. Attest audits a system in about a minute — the way an auditor is required to." |
-| 0:15–0:35 | Engagement letter + framework file | "Attest takes the regulation — DORA article 9, the technical standard on access control — and our internal policy, and Muse Spark writes the audit work programme." |
-| 0:35–1:10 | `python -m attest run --reset-lab --remediate --fresh --out runs/demo`; report refreshing | "For each control, Muse Spark writes a read-only test. The verdict comes from that script, never from the model. Then it reads the screenshot to corroborate it, and SAM 3.1 outlines the proving rows and masks every e-mail and IP before the evidence leaves the system." |
-| 1:10–1:50 | Change request in the terminal, type `y` | "Fixing is not the auditor's job. Attest drafts a minimal change request; the system owner approves it — here, me as IAM owner. It is applied with a separate change account, logged by the system, and re-tested with the same script." |
-| 1:50–2:10 | Opinion moves Unsatisfactory → Needs improvement; F-03 action plan | "Five findings closed and verified. The shared admin account is not something you PATCH: it becomes an action plan with an owner and a deadline." |
-| 2:10–2:35 | Edit a screenshot, run `python -m attest verify runs/demo` → tampering detected; optional injection banner | "Every event and file is sealed in a hash chain. Change one pixel of the evidence and verification fails. Text on the audited system that tries to instruct the AI is ignored and reported." |
-| 2:35–2:55 | README table of Meta models, `ATTEST_BACKEND=local`, annex C cost | "Muse Spark plans, codes and reviews evidence. SAM 3.1 makes the evidence precise and private. And with Muse Glimmer the whole agent runs inside the bank — because sending audit evidence to an external API is itself a DORA third-party risk. This run cost a few cents." |
-| 2:55–3:00 | Logo / repo URL | "Attest. Audits that test, not read." |
+| 0:00–0:15 | Report filling live: red rows outlined, e-mails masked | "Banks prove DORA compliance with screenshots and spreadsheets. Attest audits a system in about a minute — the way an auditor is required to." |
+| 0:15–0:45 | Attest Studio: tick DORA 9(4), RTS 21 and the internal policy, pick the IAM console, *Draft the work programme* | "Pick the regulation, pick the system. Muse Spark reads the text and drafts the audit programme — and every control must quote the article word for word. The quote is checked by code; if it is not in the text, the control is rejected." |
+| 0:45–1:00 | Review page: verified quotes, threshold sources, "document review / interview" badges; type your name, approve | "DORA is principle-based, so every threshold says where it comes from: our policy, or a public standard flagged as a proposal. What cannot be tested automatically is listed as not covered. Nothing runs until an auditor approves." |
+| 1:00–1:35 | Live report: tests, screenshots, SAM outlines, masked personal data | "Each control becomes a read-only test; the verdict comes from that script, never from the model. Muse Spark reads the screenshot to corroborate, and SAM 3.1 outlines the proving rows and masks personal data — with a deterministic safety net, because privacy cannot depend on a model's recall." |
+| 1:35–2:05 | Studio again: RTS 16 + secure-development policy, target = code repository; findings with outlined lines and masked secrets | "Same agent, another target: a payment microservice. Hard-coded secrets, TLS verification off, MD5 passwords, a production export in the test data — each finding points at the exact lines, and the secrets themselves are masked in the evidence." |
+| 2:05–2:25 | CLI remediation: change request, type `y`; re-test green; shared account → action plan | "Fixing is not the auditor's job. Attest drafts the change, the system owner approves it, it is logged and re-tested. A shared admin account is an ownership decision, so it becomes an action plan." |
+| 2:25–2:45 | Evaluation scorecard (8 fictitious banks) + `attest verify` on an edited screenshot | "We do not train the model, we measure the agent: 56 checks on eight fictitious banks with known answers. And every piece of evidence is sealed in a hash chain — edit one pixel and verification fails." |
+| 2:45–3:00 | README table of Meta models, `ATTEST_BACKEND=local`, annex C cost | "Muse Spark plans, codes and reviews evidence; SAM 3.1 makes it precise and private; Muse Glimmer runs it all inside the bank. About thirteen cents an audit. Attest: audits that test, not read." |
 
 ## Fallbacks
 

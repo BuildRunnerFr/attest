@@ -25,10 +25,13 @@ class Mission:
     scope_in: list = field(default_factory=list)
     scope_out: list = field(default_factory=list)
     sla_days: dict = field(default_factory=lambda: dict(DEFAULT_SLA))
+    target: str = "iam-console"
+    framework_label: str = ""
+    requirement_text: str | None = None          # texte déposé dans Attest Studio (sans fichier)
 
     @property
     def requirement(self) -> str:
-        return self.requirement_path.read_text()
+        return self.requirement_text if self.requirement_text is not None else self.requirement_path.read_text()
 
 
 def lang() -> str:
@@ -54,6 +57,8 @@ def load_mission(path: Path, requirement_override: Path | None = None) -> Missio
         lab_url=os.getenv("LAB_URL", m.get("lab_url", "http://127.0.0.1:5050")).rstrip("/"),
         scope_in=scope.get("in", []), scope_out=scope.get("out", []),
         sla_days={**DEFAULT_SLA, **data.get("sla_days", {})},
+        target=m.get("target", "iam-console"),
+        framework_label=m.get("framework_label", "DORA art. 9(4) · RTS (UE) 2024/1774 art. 12, 21 · PSI-4"),
     )
 
 

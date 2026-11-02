@@ -47,6 +47,8 @@ personal data spotted by the AI vs masked in the end, injection attempts flagged
 | Mock (pipeline sanity check, CI) | 56 | 100 % | 0 | 0 | 50 % / 100 % | 1/1 | — |
 | Muse Spark 1.3 + SAM 3.1 | *to be filled from `scorecard.md` after the first real run* | | | | | | |
 
+The code-repository target (Attest Studio) is not yet part of this set; the next step is a compliant twin of `paiement-api` with labelled flaws, scored the same way.
+
 Known weaknesses found so far on real runs (see [`examples/README.md`](../examples/README.md)): IP-address boxes drawn
 too short by the model (caught by the deterministic safety net), and an over-strict reading of an ambiguous policy rule
 (caught by human review, rule clarified).

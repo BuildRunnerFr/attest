@@ -2,7 +2,7 @@
 
 Le DOM sert à deux choses, jamais à fournir une réponse au modèle :
 - FILET DE SÉCURITÉ : toute donnée personnelle reconnue par expression régulière dans le texte de la
-  page (e-mail, IPv4, IBAN, téléphone) est masquée, même si Muse Spark + SAM l'ont ratée ;
+  page (e-mail, IPv4, IBAN, téléphone, nom dans des données structurées, secret) est masquée, même si Muse Spark + SAM l'ont ratée ;
 - MESURE : ces mêmes positions servent à mesurer ce que le modèle a repéré seul.
 """
 from pathlib import Path
@@ -10,7 +10,11 @@ from pathlib import Path
 from playwright.sync_api import sync_playwright
 
 _JS = r"""() => {
-  const out = {rows: {}, users: {}, pii: [], has_note: !!document.querySelector('p.inj')};
+  const out = {rows: {}, users: {}, lines: {}, pii: [], has_note: !!document.querySelector('p.inj')};
+  document.querySelectorAll('tr[id^="L"]').forEach(tr => {
+    const r = tr.getBoundingClientRect();
+    out.lines[tr.id.slice(1)] = [r.left, r.top, r.right, r.bottom].map(Math.round);
+  });
   document.querySelectorAll('tr[id^="row-"]').forEach(tr => {
     const r = tr.getBoundingClientRect();
     out.rows[tr.id.slice(4)] = [r.left, r.top, r.right, r.bottom].map(Math.round);
@@ -24,6 +28,8 @@ _JS = r"""() => {
     ["ipv4", /\b(?:\d{1,3}\.){3}\d{1,3}\b/g],
     ["iban", /\b[A-Z]{2}\d{2}(?: ?[A-Z0-9]{4}){3,7}(?: ?[A-Z0-9]{1,3})?\b/g],
     ["phone", /(?:\+33[ .]?|\b0)[1-9](?:[ .-]?\d{2}){4}\b/g],
+    ["secret", /(?:password|passwd|secret|api_key|token)\w*\s*=\s*["']([^"']{4,})["']/gi],
+    ["name", /"(?:nom|prenom|prénom|name|first_?name|last_?name|full_?name)"\s*:\s*"([^"]{2,})"/gi],
   ];
   const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
   let node;
@@ -34,12 +40,14 @@ _JS = r"""() => {
       re.lastIndex = 0;
       let m;
       while ((m = re.exec(text))) {
+        const start = m[1] ? m.index + m[0].indexOf(m[1]) : m.index;   // secret : seulement la valeur
+        const len = m[1] ? m[1].length : m[0].length;
         const range = document.createRange();
-        range.setStart(node, m.index);
-        range.setEnd(node, m.index + m[0].length);
+        range.setStart(node, start);
+        range.setEnd(node, start + len);
         const r = range.getBoundingClientRect();
         if (r.width > 0 && r.height > 0)
-          out.pii.push({kind, text: m[0], box: [r.left, r.top, r.right, r.bottom].map(Math.round)});
+          out.pii.push({kind, text: m[1] || m[0], box: [r.left, r.top, r.right, r.bottom].map(Math.round)});
       }
     }
   }

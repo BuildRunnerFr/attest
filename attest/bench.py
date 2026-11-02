@@ -59,10 +59,11 @@ def run_bench(mission, out_root: Path, only: list | None = None) -> dict:
         print(f"\n=== {sc['id']} — {sc['label']}", flush=True)
         _reset(mission, sc["id"])
         m = dataclasses.replace(mission, entity=sc["entity"], system=sc["system"])
-        c0, n0 = _usage()
+        llm.USAGE.reset()                              # coût propre à ce scénario
         t0 = time.time()
         state = pipeline.run(m, out_root / sc["id"])
         c1, n1 = _usage()
+        c0, n0 = 0.0, 0
         evs = [e["evidence_before"] for e in state["entries"] if e.get("evidence_before")]
         results.append({
             "id": sc["id"], "label": sc["label"], "tests": sc.get("tests", ""), "accounts": len(sc["users"]),

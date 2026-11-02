@@ -12,6 +12,32 @@ that a human owner approves, **re-tests** after the fix, and issues an audit rep
 
 ![Executive summary of an Attest report](docs/img/report-summary.png)
 
+## Attest Studio: pick an article, pick a target, approve, audit
+
+`python -m attest.studio` opens a local web app:
+
+1. **Framework**: tick verified excerpts of DORA (art. 9(3), 9(4)) and of the technical standard RTS 2024/1774
+   (art. 6–7 cryptography, 12 logging, 16 development, 21 access control), add an internal policy, or upload your own
+   text (.md, .txt, .pdf).
+2. **Target**: the IAM admin console, or a **code repository** (a fictitious SEPA payment microservice with realistic
+   flaws: hard-coded secrets, TLS verification disabled, MD5 password hashing, no SAST in CI, unpinned dependencies,
+   a production export in the test fixtures).
+3. **Grounded interpretation** (Muse Spark): every requirement must quote the text **word for word** — the quote is
+   checked by code, and a requirement whose quote cannot be found is rejected. Every threshold says where it comes from
+   (your policy, a named public standard marked *proposal*, or the text). Requirements are triaged into *testable
+   here*, *document review* and *interview*; the report lists what Attest did **not** cover.
+4. **Human approval**: the auditor ticks the controls, adjusts severities and signs. Nothing is tested before that.
+5. **Audit**: the same pipeline runs and the report fills in live.
+
+### Does it interpret DORA correctly?
+
+Not on its own, by design. DORA and its RTS are principle-based: they require "strong authentication" or limiting
+"generic and shared user accounts", never "12 characters" or "15 minutes". Banks translate them into internal policies,
+and that is what Attest tests. Given a policy, Muse Spark turned 7 rules into a faithful work programme on our first real
+run; given an ambiguous rule, a generated test was too strict and human review caught it (see
+[`examples/README.md`](examples/README.md)). Given the regulation alone, thresholds are flagged as proposals to approve.
+Quote verification, testability triage and mandatory approval are there because interpretation is where AI can be wrong.
+
 ## What happens in one run
 
 | Step | What Attest does | Meta model |
@@ -55,7 +81,8 @@ python -m lab.app                         # terminal 1: the audited system (fict
 
 cp .env.example .env                      # terminal 2: add MODEL_API_KEY, or ATTEST_BACKEND=mock
 set -a; source .env; set +a
-python -m attest run --reset-lab                       # read-only audit
+python -m attest.studio                                # web app: http://127.0.0.1:8000
+python -m attest run --reset-lab                       # or the CLI: read-only audit
 python -m attest run --reset-lab --remediate           # + change requests, approved interactively
 python -m attest verify runs/<run-folder>              # integrity check
 ```
@@ -76,9 +103,11 @@ non-compliances, privacy masking and cost. See [docs/EVALUATION.md](docs/EVALUAT
 ## Repository
 
 ```
-attest/          the agent: pipeline, prompts, sandbox, SAM client, evidence, audit trail, report
-lab/             the audited system (fictitious IAM console, read-only and change accounts) and 8 test scenarios
-exigences/       the framework: verified regulation excerpts + internal policy with severities
+attest/          the agent: Studio, grounded interpretation, pipeline, prompts, sandbox, SAM client, evidence,
+                 audit trail, report, evaluation bench
+lab/             the audited systems behind one read-only gateway: fictitious IAM console (read-only and change
+                 accounts), fictitious code repository (lab/repos), and the 8 evaluation scenarios
+exigences/       the framework: verified excerpts of DORA and RTS 2024/1774 (library/) and fictitious internal policies
 mission/         engagement letter (scope, owner, auditor, classification, remediation deadlines)
 controls/        work programmes drafted by AI, kept for auditor review
 library/         test scripts kept for review and replay (continuous control monitoring)
@@ -90,7 +119,8 @@ tests/           unit and end-to-end tests (mock mode, also run in CI)
 
 - Tests read configuration through an API; they do not test the strength of MFA factors themselves.
 - AI-drafted work programmes and scripts must be reviewed by an auditor before they count as validated; the report says so.
-- The audited system is a demo console. Real connectors (Entra ID, Okta, CyberArk, cloud IAM) are the next step.
+- The audited systems are demos behind a read-only gateway. Real connectors (Entra ID, Okta, CyberArk, cloud IAM,
+  GitHub/GitLab) are the next step; adding a target means describing its read-only interface in `attest/targets.py`.
 - Regulation excerpts are quoted from the official English text; check EUR-Lex before external use.
 
 ## Disclosure

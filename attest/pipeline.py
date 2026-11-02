@@ -21,7 +21,7 @@ import numpy as np
 import requests
 from PIL import Image, ImageDraw, ImageFilter
 
-from . import catalog, config, evidence, llm, prompts, report, sam, sandbox
+from . import catalog, config, evidence, llm, prompts, report, sam, sandbox, targets
 from .i18n import t
 from .trail import Trail, sha256_file
 
@@ -43,6 +43,8 @@ def shown(c: dict) -> dict:
 class Ctx:
     def __init__(self, mission, out: Path, trail: Trail, fresh: bool):
         self.mission, self.out, self.trail, self.fresh = mission, out, trail, fresh
+        self.target = targets.get(mission.target)
+        self.doc = targets.api_doc(mission.target)            # interface en lecture seule de la cible
 
     def rel(self, p: Path) -> str:
         return str(p.relative_to(self.out))
@@ -59,18 +61,18 @@ def _safe_run(code: str, ctx) -> dict:
         return {"status": "error", "detail": f"{type(e).__name__}: {e}"}
 
 
-def _write_test(control: dict, error: str | None) -> str:
+def _write_test(control: dict, error: str | None, doc: str) -> str:
     prev = f"\nYOUR PREVIOUS VERSION FAILED WITH:\n{error}\nFix it." if error else ""
     txt = llm.ask("code", prompts.CODE_SYSTEM,
                   prompts.CODE_USER.format(control=json.dumps(shown(control), ensure_ascii=False),
-                                           api_doc=catalog.API_DOC, previous_error=prev),
+                                           api_doc=doc, previous_error=prev),
                   code=True, mock_ctx={"control": control})
     return llm.extract_code(txt)
 
 
 def run_test(e: dict, ctx: Ctx):
     c = e["control"]
-    code = None if ctx.fresh else catalog.library_get(c)
+    code = None if ctx.fresh else catalog.library_get(c, ctx.doc)
     origin, res = "library", None
     if code:
         res = _safe_run(code, ctx)
@@ -80,13 +82,13 @@ def run_test(e: dict, ctx: Ctx):
     if code is None:
         origin, error = "generated", None
         for _ in range(2):                                  # une auto-correction autorisée
-            code = _write_test(c, error)
+            code = _write_test(c, error, ctx.doc)
             res = _safe_run(code, ctx)
             if res["status"] != "error":
-                catalog.library_put(c, code)
+                catalog.library_put(c, code, ctx.doc)
                 break
             error = res["detail"]
-    path = ctx.out / "scripts" / f"{c['id']}_{c['rule']}.py"
+    path = ctx.out / "scripts" / f"{c['id']}_{catalog._safe(c['rule'])}.py"
     path.write_text(code)
     sha = sha256_file(path)
     e["test"] = {"script": ctx.rel(path), "sha256": sha, "origin": origin, "code": code}
@@ -181,10 +183,20 @@ def measure(masks: dict, dom: dict) -> dict:
             "pii_found_by_model": sum(covered(masks["pii_model"], p["box"]) for p in items)}
 
 
+def evidence_page(control: dict, result: dict) -> str:
+    """La page qui prouve le résultat : celle désignée par le test (ex. le fichier fautif d'un dépôt),
+    sinon celle prévue au programme de travail. Toujours un chemin local de la passerelle."""
+    page = str(result.get("evidence_page") or "")
+    if page.startswith("/") and "://" not in page and ".." not in page:
+        return page
+    return control["evidence_page"]
+
+
 def collect_evidence(e: dict, result: dict, phase: str, ctx: Ctx) -> dict:
     c = e["control"]
     raw = ctx.out / "evidence" / f"{c['id']}_{phase}_raw.png"
-    dom = evidence.capture(ctx.mission.lab_url + c["evidence_page"], raw, config.AUDIT_TOKEN)
+    page = evidence_page(c, result)
+    dom = evidence.capture(ctx.mission.lab_url + page, raw, config.AUDIT_TOKEN)
     insp = inspect(c, result, raw, dom)
     final = ctx.out / "evidence" / f"{c['id']}_{phase}.png"
     masks = annotate(raw, insp, result["status"], final,
@@ -193,9 +205,9 @@ def collect_evidence(e: dict, result: dict, phase: str, ctx: Ctx) -> dict:
     sha = sha256_file(final)
     metrics = measure(masks, dom)
     ctx.trail.log("evidence_sealed", control=c["id"], phase=phase, file=ctx.rel(final), sha256=sha,
-                  page=c["evidence_page"], corroborates=insp.get("corroborates"),
+                  page=page, corroborates=insp.get("corroborates"),
                   injection_detected=bool(insp.get("injection_detected")), **metrics)
-    return {"image": ctx.rel(final), "sha256": sha, "inspection": insp, "metrics": metrics,
+    return {"image": ctx.rel(final), "sha256": sha, "inspection": insp, "metrics": metrics, "page": page,
             "ts": time.strftime("%Y-%m-%d %H:%M:%S")}
 
 
@@ -226,15 +238,15 @@ def observe(e: dict, ctx: Ctx, refresh):
 
 # ---------- remédiation ----------
 
-def propose_fix(e: dict) -> dict:
+def propose_fix(e: dict, ctx: Ctx) -> dict:
     c = e["control"]
     prop = llm.extract_json(llm.ask(
         "fix", prompts.FIX_SYSTEM,
         prompts.FIX_USER.format(control=json.dumps(shown(c), ensure_ascii=False),
                                 result=json.dumps(e["before"], ensure_ascii=False),
-                                api_doc=catalog.API_DOC, lang=config.lang_name()),
-        mock_ctx={"control": c}))
-    if c["remediation"] == "manual" or prop.get("type") == "manual":
+                                api_doc=ctx.doc, lang=config.lang_name()),
+        mock_ctx={"control": c, "kind": ctx.target["kind"]}))
+    if c["remediation"] == "manual" or prop.get("type") == "manual" or not ctx.target["remediable"]:
         return {"type": "manual", "actions": prop.get("actions") or [c["recommendation"]],
                 "rationale": prop.get("rationale", c["recommendation"])}
     return {"type": "config", "method": str(prop.get("method", "")).upper(), "path": prop.get("path", ""),
@@ -300,7 +312,7 @@ def remediation(entries: list, ctx: Ctx, approve_all: bool, approver: str) -> li
         sys.exit("Séparation des tâches : l'approbateur des changements ne peut pas être l'auditeur.")
     log(f"{t('log.remediation')} : {len(findings)}")
     with ThreadPoolExecutor(WORKERS) as pool:
-        proposals = list(pool.map(propose_fix, findings))
+        proposals = list(pool.map(lambda e: propose_fix(e, ctx), findings))
 
     interactive = sys.stdin.isatty() and not approve_all
     decisions = []
@@ -388,7 +400,9 @@ def raise_findings(entries: list, mission) -> None:
 
 
 def run(mission, out_dir: Path, remediate: bool = False, approve_all: bool = False,
-        approver: str = "", fresh: bool = False, replan: bool = False, reset_lab: bool = False):
+        approver: str = "", fresh: bool = False, replan: bool = False, reset_lab: bool = False,
+        controls: list | None = None, catalogue_meta: dict | None = None, interpretation: dict | None = None,
+        run_id: str | None = None):
     t0 = time.time()
     preflight(mission)
     for d in ("evidence", "scripts"):
@@ -411,7 +425,8 @@ def run(mission, out_dir: Path, remediate: bool = False, approve_all: bool = Fal
         return v
 
     state = {"mission": {k: portable(v) for k, v in asdict(mission).items()},
-             "run_id": out_dir.name, "started": time.strftime("%Y-%m-%d %H:%M"), "lang": config.lang(),
+             "run_id": run_id or out_dir.name, "started": time.strftime("%Y-%m-%d %H:%M"), "lang": config.lang(),
+             "target": mission.target, "target_label": targets.label(mission.target),
              "backend": llm.BACKEND, "models": {"reason": llm.model_for(False), "code": llm.model_for(True),
                                                  "segmentation": "sam-3.1"},
              "entries": [], "running": True, "decisions": [], "remediation_requested": remediate}
@@ -425,8 +440,15 @@ def run(mission, out_dir: Path, remediate: bool = False, approve_all: bool = Fal
             report.write(state, out_dir)
 
     refresh()
-    controls, cat_meta = catalog.load_or_plan(mission, trail, replan=replan)
+    if controls is None:
+        controls, cat_meta = catalog.load_or_plan(mission, trail, replan=replan)
+    else:                                                  # programme validé dans Attest Studio
+        controls = catalog.normalize(controls, ctx.target["default_page"])
+        cat_meta = catalogue_meta or {"source": "studio"}
+        trail.log("catalogue_validated", controls=len(controls), reviewer=cat_meta.get("reviewer"),
+                  reviewed=cat_meta.get("reviewed", False))
     state["catalogue"] = cat_meta
+    state["interpretation"] = interpretation
     state["entries"] = entries = [{"control": c} for c in controls]
     log(f"{t('log.plan')} : {len(controls)} · {cat_meta['source']}")
     refresh()
@@ -471,7 +493,7 @@ def run(mission, out_dir: Path, remediate: bool = False, approve_all: bool = Fal
               pdf_sha256=sha256_file(pdf) if pdf.exists() else None, result_sha256=sha256_file(result))
     files = sorted(p for p in out_dir.rglob("*") if p.is_file() and p.name not in ("manifest.json", "trail.jsonl"))
     (out_dir / "manifest.json").write_text(json.dumps({
-        "mission": mission.id, "run_id": out_dir.name, "issued_at": time.strftime("%Y-%m-%dT%H:%M:%S"),
+        "mission": mission.id, "run_id": state["run_id"], "issued_at": time.strftime("%Y-%m-%dT%H:%M:%S"),
         "trail_head": trail.head,
         "files": [{"path": ctx.rel(p), "sha256": sha256_file(p)} for p in files]}, indent=2))
     log(f"{t('log.report')} : {html}" + (f" · {pdf.name}" if pdf.exists() else ""))
