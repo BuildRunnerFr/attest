@@ -74,15 +74,13 @@ print(json.dumps({{"status": "pass" if ok else "fail", "observed": {observed},
     if task == "inspect":
         dom, c, res = ctx["dom"], ctx["control"], ctx["result"]
         if c["evidence_page"] == "/admin/users":
-            admin_boxes = [u["box"] for u in dom["users"].values() if u["role"] == "admin"]
-            box = [min(b[0] for b in admin_boxes), min(b[1] for b in admin_boxes),
-                   max(b[2] for b in admin_boxes), max(b[3] for b in admin_boxes)]
+            boxes = [u["box"] for u in dom["users"].values() if u["role"] == "admin"]
             text = "Comptes admin a.lefloch et ops : MFA " + ("Oui" if res["status"] == "pass" else "Non")
         else:
-            box = dom["rows"][c.get("_field", "mfa_users")]
+            boxes = [dom["rows"][c.get("_field", "mfa_users")]]
             text = c["title"]
         return json.dumps({
-            "corroborates": True, "field_text": text, "field_box": _jitter(box),
+            "corroborates": True, "field_text": text, "field_boxes": [_jitter(b) for b in boxes],
             "comment": f"Ligne « {text} » : valeur cohérente avec la lecture API.",
             "pii": [{"text": p["text"], "box": _jitter(p["box"], 3)} for p in dom["pii"]],
         }, ensure_ascii=False)

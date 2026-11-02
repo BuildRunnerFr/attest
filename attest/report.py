@@ -22,7 +22,7 @@ details.req pre{white-space:pre-wrap;font:13px/1.5 ui-monospace,Menlo,monospace;
 .st.fail{background:var(--ko)}.st.pass{background:var(--ok)}.st.error{background:var(--warn)}
 .arrow{color:var(--mute)}
 .obj{color:var(--mute);margin:8px 0 14px}
-.ev{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+.ev{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}@media(max-width:700px){.ev{grid-template-columns:1fr}}
 figure{margin:0}figure img{width:100%;border:1px solid var(--line);border-radius:8px;display:block}
 figcaption{font-size:13px;color:var(--mute);margin-top:6px}
 .fix{margin-top:14px;font-size:14px;background:#f3f7f4;border-left:3px solid var(--ok);padding:10px 12px;border-radius:0 8px 8px 0}

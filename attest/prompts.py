@@ -37,14 +37,15 @@ Coordinates are integer pixels in the image (origin top-left), image size is {w}
 INSPECT_USER = """CONTROL: {control}
 AUTOMATED CHECK RESULT: {result}
 
-1. Does the screenshot corroborate the automated result? Find the exact row/field that proves it.
+1. Does the screenshot corroborate the automated result? Find EVERY row that proves it
+   (e.g. if two admin accounts lack MFA, return both rows). One box per table row, covering the whole row.
 2. List every piece of personal data visible (e-mail addresses, IP addresses, personal names in e-mails)
-   that must be redacted before the evidence goes into an audit report.
+   that must be redacted before the evidence goes into an audit report. One box per cell.
 
 Return:
 {{"corroborates": true|false,
-  "field_text": "<text of the proving row>",
-  "field_box": [x1, y1, x2, y2],
+  "field_text": "<text of the proving row(s)>",
+  "field_boxes": [[x1, y1, x2, y2], ...],
   "comment": "<one sentence, {lang}>",
   "pii": [{{"text": "<value>", "box": [x1, y1, x2, y2]}}]}}"""
 
