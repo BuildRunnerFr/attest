@@ -27,17 +27,26 @@ Every run measures its own tokens and prices them from `pricing.toml` (report, a
 Muse Spark 1.3 **$1.25 / $4.25 per million input / output tokens** (source cited in `pricing.toml`).
 SAM 3.1 price was not found in public sources: fill it in from the Meta console.
 
-Order of magnitude for the 7-control demo, from the size of Attest's own prompts:
+**Measured on the first real run** (2 November 2026, Meta Model API, 7 controls, cached work programme and scripts,
+remediation with interactive approval — see [`examples/rapport-reel-fr`](../examples/rapport-reel-fr/report.html)):
 
-| Scenario | Model calls | Input tokens | Output tokens **(assumption)** | Muse Spark cost |
-|---|---|---|---|---|
-| First engagement: work programme + 7 tests + evidence + 5 change requests + re-tests | ≈ 26 | ≈ 35k + image tokens | 4k–40k (reasoning output varies a lot) | ≈ $0.06–0.21 |
-| Monitoring run: cached programme and scripts, evidence review only | ≈ 7 | ≈ 18k + image tokens | 1k–10k | ≈ $0.03–0.07 |
+| Item | Measured |
+|---|---|
+| Muse Spark 1.3 calls | 18 (12 evidence reviews + 6 change requests) |
+| Tokens | 22,663 input · 25,181 output (reasoning makes output larger than input) |
+| Muse Spark cost | **$0.135** for the whole engagement, ≈ $0.0075 per call |
+| SAM 3.1 | 12 images, 15 s in total; price not public |
+| Wall-clock | 29 s to test and evidence 7 controls · 8 s to re-test 5 fixes · 108 s end to end including about a minute of human approvals |
 
-Image token counts for Muse Spark are not published in the sources consulted; the measured figure in annex C is the reference.
+Estimates for other runs, scaled from those measurements:
+
+| Scenario | Model calls | Muse Spark cost |
+|---|---|---|
+| First engagement, nothing cached: work programme + 7 test scripts + the run above | ≈ 26 | ≈ $0.20 |
+| Monitoring run: cached programme and scripts, evidence review only, no remediation | ≈ 7 | ≈ $0.05 |
 
 **At scale (assumption)**: 150 critical systems × 10 configuration controls, tested monthly = 1,500 control tests a month.
-At $0.005–0.01 per monitoring control test, that is **≈ $8–15 a month** of model cost on the API. With **Muse Glimmer**
+At ≈ $0.0075 per monitoring control test, that is **≈ $11 a month** of model cost on the API. With **Muse Glimmer**
 served internally (30B dense, under 20 GB quantised, runs on a single GPU according to Meta and Nvidia's launch
 communication) the marginal model cost is the GPU time the bank already operates.
 

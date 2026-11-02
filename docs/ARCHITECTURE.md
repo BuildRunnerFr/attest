@@ -37,7 +37,7 @@ With `ATTEST_BACKEND=local`, every Muse Spark box runs on **Muse Glimmer** insid
 |---|---|
 | `attest/catalog.py` | Work programme drafting and caching; script library (replay, regeneration on failure) |
 | `attest/sandbox.py` | Static guard (imports allow-list, no write calls, no exec/eval/open) and isolated execution |
-| `attest/evidence.py` | Authenticated screenshots; DOM ground truth used only to *measure* masking |
+| `attest/evidence.py` | Authenticated screenshots; personal data found in the page text (safety net and measurement) |
 | `attest/sam.py` | SAM 3.1 calls (box prompts) and mask decoding with Meta's `meta-sam-parser` |
 | `attest/pipeline.py` | The three phases, findings, change requests, approvals, re-tests, opinion |
 | `attest/trail.py` | SHA-256 hash chain, manifest, `verify` |
@@ -62,7 +62,7 @@ With `ATTEST_BACKEND=local`, every Muse Spark box runs on **Muse Glimmer** insid
 | Over-privileged agent | Agent changes production on its own | No write capability in tests; changes require human approval, allow-listed route and keys, separate change account, ticket |
 | Auditor approving own fix | Independence breach | Run aborts if approver equals lead auditor |
 | Evidence tampering | Screenshot edited after the fact | SHA-256 chain + manifest; `attest verify` |
-| Personal data leakage in reports | E-mails, IPs in screenshots | Model + SAM masking with safety margin; coverage measured; raw capture deleted |
+| Personal data leakage in reports | E-mails, IPs in screenshots or in test output | Two layers: model + SAM masking, then a deterministic regex safety net on the page text; coverage measured per layer; report text pseudonymised; raw capture deleted |
 | Data leaving the bank | Evidence sent to an external API | Local backend on Muse Glimmer (open weights, Apache 2.0) |
 | Supply-chain / availability of the model API | Rate limits, outages | Retries with backoff; cached work programme and script library keep monitoring runs nearly model-free |
 

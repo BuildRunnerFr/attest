@@ -127,8 +127,12 @@ def field_boxes(insp: dict) -> list:
     return [tuple(int(v) for v in b) for b in boxes if isinstance(b, (list, tuple)) and len(b) == 4]
 
 
-def annotate(shot: Path, insp: dict, status: str, out: Path) -> dict:
-    """Masque les données personnelles puis encadre les lignes probantes (SAM affine les deux)."""
+def annotate(shot: Path, insp: dict, status: str, out: Path, net_boxes=()) -> dict:
+    """Masque les données personnelles puis encadre les lignes probantes (SAM affine les deux).
+
+    Masquage en deux couches : (1) ce que Muse Spark a repéré, affiné par SAM ; (2) un filet
+    déterministe — les données personnelles reconnues dans le texte de la page (net_boxes).
+    La confidentialité ne dépend donc jamais de la seule précision d'un modèle."""
     img = Image.open(shot).convert("RGB")
     W, H = img.size
     fboxes = field_boxes(insp)
@@ -137,11 +141,15 @@ def annotate(shot: Path, insp: dict, status: str, out: Path) -> dict:
     masks = sam.segment_boxes(shot, fboxes + pboxes)
     fmasks, pmasks = masks[:len(fboxes)], masks[len(fboxes):]
 
-    # masquage : boîte du modèle ∪ masque SAM dilaté (en rédaction, mieux vaut trop que pas assez)
-    pii = np.zeros((H, W), dtype=bool)
+    # couche 1 : boîte du modèle ∪ masque SAM dilaté (en rédaction, mieux vaut trop que pas assez)
+    pii_model = np.zeros((H, W), dtype=bool)
     for (x1, y1, x2, y2), m in zip(pboxes, pmasks):
-        pii[max(0, y1 - 3):y2 + 3, max(0, x1 - 3):x2 + 3] = True
-        pii |= np.asarray(Image.fromarray(m.astype(np.uint8) * 255).filter(ImageFilter.MaxFilter(11))) > 127
+        pii_model[max(0, y1 - 3):y2 + 3, max(0, x1 - 3):x2 + 3] = True
+        pii_model |= np.asarray(Image.fromarray(m.astype(np.uint8) * 255).filter(ImageFilter.MaxFilter(11))) > 127
+    # couche 2 : filet déterministe
+    pii = pii_model.copy()
+    for x1, y1, x2, y2 in net_boxes:
+        pii[max(0, y1 - 4):y2 + 4, max(0, x1 - 4):x2 + 4] = True
     if pii.any():
         pii_img = Image.fromarray(pii.astype(np.uint8) * 255)
         pixel = img.resize((max(1, W // 12), max(1, H // 12)), Image.BILINEAR).resize((W, H), Image.NEAREST)
@@ -155,17 +163,20 @@ def annotate(shot: Path, insp: dict, status: str, out: Path) -> dict:
         draw.rounded_rectangle((x1 - 6, y1 - 5, x2 + 6, y2 + 5), radius=6, fill=rgb + (55,),
                                outline=rgb + (255,), width=3)
     Image.alpha_composite(img.convert("RGBA"), overlay).convert("RGB").save(out)
-    return {"pii": pii}
+    return {"pii": pii, "pii_model": pii_model}
 
 
-def measure(pii: np.ndarray, dom: dict) -> dict:
-    """Couverture du masquage mesurée contre le DOM (vérité terrain jamais montrée au modèle)."""
-    covered = []
-    for p in dom.get("pii", []):
-        x1, y1, x2, y2 = p["box"]
-        zone = pii[max(0, y1):y2, max(0, x1):x2]
-        covered.append(float(zone.mean()) if zone.size else 0.0)
-    return {"pii_total": len(covered), "pii_masked": sum(c >= 0.8 for c in covered)}
+def measure(masks: dict, dom: dict) -> dict:
+    """Couverture mesurée sur les données personnelles présentes dans la page (jamais montrées au modèle) :
+    ce que Muse Spark + SAM ont repéré seuls, et ce qui est masqué au final."""
+    def covered(mask, box):
+        x1, y1, x2, y2 = box
+        zone = mask[max(0, y1):y2, max(0, x1):x2]
+        return zone.size > 0 and float(zone.mean()) >= 0.8
+    items = dom.get("pii", [])
+    return {"pii_total": len(items),
+            "pii_masked": sum(covered(masks["pii"], p["box"]) for p in items),
+            "pii_found_by_model": sum(covered(masks["pii_model"], p["box"]) for p in items)}
 
 
 def collect_evidence(e: dict, result: dict, phase: str, ctx: Ctx) -> dict:
@@ -174,10 +185,11 @@ def collect_evidence(e: dict, result: dict, phase: str, ctx: Ctx) -> dict:
     dom = evidence.capture(ctx.mission.lab_url + c["evidence_page"], raw, config.AUDIT_TOKEN)
     insp = inspect(c, result, raw, dom)
     final = ctx.out / "evidence" / f"{c['id']}_{phase}.png"
-    masks = annotate(raw, insp, result["status"], final)
+    masks = annotate(raw, insp, result["status"], final,
+                     net_boxes=[tuple(p["box"]) for p in dom.get("pii", [])])
     raw.unlink()                                   # la capture non masquée n'est pas conservée
     sha = sha256_file(final)
-    metrics = measure(masks["pii"], dom)
+    metrics = measure(masks, dom)
     ctx.trail.log("evidence_sealed", control=c["id"], phase=phase, file=ctx.rel(final), sha256=sha,
                   page=c["evidence_page"], corroborates=insp.get("corroborates"),
                   injection_detected=bool(insp.get("injection_detected")), **metrics)

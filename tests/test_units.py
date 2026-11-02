@@ -90,3 +90,26 @@ def test_trail_detects_tampering(tmp_path):
 def test_extract_json_tolerates_prose():
     assert llm.extract_json('Voici :\n```json\n{"a": [1, 2]}\n```') == {"a": [1, 2]}
     assert llm.extract_json('texte [ {"b": 1} ] fin') == [{"b": 1}]
+
+
+# ---------- confidentialité ----------
+
+def test_safety_net_masks_what_the_model_missed(tmp_path):
+    from PIL import Image
+    from attest.pipeline import annotate, measure
+    shot = tmp_path / "shot.png"
+    Image.new("RGB", (400, 200), "white").save(shot)
+    ip_box = (300, 50, 360, 70)
+    insp = {"field_boxes": [], "pii": [{"text": "10.12.4.31", "box": [340, 50, 360, 70]}]}   # boîte trop courte
+    dom = {"pii": [{"kind": "ipv4", "text": "10.12.4.31", "box": list(ip_box)}]}
+    masks = annotate(shot, insp, "fail", tmp_path / "out.png", net_boxes=[ip_box])
+    m = measure(masks, dom)
+    assert m == {"pii_total": 1, "pii_masked": 1, "pii_found_by_model": 0}
+
+
+def test_report_text_is_pseudonymised():
+    from attest.report import redact
+    out = redact('{"email": "anne.lefloch@kerlann-banque.example", "ip": "10.12.4.31", "iban": "FR76 3000 6000 0112 3456 7890 189"}')
+    assert "anne.lefloch" not in out and "a•••@kerlann-banque.example" in out
+    assert "10.12.•.•" in out and "4.31" not in out
+    assert "FR76 •••• ••••" in out and "7890" not in out

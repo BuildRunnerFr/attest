@@ -5,6 +5,7 @@ des constats, constats détaillés (critère / constat / risque / recommandation
 """
 import html
 import json
+import re
 from pathlib import Path
 
 from . import config
@@ -111,8 +112,21 @@ def fstatus(f):
     return f'<span class="fs fs-{e(f["status"])}">{e(t("fs." + f["status"]))}</span>' if f else ""
 
 
+_EMAIL = re.compile(r"([A-Za-z0-9])[A-Za-z0-9._%+-]*@([A-Za-z0-9.-]+\.[A-Za-z]{2,})")
+_IPV4 = re.compile(r"\b(\d{1,3})\.(\d{1,3})\.\d{1,3}\.\d{1,3}\b")
+_IBAN = re.compile(r"\b([A-Z]{2}\d{2})(?: ?[A-Z0-9]{4}){3,7}(?: ?[A-Z0-9]{1,3})?\b")
+
+
+def redact(s: str) -> str:
+    """Pseudonymise les données personnelles dans le texte distribué (la piste d'audit, à accès
+    restreint, conserve les valeurs brutes pour leur valeur probante)."""
+    s = _EMAIL.sub(lambda m: f"{m.group(1)}•••@{m.group(2)}", s)
+    s = _IPV4.sub(lambda m: f"{m.group(1)}.{m.group(2)}.•.•", s)
+    return _IBAN.sub(lambda m: f"{m.group(1)} •••• ••••", s)
+
+
 def compact(v, n=160):
-    s = v if isinstance(v, str) else json.dumps(v, ensure_ascii=False)
+    s = redact(v if isinstance(v, str) else json.dumps(v, ensure_ascii=False))
     return s if len(s) <= n else s[:n] + "…"
 
 
@@ -121,9 +135,13 @@ def figure(ev, label):
         return ""
     i, m = ev["inspection"], ev["metrics"]
     corro = t("f.corro_yes") if i.get("corroborates") is not False else t("f.corro_no")
-    pii = f" · {m['pii_masked']}/{m['pii_total']} {t('f.pii')}" if m.get("pii_total") else ""
+    pii = ""
+    if m.get("pii_total"):
+        pii = f" · {m['pii_masked']}/{m['pii_total']} {t('f.pii')}"
+        if m.get("pii_found_by_model", m["pii_total"]) < m["pii_total"]:
+            pii += f" ({t('f.pii_model').format(n=m['pii_found_by_model'])})"
     return (f'<figure><a href="{e(ev["image"])}" target="_blank"><img src="{e(ev["image"])}" alt="{e(label)}"></a><figcaption><b>{e(label)}</b> — {e(corro)} '
-            f'{e(i.get("comment", ""))}{e(pii)}<br><span class="hash">{e(ev["ts"])} · SHA-256 {e(ev["sha256"][:16])}…</span>'
+            f'{e(redact(i.get("comment", "")))}{e(pii)}<br><span class="hash">{e(ev["ts"])} · SHA-256 {e(ev["sha256"][:16])}…</span>'
             f'</figcaption></figure>')
 
 
@@ -170,7 +188,7 @@ def card(en):
                 f'{e(compact(before.get("observed", "")))}</code></p>'
                 f'<div class="ev">{figure(en.get("evidence_before"), t("f.before"))}</div>{script}</div></div>')
 
-    detail = before.get("detail", "")
+    detail = redact(str(before.get("detail", "")))
     return (f'<div class="card">{head}<div class="bd"><div class="c4">'
             f'<div><h4>{e(t("f.criteria"))}</h4><p>{e(c["objective"])}<br><span class="small">{e(c["rule"])} · {e(refs)}</span></p></div>'
             f'<div><h4>{e(t("f.condition"))}</h4><p>{e(t("f.observed"))}{colon()}<code class="obs">{e(compact(before.get("observed", "")))}</code><br>'
@@ -317,7 +335,12 @@ def write(state: dict, out: Path):
     if je:
         journal = (f'<h3>{e(t("a.journal"))}</h3><figure><img src="{e(je["image"])}" alt="journal"><figcaption class="hash">'
                    f'SHA-256 {e(je["sha256"])}</figcaption></figure>')
-    note = f'<p class="small">* {e(t("a.estimated"))}</p>' if usage.get("estimated") else ""
+    evs = [x.get(k) for x in entries for k in ("evidence_before", "evidence_after") if x.get(k)]
+    p_tot = sum(v["metrics"].get("pii_total", 0) for v in evs)
+    p_mod = sum(v["metrics"].get("pii_found_by_model", v["metrics"].get("pii_masked", 0)) for v in evs)
+    p_fin = sum(v["metrics"].get("pii_masked", 0) for v in evs)
+    pii_line = f'<p class="small">{e(t("a.pii_line").format(f=p_mod, t=p_tot, m=p_fin))}</p>' if p_tot else ""
+    note = pii_line + (f'<p class="small">* {e(t("a.estimated"))}</p>' if usage.get("estimated") else "")
     if usage.get("unpriced"):
         note += f'<p class="small">* {e(", ".join(usage["unpriced"]))}{colon()}{e(t("a.unpriced"))} (pricing.toml)</p>'
     annexes = (f'<section id="annexes"><h2>{e(t("s5"))}</h2>'

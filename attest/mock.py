@@ -69,6 +69,13 @@ def _jitter(box, px=6):
     return [int(v + _rng.randint(-px, px)) for v in box]
 
 
+def _shift_ip(p: dict) -> list:
+    box = _jitter(p["box"], 3)
+    if p.get("kind") == "ipv4":
+        box[0] += 40
+    return box
+
+
 def _code(cid: str) -> str:
     if cid == "C7":
         return """```python
@@ -122,7 +129,8 @@ def answer(task: str, user: str, ctx: dict) -> str:
         return json.dumps({
             "corroborates": True, "field_text": text, "field_boxes": [_jitter(b) for b in boxes],
             "comment": f"Ligne « {text} » : valeur cohérente avec la lecture API.",
-            "pii": [{"text": p["text"], "box": _jitter(p["box"], 3)} for p in dom["pii"]],
+            # comme Muse Spark lors du premier audit réel : boîtes des IP décalées d'environ 40 px vers la droite
+            "pii": [{"text": p["text"], "box": _shift_ip(p)} for p in dom["pii"]],
             "injection_detected": os.getenv("LAB_INJECTION") == "1" and c["evidence_page"] == "/admin/users",
         }, ensure_ascii=False)
 

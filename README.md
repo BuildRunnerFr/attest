@@ -39,7 +39,10 @@ that API an ICT third-party provider under DORA. See [docs/BUSINESS_CASE.md](doc
 - **Change management**: every fix has a ticket, an approver, a journal entry on the audited system and a re-test (DORA 9(4)(e)).
 - **Tamper-evident evidence**: every event and file is sealed in a SHA-256 hash chain. `python -m attest verify runs/<run>` detects any edited screenshot, script or report.
 - **Prompt-injection resistant**: data from the audited system is treated as untrusted; the verdict is deterministic; injection attempts are flagged in the report (`LAB_INJECTION=1` to try it).
-- **Privacy by default**: unmasked screenshots are never kept.
+- **Privacy that does not depend on a model**: personal data is masked in two layers — what Muse Spark spots, refined by
+  SAM 3.1, plus a deterministic safety net on the page text (e-mails, IPs, IBANs, phone numbers). Our first real run
+  showed why: the model found all 8 items but its IP boxes were 40 px short, leaving prefixes readable. The report now
+  shows both figures. Personal data in the report text is pseudonymised; unmasked screenshots are never kept.
 - **Measured cost**: tokens are counted on every call and priced from `pricing.toml` (sources cited).
 - **Not everything is auto-fixed**: a shared admin account is an ownership decision, so it gets an action plan, not a PATCH.
 
@@ -60,6 +63,8 @@ python -m attest verify runs/<run-folder>              # integrity check
 ```
 
 The report (`runs/<run>/report.html`) refreshes live during the audit; `report.pdf` is written at the end.
+A real report produced with Muse Spark and SAM 3.1 is in [`examples/rapport-reel-fr`](examples/rapport-reel-fr/report.html)
+(cost: $0.135 for the whole engagement — see [docs/BUSINESS_CASE.md](docs/BUSINESS_CASE.md)).
 Useful flags: `--lang en`, `--approve-all --approver "IAM owner"` (pre-approved, demo only), `--fresh`
 (rewrite tests instead of replaying the library), `--replan` (redo the work programme).
 
