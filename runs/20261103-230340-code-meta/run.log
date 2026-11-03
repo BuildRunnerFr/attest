@@ -1,0 +1,12 @@
+interprétation : {"interview": 0, "document": 9, "automated": 11, "requirements": 20, "rejected": 0, "controls": 7, "covered": 4}
+23:00:28 Work programme : 7 · studio
+23:01:52 Test C2 PDS-2.2 · TLS certificate verification never disabled → Non-compliant · evidence sealed
+23:01:59 Test C3 PDS-2.3 · Approved password hashing and ban of MD5/SHA-1 → Non-compliant · evidence sealed
+23:02:08 Test C4 PDS-2.4 · Static security analysis in CI on each change → Non-compliant · evidence sealed
+23:02:18 Test C1 PDS-2.1 · No hardcoded secrets in code or versioned configuration → Non-compliant · evidence sealed
+23:03:01 Test C5 PDS-2.5 · Exact dependency pinning and CI audit → Non-compliant · evidence sealed
+  [SAM] repli sur les boîtes : Error code: 400 - invalid prompt: 17 objects exceed this model's limit of 16
+23:03:06 Test C6 PDS-2.6 · Synthetic test data only → Non-compliant · evidence sealed
+23:03:38 Test C7 PDS-2.7 · Logging of authentication successes and failures → Non-compliant · evidence sealed
+23:03:39 Report : out/code/studio/20261103-230028-297b/audit/report.html · report.pdf
+audit : {'pdf': True, 'report': True, 'state': 'done'}

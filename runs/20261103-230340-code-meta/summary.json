@@ -1,0 +1,36 @@
+{
+  "id": "20261103-230340-code-meta",
+  "utc": "20261103-230340",
+  "kind": "code",
+  "backend": "meta",
+  "note": "premier audit réel dans GitHub Actions : audit de code par le Studio (preuve F-04, covered_by)",
+  "commit": "ab965ea",
+  "workflow_run": "41734972847",
+  "status": "success",
+  "budget_spent_usd": 0.4484,
+  "priced_usd": 0.3284,
+  "unpriced": [
+    "sam-3.1"
+  ],
+  "audits": [
+    {
+      "folder": "code/studio/20261103-230028-297b/audit",
+      "controls": 7,
+      "status_before": [
+        "fail",
+        "fail",
+        "fail",
+        "fail",
+        "fail",
+        "fail",
+        "fail"
+      ],
+      "status_after": [],
+      "evidence_errors": 0,
+      "opinion_initial": "insuffisant",
+      "opinion_final": "insuffisant",
+      "injection_detected": false,
+      "cost_usd": 0.32841925
+    }
+  ]
+}
