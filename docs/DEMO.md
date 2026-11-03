@@ -3,15 +3,14 @@
 ## Before recording
 
 ```bash
-# terminal 1
-python -m lab.app
-# terminal 2
-set -a; source .env; set +a
+# terminal 1: audited console + Studio (http://127.0.0.1:8000)
+bash scripts/start.sh
+# terminal 2: warm-up run, caches the work programme and the test scripts
+source .venv/bin/activate; set -a; source .env; set +a
 export ATTEST_LANG=en ATTEST_AUDITOR="<your name>" ATTEST_APPROVER="IAM owner"
-python -m attest run --reset-lab --remediate --approve-all --out runs/warmup   # warm-up: caches programme + scripts
+python -m attest run --reset-lab --remediate --approve-all --out runs/warmup
 ```
 
-Also start the Studio: `python -m attest.studio` (http://127.0.0.1:8000).
 Arrange the screen: terminal on the left, the browser on the right.
 Record the live run once at normal speed; speed up the waiting parts in editing.
 

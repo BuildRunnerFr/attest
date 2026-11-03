@@ -77,10 +77,15 @@ git clone https://github.com/BuildRunnerFr/attest.git && cd attest
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt && python -m playwright install chromium
 
-python -m lab.app                         # terminal 1: the audited system (fictitious bank console)
+cp .env.example .env                      # add MODEL_API_KEY, or ATTEST_BACKEND=mock (no key)
+bash scripts/start.sh                     # one command: audited console + Studio, opens http://127.0.0.1:8000
+```
 
-cp .env.example .env                      # terminal 2: add MODEL_API_KEY, or ATTEST_BACKEND=mock
-set -a; source .env; set +a
+Or step by step:
+
+```bash
+python -m lab.app                         # terminal 1: the audited system (fictitious bank console)
+set -a; source .env; set +a               # terminal 2
 python -m attest.studio                                # web app: http://127.0.0.1:8000
 python -m attest run --reset-lab                       # or the CLI: read-only audit
 python -m attest run --reset-lab --remediate           # + change requests, approved interactively
