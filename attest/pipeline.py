@@ -9,6 +9,7 @@ Puis : rapport HTML + PDF, manifeste, piste d'audit chaînée.
 """
 import json
 import os
+import re
 import sys
 import threading
 import time
@@ -106,8 +107,19 @@ def inspect(control: dict, result: dict, shot: Path, dom: dict) -> dict:
                                               result=json.dumps(result, ensure_ascii=False),
                                               lang=config.lang_name()),
                   image=shot, mock_ctx={"control": control, "result": result, "dom": dom})
-    insp = llm.extract_json(txt)
-    insp.setdefault("pii", [])
+    try:
+        insp = llm.extract_json(txt)
+    except ValueError:                                  # une seconde chance : JSON seul, rien d'autre
+        txt = llm.ask("inspect", prompts.INSPECT_SYSTEM.format(w=w, h=h),
+                      prompts.INSPECT_USER.format(control=json.dumps(shown(control), ensure_ascii=False),
+                                                  result=json.dumps(result, ensure_ascii=False),
+                                                  lang=config.lang_name())
+                      + "\n\nYour previous answer was not valid JSON. Return ONLY the JSON object.",
+                      image=shot, mock_ctx={"control": control, "result": result, "dom": dom})
+        insp = llm.extract_json(txt)
+    if not isinstance(insp, dict):
+        raise ValueError("réponse de vérification visuelle inattendue")
+    insp["pii"] = [p for p in insp.get("pii") or [] if isinstance(p, dict)]
     return insp
 
 
@@ -124,12 +136,51 @@ def snap(mask: np.ndarray, box, pad: int = 10):
     return (X1 + int(xs.min()), Y1 + int(ys.min()), X1 + int(xs.max()) + 1, Y1 + int(ys.max()) + 1)
 
 
+def as_box(v):
+    """Boîte [x1, y1, x2, y2] lue avec tolérance : liste, objet {x1..}/{left..}/{x, y, w, h}, texte, décimaux."""
+    if isinstance(v, dict):
+        for ks in (("x1", "y1", "x2", "y2"), ("left", "top", "right", "bottom"), ("x", "y", "w", "h")):
+            if all(k in v for k in ks):
+                vals = [v[k] for k in ks]
+                if ks[2] == "w":
+                    try:
+                        vals = [float(vals[0]), float(vals[1]), float(vals[0]) + float(vals[2]),
+                                float(vals[1]) + float(vals[3])]
+                    except (TypeError, ValueError):
+                        return None
+                v = vals
+                break
+        else:
+            return None
+    if isinstance(v, str):
+        v = re.findall(r"-?\d+(?:\.\d+)?", v)
+    if not isinstance(v, (list, tuple)) or len(v) != 4:
+        return None
+    try:
+        x1, y1, x2, y2 = (int(round(float(a))) for a in v)
+    except (TypeError, ValueError):
+        return None
+    x1, x2 = sorted((x1, x2))
+    y1, y2 = sorted((y1, y2))
+    return (x1, y1, x2, y2) if x2 - x1 >= 2 and y2 - y1 >= 2 else None
+
+
 def field_boxes(insp: dict) -> list:
     boxes = insp.get("field_boxes") or ([insp["field_box"]] if insp.get("field_box") else [])
-    return [tuple(int(v) for v in b) for b in boxes if isinstance(b, (list, tuple)) and len(b) == 4]
+    boxes = boxes if isinstance(boxes, list) else [boxes]
+    return [b for b in (as_box(x) for x in boxes) if b]
 
 
-def annotate(shot: Path, insp: dict, status: str, out: Path, net_boxes=()) -> dict:
+def to_rows(box, rows: list):
+    """Page de code : la zone est alignée sur les lignes entières qu'elle recouvre (None si aucune)."""
+    x1, y1, x2, y2 = box
+    hit = [r for r in rows if min(y2, r[3]) - max(y1, r[1]) >= 0.4 * (r[3] - r[1])]
+    if not hit:
+        return None
+    return (min(r[0] for r in hit), min(r[1] for r in hit), max(r[2] for r in hit), max(r[3] for r in hit))
+
+
+def annotate(shot: Path, insp: dict, status: str, out: Path, net_boxes=(), rows=()) -> dict:
     """Masque les données personnelles puis encadre les lignes probantes (SAM affine les deux).
 
     Masquage en deux couches : (1) ce que Muse Spark a repéré, affiné par SAM ; (2) un filet
@@ -138,8 +189,7 @@ def annotate(shot: Path, insp: dict, status: str, out: Path, net_boxes=()) -> di
     img = Image.open(shot).convert("RGB")
     W, H = img.size
     fboxes = field_boxes(insp)
-    pboxes = [tuple(int(v) for v in p["box"]) for p in insp.get("pii", [])
-              if isinstance(p, dict) and len(p.get("box", [])) == 4]
+    pboxes = [b for b in (as_box(p.get("box")) for p in insp.get("pii", [])) if b]
     masks = sam.segment_boxes(shot, fboxes + pboxes)
     fmasks, pmasks = masks[:len(fboxes)], masks[len(fboxes):]
 
@@ -163,6 +213,14 @@ def annotate(shot: Path, insp: dict, status: str, out: Path, net_boxes=()) -> di
     overlay = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     draw = ImageDraw.Draw(overlay)
     for b, m in zip(fboxes, fmasks):
+        if rows:                                   # page de code : lignes entières, rien hors du code
+            box = to_rows(b, rows)
+            if box is None:
+                continue
+            x1, y1, x2, y2 = box
+            draw.rounded_rectangle((x1 - 2, y1, x2 + 2, y2), radius=4, fill=rgb + (55,),
+                                   outline=rgb + (255,), width=3)
+            continue
         x1, y1, x2, y2 = snap(m, b)
         draw.rounded_rectangle((x1 - 6, y1 - 5, x2 + 6, y2 + 5), radius=6, fill=rgb + (55,),
                                outline=rgb + (255,), width=3)
@@ -200,7 +258,8 @@ def collect_evidence(e: dict, result: dict, phase: str, ctx: Ctx) -> dict:
     insp = inspect(c, result, raw, dom)
     final = ctx.out / "evidence" / f"{c['id']}_{phase}.png"
     masks = annotate(raw, insp, result["status"], final,
-                     net_boxes=[tuple(p["box"]) for p in dom.get("pii", [])])
+                     net_boxes=[tuple(p["box"]) for p in dom.get("pii", [])],
+                     rows=[tuple(r) for r in dom.get("lines", {}).values()])
     raw.unlink()                                   # la capture non masquée n'est pas conservée
     sha = sha256_file(final)
     metrics = measure(masks, dom)
@@ -228,7 +287,9 @@ def observe(e: dict, ctx: Ctx, refresh):
         try:
             ev = collect_evidence(e, e["before"], "before", ctx)
         except Exception as ex:
-            log(f"  {c['id']} preuve impossible : {ex}")
+            e["evidence_error"] = f"{type(ex).__name__} : {str(ex)[:240]}"
+            ctx.trail.log("evidence_failed", control=c["id"], phase="before", error=e["evidence_error"])
+            log(f"  {c['id']} preuve impossible : {e['evidence_error']}")
     e["evidence_before"] = ev
     e["status_before"] = classify(e["before"], ev)
     log(f"{t('log.test')} {c['id']} {c['rule']} · {c['title']} → {t('st.' + e['status_before'])}"
@@ -368,7 +429,9 @@ def verify_fix(e: dict, ctx: Ctx, refresh):
     try:
         ev = collect_evidence(e, res, "after", ctx) if res["status"] != "error" else None
     except Exception as ex:
-        log(f"  {e['control']['id']} preuve impossible : {ex}")
+        e["evidence_error_after"] = f"{type(ex).__name__} : {str(ex)[:240]}"
+        ctx.trail.log("evidence_failed", control=e["control"]["id"], phase="after", error=e["evidence_error_after"])
+        log(f"  {e['control']['id']} preuve impossible : {e['evidence_error_after']}")
     e["after"], e["evidence_after"] = res, ev
     e["status_after"] = classify(res, ev)
     if e["status_after"] == "pass":

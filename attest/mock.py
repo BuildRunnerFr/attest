@@ -130,7 +130,7 @@ def answer(task: str, user: str, ctx: dict) -> str:
             return json.dumps({"corroborates": True, "field_text": "lignes en cause",
                                "field_boxes": [_jitter(b, 3) for b in boxes],
                                "comment": "Les lignes encadrées correspondent au résultat du test.",
-                               "pii": [{"text": p["text"], "box": _shift_ip(p)} for p in dom["pii"] if p.get("kind") != "secret"],
+                               "pii": [{"text": p["text"], "box": _shift_ip(p)} for p in dom["pii"]],
                                "injection_detected": False}, ensure_ascii=False)
         if c["id"] == "C7":
             generic = (res.get("observed") or {}).get("generic_admin_accounts", []) if isinstance(res.get("observed"), dict) else []
@@ -282,6 +282,18 @@ def interpret(ctx: dict) -> str:
                 continue
             reqs.append({"ref": rule, "quote": text, "summary": text, "testability": "automated",
                          "why": "Vérifiable par l'interface en lecture seule de la cible.", "controls": ctrls})
+    if reqs:                                          # 1 bis. clauses du règlement couvertes par la politique
+        tested = {c["rule"] for r in reqs for c in r["controls"]}
+        for rx, testability, keys, source in (REG_APP if kind == "app" else REG_CODE):
+            line = next((l for l in lines if _re.search(rx, l, _re.I)), None)
+            if not line:
+                continue
+            rules = [(next(x for x in CONTROLS if x[0] == k)[1] if kind == "app" else CODE[k][0]) for k in keys]
+            cov = [r for r in rules if r in tested]
+            reqs.append({"ref": "", "quote": _clause(line), "summary": _clause(line)[:120],
+                         "testability": "automated" if cov else ("document" if testability == "automated" else testability),
+                         "why": "Couverte par les contrôles de la politique interne." if cov else "Nécessite une revue.",
+                         "controls": [], "covered_by": cov})
     if not reqs:                                      # 2. texte réglementaire seul : seuils proposés
         for rx, testability, keys, source in (REG_APP if kind == "app" else REG_CODE):
             line = next((l for l in lines if _re.search(rx, l, _re.I)), None)

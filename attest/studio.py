@@ -49,7 +49,7 @@ S = {
         "remediate": "Proposer et appliquer les correctifs approuvés", "approver": "Approbateur des changements",
         "run": "Valider le programme et lancer l'audit", "running": "Audit en cours…", "done": "Audit terminé",
         "error": "Erreur", "pdf": "Télécharger le PDF", "new": "Nouvel audit", "none": "Choisissez au moins un texte.",
-        "sod": "L'approbateur des changements doit être différent de l'auditeur.", "noctrl": "Aucun contrôle retenu.",
+        "sod": "L'approbateur des changements doit être différent de l'auditeur.", "covered": "testée par le contrôle de la politique", "noctrl": "Aucun contrôle retenu.",
         "testability": {"automated": "testable ici", "document": "revue documentaire", "interview": "entretien"},
         "sev": {"critique": "Critique", "elevee": "Élevée", "moyenne": "Moyenne", "faible": "Faible"},
     },
@@ -72,7 +72,7 @@ S = {
         "remediate": "Propose and apply approved fixes", "approver": "Change approver",
         "run": "Approve the programme and run the audit", "running": "Audit running…", "done": "Audit complete",
         "error": "Error", "pdf": "Download the PDF", "new": "New audit", "none": "Pick at least one text.",
-        "sod": "The change approver must not be the auditor.", "noctrl": "No control selected.",
+        "sod": "The change approver must not be the auditor.", "covered": "tested by the policy control", "noctrl": "No control selected.",
         "testability": {"automated": "testable here", "document": "document review", "interview": "interview"},
         "sev": {"critique": "Critical", "elevee": "High", "moyenne": "Medium", "faible": "Low"},
     },
@@ -147,6 +147,7 @@ REVIEW = HEAD + """<main><h1>{{ s.review }}</h1><p class="sub">{{ it.texts|join(
 <span class="tb {{ r.testability if r.quote_verified else 'rejected' }}">{{ s.testability[r.testability] if r.quote_verified else s.notfound }}</span>
 <span>{{ r.summary }}</span></div>
 <blockquote>« {{ r.quote }} » {% if r.quote_verified %}<span class="q-ok">✓ {{ s.verified }}</span>{% else %}<span class="q-ko">✗ {{ s.notfound }}</span>{% endif %}</blockquote>
+{% if r.covered_by %}<p class="hint">↳ {{ s.covered }} {{ r.covered_by|join(', ') }}</p>{% endif %}
 {% if r.why %}<p class="hint">{{ r.why }}</p>{% endif %}
 {% for c in r.controls %}<label class="ctrl"><input type="checkbox" name="ctrl" value="{{ c.id }}" checked>
 <span><b>{{ c.id }} · {{ c.title }}</b><br>{{ c.objective }}<br><small>{{ s.expected }} : <code>{{ c.expected }}</code> · {{ s.threshold }} : {{ c.threshold_source }}

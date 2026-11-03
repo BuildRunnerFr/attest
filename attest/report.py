@@ -210,7 +210,9 @@ def card(en):
             + f'</p></div></div>'
             f'<p class="small">{e(t("f.test"))}{colon()}{e(c.get("test_procedure", ""))}</p>'
             f'<div class="ev">{figure(en.get("evidence_before"), t("f.before"))}{figure(en.get("evidence_after"), t("f.after"))}</div>'
-            f'{change_box(en)}{script}</div></div>')
+            + "".join(f'<div class="alert">⚠ {e(t("f.noevidence"))}{colon()}{e(en[k])}</div>'
+                      for k in ("evidence_error", "evidence_error_after") if en.get(k))
+            + f'{change_box(en)}{script}</div></div>')
 
 
 def money(x: float, lang: str) -> str:
@@ -259,9 +261,10 @@ def coverage(state: dict) -> str:
         f'<tr><td class="mono">{e(r["ref"])}</td><td>« {e(r["quote"][:220])} »</td>'
         f'<td><span class="tb {"rejected" if not r["quote_verified"] else r["testability"]}">'
         f'{e(t("cov.rejected") if not r["quote_verified"] else t("cov." + r["testability"]))}</span></td>'
-        f'<td>{len(r["controls"])}</td><td class="small">{e(r["why"])}</td></tr>' for r in it["requirements"])
+        f'<td>{len(r["controls"]) or ("→ " + ", ".join(r.get("covered_by") or []) if r.get("covered_by") else 0)}</td>'
+        f'<td class="small">{e(r["why"])}</td></tr>' for r in it["requirements"])
     summary = t("cov.summary").format(n=k["requirements"], a=k["automated"], d=k["document"], i=k["interview"],
-                                      r=k["rejected"], c=k["controls"])
+                                      r=k["rejected"], c=k["controls"], v=k.get("covered", 0))
     return (f'<h3>{e(t("a.coverage"))}</h3><p class="small">{e(summary)}</p><div class="tbl"><table><tr>'
             f'<th>Réf.</th><th>{e(t("cov.quote"))}</th><th>{e(t("cov.test"))}</th><th>{e(t("a.control"))}</th>'
             f'<th></th></tr>{rows}</table></div>')
@@ -298,6 +301,9 @@ def write(state: dict, out: Path):
     legend = "".join(f'<span><i style="background:{colors[s]}"></i>{e(t("sev." + s))}{colon()}{n}</span>' for s, n in sev_count.items())
     msgs = key_messages(state.get("lang", "fr"), len(entries), len(findings), sev_count, len(closed),
                         len(still_open), len(review)) if entries and not running else []
+    no_ev = sum(1 for x in entries if x.get("evidence_error"))
+    if no_ev and not running:
+        msgs.append(t("msg.noevidence").format(n=no_ev))
     inj = f'<div class="alert">⚠ {e(t("msg.injection"))}</div>' if state.get("injection_detected") else ""
     s1 = (f'<section id="s1"><h2>{e(t("s1"))}</h2><div class="ops">{ops}</div><div class="kpis">{kpis}</div>'
           + (f'<div class="dist">{dist}</div><div class="legend">{legend}</div>' if findings else "")

@@ -20,7 +20,8 @@ def test_quote_verification():
 
 def test_policy_gives_thresholds_regulation_alone_gives_proposals():
     with_policy = interpret.interpret(_texts("rts-16-developpement", "politique-pds-2-developpement"), "repo:paiement-api")
-    assert with_policy["counts"]["automated"] == 7 and with_policy["counts"]["rejected"] == 1
+    assert with_policy["counts"]["controls"] == 7 and with_policy["counts"]["rejected"] == 1
+    assert with_policy["counts"]["automated"] == 10                    # 7 règles + 3 clauses rattachées
     sources = {c["threshold_source"] for r in with_policy["requirements"] for c in r["controls"]}
     assert all(s.startswith("PDS-2.") for s in sources)
     alone = interpret.interpret(_texts("dora-9-4-acces-changements", "rts-21-controle-acces"), "iam-console")
@@ -60,3 +61,29 @@ def test_studio_refuses_self_approval(lab, tmp_path, monkeypatch):
     sid = r.location.split("/review/")[1].split("?")[0]
     page = c.post(f"/run/{sid}", data={"reviewer": "Alex", "approver": "alex", "remediate": "on", "ctrl": ["C1"]})
     assert "doit être différent" in page.get_data(as_text=True)
+
+
+def test_regulation_clauses_covered_by_policy_controls():
+    r = interpret.interpret(_texts("rts-16-developpement", "politique-pds-2-developpement"), "repo:paiement-api")
+    cov = {x["quote"][:40]: x["covered_by"] for x in r["requirements"] if x["covered_by"]}
+    assert r["counts"]["covered"] == 3 and ["PDS-2.4"] in cov.values()
+    assert all(x["covered_by"] == [] for x in r["requirements"] if x["controls"])      # pas de doublon
+
+
+def test_missing_evidence_is_reported_not_hidden(lab, tmp_path, monkeypatch):
+    """Une capture qui échoue ne disparaît pas : le rapport le dit et la piste d'audit le trace."""
+    from attest import evidence, pipeline
+    real = evidence.capture
+
+    def flaky(url, out, token):
+        if "users" in url:
+            raise RuntimeError("navigateur indisponible")
+        return real(url, out, token)
+    monkeypatch.setattr(evidence, "capture", flaky)
+    mission = config.load_mission(config.ROOT / "mission" / "kerlann-iam.toml")
+    state = pipeline.run(mission, tmp_path / "run", reset_lab=True)
+    broken = [e for e in state["entries"] if e.get("evidence_error")]
+    assert broken and all(e["status_before"] in ("pass", "fail") for e in broken)
+    html = (tmp_path / "run" / "report.html").read_text()
+    assert "Preuve visuelle indisponible" in html and "sans preuve visuelle" in html
+    assert "evidence_failed" in (tmp_path / "run" / "trail.jsonl").read_text()

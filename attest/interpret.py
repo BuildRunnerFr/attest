@@ -71,11 +71,23 @@ def interpret(texts: list, target_id: str) -> dict:
                 c.setdefault("references", [r.get("ref", "")])
                 c.setdefault("evidence_page", target["default_page"])
                 controls.append(c)
+        cov = r.get("covered_by") or []
         requirements.append({"ref": str(r.get("ref", "")), "quote": quote, "quote_verified": verified,
                              "summary": str(r.get("summary", "")), "testability": testability,
-                             "why": str(r.get("why", "")), "controls": controls})
+                             "why": str(r.get("why", "")), "controls": controls,
+                             "covered_by": [str(x) for x in (cov if isinstance(cov, list) else [cov]) if x]})
+    # rattachement : une clause « automatisable » sans contrôle propre doit pointer un contrôle réellement proposé
+    rules = {c.get("rule") for r in requirements for c in r["controls"]}
+    for r in requirements:
+        if r["quote_verified"] and r["testability"] == "automated" and not r["controls"]:
+            r["covered_by"] = [x for x in r["covered_by"] if x in rules]
+            if not r["covered_by"]:
+                r["testability"] = "document"
+                r["why"] = (r["why"] + " — " if r["why"] else "") + "aucun contrôle de rattachement proposé"
+        elif r["controls"]:
+            r["covered_by"] = []
     counts = {k: sum(1 for r in requirements if r["quote_verified"] and r["testability"] == k) for k in TESTABILITY}
     counts.update(requirements=len(requirements), rejected=sum(not r["quote_verified"] for r in requirements),
-                  controls=n)
+                  controls=n, covered=sum(1 for r in requirements if r["covered_by"]))
     return {"target": target_id, "texts": [t for t, _ in texts], "text_sha256": sha256_text(joined),
             "model": llm.model_for(False), "requirements": requirements, "counts": counts}

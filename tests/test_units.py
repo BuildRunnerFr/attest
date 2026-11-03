@@ -124,3 +124,15 @@ def test_no_finding_without_observed_value():
     assert sandbox.run(code, "http://127.0.0.1:9", "t")["status"] == "error"
     code = 'import sys\nsys.exit(2)'
     assert sandbox.run(code, "http://127.0.0.1:9", "t")["status"] == "error"
+
+
+def test_model_boxes_are_read_tolerantly():
+    from attest.pipeline import as_box, to_rows
+    assert as_box([218.4, 201, 520, "224"]) == (218, 201, 520, 224)
+    assert as_box({"x1": 1, "y1": 2, "x2": 50, "y2": 30}) == (1, 2, 50, 30)
+    assert as_box({"x": 10, "y": 10, "w": 40, "h": 12}) == (10, 10, 50, 22)
+    assert as_box("[5, 6, 90, 40]") == (5, 6, 90, 40)
+    assert as_box({"a": 1}) is None and as_box([1, 2, 3]) is None and as_box(None) is None
+    rows = [(28, 100, 1068, 124), (28, 124, 1068, 148), (28, 148, 1068, 172)]
+    assert to_rows((100, 118, 300, 150), rows) == (28, 124, 1068, 148)     # ligne entière
+    assert to_rows((100, 400, 300, 420), rows) is None                       # hors du code : ignoré
