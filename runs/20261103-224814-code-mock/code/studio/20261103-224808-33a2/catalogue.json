@@ -1,0 +1,145 @@
+{
+  "source": "studio",
+  "reviewed": true,
+  "reviewer": "Attest CI",
+  "path": "runs/studio/20261103-224808-33a2/catalogue.json",
+  "validated_at": "2026-11-03 22:48",
+  "controls": [
+    {
+      "rule": "PDS-2.1",
+      "title": "Aucun secret en clair dans le code",
+      "objective": "Aucun mot de passe, clé ou jeton n'est écrit en clair dans le code ou la configuration versionnée.",
+      "expected": "aucune affectation littérale de secret hors des tests",
+      "severity": "critique",
+      "references": [
+        "RTS 7(2)"
+      ],
+      "test_procedure": "Analyse du dépôt via la passerelle en lecture seule (arborescence, fichiers, recherche).",
+      "risk": "Un secret versionné est exposé à toute personne ayant accès au dépôt et reste dans l'historique git.",
+      "recommendation": "Retirer et révoquer le secret, puis le charger depuis le coffre-fort ou une variable d'environnement.",
+      "evidence_page": "/repo/paiement-api/view?path=README.md",
+      "remediation": "manual",
+      "_check": "secrets",
+      "threshold_source": "PDS-2.1",
+      "id": "C1",
+      "quote": "Aucun secret (mot de passe, clé, jeton) n'est écrit en clair dans le code source ni dans la configuration versionnée : les secrets viennent d'un coffre ou de variables d'environnement."
+    },
+    {
+      "rule": "PDS-2.2",
+      "title": "Vérification TLS des appels sortants",
+      "objective": "Tout appel réseau sortant vérifie le certificat du serveur.",
+      "expected": "aucun verify=False",
+      "severity": "elevee",
+      "references": [
+        "DORA 9(3)(a)",
+        "RTS 6(2)(a)"
+      ],
+      "test_procedure": "Analyse du dépôt via la passerelle en lecture seule (arborescence, fichiers, recherche).",
+      "risk": "Un attaquant placé sur le réseau peut intercepter ou modifier les ordres de virement.",
+      "recommendation": "Supprimer verify=False et épingler l'autorité de certification du prestataire.",
+      "evidence_page": "/repo/paiement-api/view?path=README.md",
+      "remediation": "manual",
+      "_check": "tls",
+      "threshold_source": "PDS-2.2",
+      "id": "C2",
+      "quote": "Tout appel réseau sortant vérifie le certificat TLS du serveur : la vérification n'est jamais désactivée (`verify=False` interdit)."
+    },
+    {
+      "rule": "PDS-2.3",
+      "title": "Hachage robuste des mots de passe",
+      "objective": "Les mots de passe sont hachés avec argon2, bcrypt, scrypt ou PBKDF2.",
+      "expected": "ni MD5 ni SHA-1 pour un usage de sécurité",
+      "severity": "elevee",
+      "references": [
+        "RTS 6(3)",
+        "RTS 6(4)"
+      ],
+      "test_procedure": "Analyse du dépôt via la passerelle en lecture seule (arborescence, fichiers, recherche).",
+      "risk": "En cas de fuite de la base, les mots de passe sont retrouvés en quelques secondes.",
+      "recommendation": "Migrer vers argon2id, avec renouvellement des empreintes à la prochaine connexion.",
+      "evidence_page": "/repo/paiement-api/view?path=README.md",
+      "remediation": "manual",
+      "_check": "hash",
+      "threshold_source": "PDS-2.3",
+      "id": "C3",
+      "quote": "Les mots de passe sont hachés avec argon2, bcrypt, scrypt ou PBKDF2. MD5 et SHA-1 sont interdits pour tout usage de sécurité."
+    },
+    {
+      "rule": "PDS-2.4",
+      "title": "Analyse statique de sécurité en CI",
+      "objective": "La chaîne d'intégration continue exécute une analyse statique de sécurité.",
+      "expected": "bandit, semgrep ou CodeQL dans la CI",
+      "severity": "moyenne",
+      "references": [
+        "RTS 16(3)"
+      ],
+      "test_procedure": "Analyse du dépôt via la passerelle en lecture seule (arborescence, fichiers, recherche).",
+      "risk": "Des vulnérabilités atteignent la production sans détection.",
+      "recommendation": "Ajouter une étape bandit ou semgrep bloquante à la CI.",
+      "evidence_page": "/repo/paiement-api/view?path=README.md",
+      "remediation": "manual",
+      "_check": "sast",
+      "threshold_source": "PDS-2.4",
+      "id": "C4",
+      "quote": "La chaîne d'intégration continue exécute une analyse statique de sécurité (bandit, semgrep ou CodeQL) à chaque modification."
+    },
+    {
+      "rule": "PDS-2.5",
+      "title": "Dépendances épinglées et auditées",
+      "objective": "Chaque dépendance est épinglée à une version exacte et auditée en CI.",
+      "expected": "paquet==version partout et pip-audit en CI",
+      "severity": "moyenne",
+      "references": [
+        "RTS 16(4)",
+        "RTS 16(8)"
+      ],
+      "test_procedure": "Analyse du dépôt via la passerelle en lecture seule (arborescence, fichiers, recherche).",
+      "risk": "Une version vulnérable ou compromise d'une dépendance s'installe sans contrôle.",
+      "recommendation": "Épingler les versions et ajouter pip-audit à la CI.",
+      "evidence_page": "/repo/paiement-api/view?path=README.md",
+      "remediation": "manual",
+      "_check": "deps",
+      "threshold_source": "PDS-2.5",
+      "id": "C5",
+      "quote": "Les dépendances sont épinglées à une version exacte (`paquet==version`) et auditées en intégration continue (pip-audit ou équivalent)."
+    },
+    {
+      "rule": "PDS-2.6",
+      "title": "Données de test synthétiques",
+      "objective": "Les jeux de test sont synthétiques et déclarés comme tels ; aucun export de production.",
+      "expected": "\"synthetic\": true dans chaque jeu ; aucun export de production",
+      "severity": "elevee",
+      "references": [
+        "RTS 16(5)(a)"
+      ],
+      "test_procedure": "Analyse du dépôt via la passerelle en lecture seule (arborescence, fichiers, recherche).",
+      "risk": "Des données clients réelles sont exposées hors production.",
+      "recommendation": "Supprimer l'export, purger l'historique git et générer des données synthétiques.",
+      "evidence_page": "/repo/paiement-api/view?path=README.md",
+      "remediation": "manual",
+      "_check": "testdata",
+      "threshold_source": "PDS-2.6",
+      "id": "C6",
+      "quote": "Les données de test sont synthétiques et déclarées comme telles (champ `\"synthetic\": true`) ; aucun export de production n'est versionné."
+    },
+    {
+      "rule": "PDS-2.7",
+      "title": "Journalisation des authentifications",
+      "objective": "Les réussites et les échecs d'authentification sont journalisés.",
+      "expected": "journalisation dans la fonction de login",
+      "severity": "moyenne",
+      "references": [
+        "RTS 12(2)(c)(i)"
+      ],
+      "test_procedure": "Analyse du dépôt via la passerelle en lecture seule (arborescence, fichiers, recherche).",
+      "risk": "Les tentatives de connexion frauduleuses passent inaperçues.",
+      "recommendation": "Journaliser chaque tentative : identifiant, résultat, horodatage.",
+      "evidence_page": "/repo/paiement-api/view?path=README.md",
+      "remediation": "manual",
+      "_check": "authlog",
+      "threshold_source": "PDS-2.7",
+      "id": "C7",
+      "quote": "Les réussites et les échecs d'authentification sont journalisés par l'application."
+    }
+  ]
+}

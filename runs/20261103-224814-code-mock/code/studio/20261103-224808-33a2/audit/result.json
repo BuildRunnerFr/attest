@@ -1,0 +1,1137 @@
+{
+  "mission": {
+    "id": "AUD-20261103-33A2",
+    "title": "paiement-api — microservice de virements SEPA — RTS 2024/1774 · Politique interne PDS-2 (Banque Kerlann, fictive)",
+    "entity": "Banque Kerlann (fictive)",
+    "system": "paiement-api — microservice de virements SEPA",
+    "system_criticality": "Supporte des fonctions critiques ou importantes (DORA)",
+    "environment": "Pré-production de démonstration",
+    "owner": "DSI — équipe de développement Paiements",
+    "lead_auditor": "Attest CI",
+    "classification": "TLP:AMBER+STRICT",
+    "requirement_path": "exigences/dora_authentification.md",
+    "lab_url": "http://127.0.0.1:5050",
+    "scope_in": [
+      "Code source, configuration et chaîne CI du dépôt",
+      "Jeux de données de test versionnés"
+    ],
+    "scope_out": [
+      "Tests dynamiques (DAST) et tests d'intrusion",
+      "Environnements d'exécution et de production",
+      "Historique git"
+    ],
+    "sla_days": {
+      "critique": 30,
+      "elevee": 90,
+      "moyenne": 180,
+      "faible": 365
+    },
+    "target": "repo:paiement-api",
+    "framework_label": "RTS 2024/1774 — article 16 : acquisition, développement et maintenance des systèmes TIC · Politique interne PDS-2 (Banque Kerlann, fictive) — développement sécurisé",
+    "requirement_text": "# RTS 2024/1774 — article 16 : acquisition, développement et maintenance des systèmes TIC\nSource : règlement délégué (UE) 2024/1774, article 16 « ICT systems acquisition, development, and maintenance ». Extraits du texte officiel anglais ; vérifier sur EUR-Lex.\n\nArticle 16(1): financial entities shall develop, document and implement a policy governing the acquisition, development, and maintenance of ICT systems. That policy shall:\n(a) identify security practices and methodologies relating to the acquisition, development, and maintenance of ICT systems;\n(c) specify measures to mitigate the risk of unintentional alteration or intentional manipulation of the ICT systems during development, maintenance, and deployment.\nArticle 16(2): financial entities shall develop, document, and implement an ICT systems' acquisition, development, and maintenance procedure for the testing and approval of all ICT systems prior to their use and after maintenance.\nArticle 16(3): the procedure shall contain source code reviews covering both static and dynamic testing, including security testing for internet-exposed systems and applications. Financial entities shall:\n(a) identify and analyse vulnerabilities and anomalies in the source code;\n(b) adopt an action plan to address those vulnerabilities and anomalies;\n(c) monitor the implementation of that action plan.\nArticle 16(4): the procedure shall contain security testing of software packages no later than at the integration phase.\nArticle 16(5): the procedure shall provide that:\n(a) non-production environments only store anonymised, pseudonymised, or randomised production data;\n(b) financial entities are to protect the integrity and confidentiality of data in non-production environments.\nArticle 16(7): the procedure shall include controls to protect the integrity of source code of ICT systems that are developed in-house or by an ICT third-party service provider.\nArticle 16(8): proprietary software and, where feasible, the source code provided by ICT third-party service providers, as well as source code coming from open-source projects, are to be analysed and tested in accordance with paragraph 3 prior to their deployment in the production environment.\n\n\n# Politique interne PDS-2 (Banque Kerlann, fictive) — développement sécurisé\nDéclinaison interne de DORA 9(3), du RTS 2024/1774 articles 6, 7, 12 et 16 pour le code applicatif. Elle fixe les règles\nprécises que les textes réglementaires ne donnent pas.\n\n| Règle | Exigence | Criticité | Fondement |\n|---|---|---|---|\n| PDS-2.1 | Aucun secret (mot de passe, clé, jeton) n'est écrit en clair dans le code source ni dans la configuration versionnée : les secrets viennent d'un coffre ou de variables d'environnement. | Critique | RTS 7(2) |\n| PDS-2.2 | Tout appel réseau sortant vérifie le certificat TLS du serveur : la vérification n'est jamais désactivée (`verify=False` interdit). | Élevée | DORA 9(3)(a) ; RTS 6(2)(a) |\n| PDS-2.3 | Les mots de passe sont hachés avec argon2, bcrypt, scrypt ou PBKDF2. MD5 et SHA-1 sont interdits pour tout usage de sécurité. | Élevée | RTS 6(3) et 6(4) |\n| PDS-2.4 | La chaîne d'intégration continue exécute une analyse statique de sécurité (bandit, semgrep ou CodeQL) à chaque modification. | Moyenne | RTS 16(3) |\n| PDS-2.5 | Les dépendances sont épinglées à une version exacte (`paquet==version`) et auditées en intégration continue (pip-audit ou équivalent). | Moyenne | RTS 16(4) et 16(8) |\n| PDS-2.6 | Les données de test sont synthétiques et déclarées comme telles (champ `\"synthetic\": true`) ; aucun export de production n'est versionné. | Élevée | RTS 16(5)(a) |\n| PDS-2.7 | Les réussites et les échecs d'authentification sont journalisés par l'application. | Moyenne | RTS 12(2)(c)(i) |\n\n## Délais de remédiation\nCritique : 30 jours · Élevée : 90 jours · Moyenne : 180 jours · Faible : 365 jours.\n"
+  },
+  "run_id": "20261103-224808-33a2",
+  "started": "2026-11-03 22:48",
+  "lang": "en",
+  "target": "repo:paiement-api",
+  "target_label": "paiement-api code repository (SEPA transfer microservice)",
+  "backend": "mock",
+  "models": {
+    "reason": "mock",
+    "code": "mock",
+    "segmentation": "sam-3.1"
+  },
+  "entries": [
+    {
+      "control": {
+        "rule": "PDS-2.1",
+        "title": "Aucun secret en clair dans le code",
+        "objective": "Aucun mot de passe, clé ou jeton n'est écrit en clair dans le code ou la configuration versionnée.",
+        "expected": "aucune affectation littérale de secret hors des tests",
+        "severity": "critique",
+        "references": [
+          "RTS 7(2)"
+        ],
+        "test_procedure": "Analyse du dépôt via la passerelle en lecture seule (arborescence, fichiers, recherche).",
+        "risk": "Un secret versionné est exposé à toute personne ayant accès au dépôt et reste dans l'historique git.",
+        "recommendation": "Retirer et révoquer le secret, puis le charger depuis le coffre-fort ou une variable d'environnement.",
+        "evidence_page": "/repo/paiement-api/view?path=README.md",
+        "remediation": "manual",
+        "_check": "secrets",
+        "threshold_source": "PDS-2.1",
+        "id": "C1",
+        "quote": "Aucun secret (mot de passe, clé, jeton) n'est écrit en clair dans le code source ni dans la configuration versionnée : les secrets viennent d'un coffre ou de variables d'environnement."
+      },
+      "test": {
+        "script": "scripts/C1_PDS-2.1.py",
+        "sha256": "0ac7439a43f9c51191d5d745968de3e6f3727815e0fe1273e4a40a61b4dd04b7",
+        "origin": "generated",
+        "code": "import json, os, re, requests\n\nB = os.environ[\"LAB_URL\"] + \"/api/repo/paiement-api\"\nH = {\"Authorization\": \"Bearer \" + os.environ[\"LAB_TOKEN\"]}\n\n\ndef get(endpoint, **params):\n    r = requests.get(B + endpoint, headers=H, params=params, timeout=10)\n    r.raise_for_status()\n    return r.json()\n\n\ndef view(path):\n    return \"/repo/paiement-api/view?path=\" + path\n\n\ndef report(ok, observed, expected, detail, page):\n    print(json.dumps({\"status\": \"pass\" if ok else \"fail\", \"observed\": observed, \"expected\": expected,\n                      \"detail\": detail, \"evidence_page\": page}, ensure_ascii=False))\n\n\nm = [x for x in get(\"/search\", q=r\"(?i)(password|passwd|secret|api_key|token)\\w*\\s*=\\s*[\\\"'][^\\\"']{6,}[\\\"']\")[\"matches\"]\n     if not x[\"path\"].startswith(\"tests/\")]\nreport(not m, {\"matches\": m}, \"aucun secret littéral\", f\"{len(m)} secret(s) en clair dans le code.\",\n       view(m[0][\"path\"]) if m else view(\"README.md\"))\n"
+      },
+      "before": {
+        "status": "fail",
+        "observed": {
+          "matches": [
+            {
+              "line": 6,
+              "path": "app/config.py",
+              "text": "DB_PASSWORD = \"Azerty123!\"  # TODO : déplacer dans le coffre-fort"
+            },
+            {
+              "line": 7,
+              "path": "app/config.py",
+              "text": "JWT_SECRET = \"kerlann-dev-secret-2026\""
+            }
+          ]
+        },
+        "expected": "aucun secret littéral",
+        "detail": "2 secret(s) en clair dans le code.",
+        "evidence_page": "/repo/paiement-api/view?path=app/config.py"
+      },
+      "evidence_before": {
+        "image": "evidence/C1_before.png",
+        "sha256": "677f1efd61c13982913e3cc74210a6ebc77f6ab4ff56b1fef3220704f46b2cb6",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "lignes en cause",
+          "field_boxes": [
+            [
+              25,
+              236,
+              1069,
+              261
+            ],
+            [
+              29,
+              262,
+              1065,
+              287
+            ]
+          ],
+          "comment": "Les lignes encadrées correspondent au résultat du test.",
+          "pii": [
+            {
+              "text": "paiement@db.kerlann-banque.example",
+              "box": [
+                281,
+                216,
+                544,
+                229
+              ]
+            },
+            {
+              "text": "Azerty123!",
+              "box": [
+                215,
+                243,
+                297,
+                254
+              ]
+            },
+            {
+              "text": "kerlann-dev-secret-2026",
+              "box": [
+                214,
+                270,
+                388,
+                282
+              ]
+            }
+          ],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 3,
+          "pii_masked": 3,
+          "pii_found_by_model": 3
+        },
+        "page": "/repo/paiement-api/view?path=app/config.py",
+        "ts": "2026-11-03 22:48:11"
+      },
+      "status_before": "fail",
+      "finding": {
+        "id": "F-01",
+        "severity": "critique",
+        "status": "open",
+        "owner": "DSI — équipe de développement Paiements",
+        "due": "2026-12-03"
+      }
+    },
+    {
+      "control": {
+        "rule": "PDS-2.2",
+        "title": "Vérification TLS des appels sortants",
+        "objective": "Tout appel réseau sortant vérifie le certificat du serveur.",
+        "expected": "aucun verify=False",
+        "severity": "elevee",
+        "references": [
+          "DORA 9(3)(a)",
+          "RTS 6(2)(a)"
+        ],
+        "test_procedure": "Analyse du dépôt via la passerelle en lecture seule (arborescence, fichiers, recherche).",
+        "risk": "Un attaquant placé sur le réseau peut intercepter ou modifier les ordres de virement.",
+        "recommendation": "Supprimer verify=False et épingler l'autorité de certification du prestataire.",
+        "evidence_page": "/repo/paiement-api/view?path=README.md",
+        "remediation": "manual",
+        "_check": "tls",
+        "threshold_source": "PDS-2.2",
+        "id": "C2",
+        "quote": "Tout appel réseau sortant vérifie le certificat TLS du serveur : la vérification n'est jamais désactivée (`verify=False` interdit)."
+      },
+      "test": {
+        "script": "scripts/C2_PDS-2.2.py",
+        "sha256": "0345bb97c3bac36c8ba6ab80019b3a5edcbf3b7b15a8ec1649688da82d11b27b",
+        "origin": "generated",
+        "code": "import json, os, re, requests\n\nB = os.environ[\"LAB_URL\"] + \"/api/repo/paiement-api\"\nH = {\"Authorization\": \"Bearer \" + os.environ[\"LAB_TOKEN\"]}\n\n\ndef get(endpoint, **params):\n    r = requests.get(B + endpoint, headers=H, params=params, timeout=10)\n    r.raise_for_status()\n    return r.json()\n\n\ndef view(path):\n    return \"/repo/paiement-api/view?path=\" + path\n\n\ndef report(ok, observed, expected, detail, page):\n    print(json.dumps({\"status\": \"pass\" if ok else \"fail\", \"observed\": observed, \"expected\": expected,\n                      \"detail\": detail, \"evidence_page\": page}, ensure_ascii=False))\n\n\nm = get(\"/search\", q=r\"verify\\s*=\\s*False\")[\"matches\"]\nreport(not m, {\"matches\": m}, \"aucun verify=False\", f\"{len(m)} appel(s) sans vérification TLS.\",\n       view(m[0][\"path\"]) if m else view(\"README.md\"))\n"
+      },
+      "before": {
+        "status": "fail",
+        "observed": {
+          "matches": [
+            {
+              "line": 18,
+              "path": "app/payments.py",
+              "text": "response = requests.post(PSP_URL, json=payload, timeout=TIMEOUT_S, verify=False)"
+            }
+          ]
+        },
+        "expected": "aucun verify=False",
+        "detail": "1 appel(s) sans vérification TLS.",
+        "evidence_page": "/repo/paiement-api/view?path=app/payments.py"
+      },
+      "evidence_before": {
+        "image": "evidence/C2_before.png",
+        "sha256": "168099bdf34367c6af05eb21777c45a42a9ffe770d00194506fe75f1de923b8b",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "lignes en cause",
+          "field_boxes": [
+            [
+              29,
+              551,
+              1068,
+              573
+            ]
+          ],
+          "comment": "Les lignes encadrées correspondent au résultat du test.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 0,
+          "pii_masked": 0,
+          "pii_found_by_model": 0
+        },
+        "page": "/repo/paiement-api/view?path=app/payments.py",
+        "ts": "2026-11-03 22:48:11"
+      },
+      "status_before": "fail",
+      "finding": {
+        "id": "F-02",
+        "severity": "elevee",
+        "status": "open",
+        "owner": "DSI — équipe de développement Paiements",
+        "due": "2027-02-01"
+      }
+    },
+    {
+      "control": {
+        "rule": "PDS-2.3",
+        "title": "Hachage robuste des mots de passe",
+        "objective": "Les mots de passe sont hachés avec argon2, bcrypt, scrypt ou PBKDF2.",
+        "expected": "ni MD5 ni SHA-1 pour un usage de sécurité",
+        "severity": "elevee",
+        "references": [
+          "RTS 6(3)",
+          "RTS 6(4)"
+        ],
+        "test_procedure": "Analyse du dépôt via la passerelle en lecture seule (arborescence, fichiers, recherche).",
+        "risk": "En cas de fuite de la base, les mots de passe sont retrouvés en quelques secondes.",
+        "recommendation": "Migrer vers argon2id, avec renouvellement des empreintes à la prochaine connexion.",
+        "evidence_page": "/repo/paiement-api/view?path=README.md",
+        "remediation": "manual",
+        "_check": "hash",
+        "threshold_source": "PDS-2.3",
+        "id": "C3",
+        "quote": "Les mots de passe sont hachés avec argon2, bcrypt, scrypt ou PBKDF2. MD5 et SHA-1 sont interdits pour tout usage de sécurité."
+      },
+      "test": {
+        "script": "scripts/C3_PDS-2.3.py",
+        "sha256": "5f1dc17f7ca223092db5000b2541527b83c59b3cd594f51d26d373cde8a01ec5",
+        "origin": "generated",
+        "code": "import json, os, re, requests\n\nB = os.environ[\"LAB_URL\"] + \"/api/repo/paiement-api\"\nH = {\"Authorization\": \"Bearer \" + os.environ[\"LAB_TOKEN\"]}\n\n\ndef get(endpoint, **params):\n    r = requests.get(B + endpoint, headers=H, params=params, timeout=10)\n    r.raise_for_status()\n    return r.json()\n\n\ndef view(path):\n    return \"/repo/paiement-api/view?path=\" + path\n\n\ndef report(ok, observed, expected, detail, page):\n    print(json.dumps({\"status\": \"pass\" if ok else \"fail\", \"observed\": observed, \"expected\": expected,\n                      \"detail\": detail, \"evidence_page\": page}, ensure_ascii=False))\n\n\nm = get(\"/search\", q=r\"hashlib\\.(md5|sha1)\\(\")[\"matches\"]\nreport(not m, {\"matches\": m}, \"argon2, bcrypt, scrypt ou PBKDF2\", f\"{len(m)} usage(s) de MD5 ou SHA-1.\",\n       view(m[0][\"path\"]) if m else view(\"README.md\"))\n"
+      },
+      "before": {
+        "status": "fail",
+        "observed": {
+          "matches": [
+            {
+              "line": 8,
+              "path": "app/auth.py",
+              "text": "return hashlib.md5(password.encode()).hexdigest()"
+            }
+          ]
+        },
+        "expected": "argon2, bcrypt, scrypt ou PBKDF2",
+        "detail": "1 usage(s) de MD5 ou SHA-1.",
+        "evidence_page": "/repo/paiement-api/view?path=app/auth.py"
+      },
+      "evidence_before": {
+        "image": "evidence/C3_before.png",
+        "sha256": "9b670c1eafd915cb6df201edf42dc67d9cd479c769ad7b5f49bc574e294bd891",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "lignes en cause",
+          "field_boxes": [
+            [
+              30,
+              292,
+              1069,
+              313
+            ]
+          ],
+          "comment": "Les lignes encadrées correspondent au résultat du test.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 0,
+          "pii_masked": 0,
+          "pii_found_by_model": 0
+        },
+        "page": "/repo/paiement-api/view?path=app/auth.py",
+        "ts": "2026-11-03 22:48:11"
+      },
+      "status_before": "fail",
+      "finding": {
+        "id": "F-03",
+        "severity": "elevee",
+        "status": "open",
+        "owner": "DSI — équipe de développement Paiements",
+        "due": "2027-02-01"
+      }
+    },
+    {
+      "control": {
+        "rule": "PDS-2.4",
+        "title": "Analyse statique de sécurité en CI",
+        "objective": "La chaîne d'intégration continue exécute une analyse statique de sécurité.",
+        "expected": "bandit, semgrep ou CodeQL dans la CI",
+        "severity": "moyenne",
+        "references": [
+          "RTS 16(3)"
+        ],
+        "test_procedure": "Analyse du dépôt via la passerelle en lecture seule (arborescence, fichiers, recherche).",
+        "risk": "Des vulnérabilités atteignent la production sans détection.",
+        "recommendation": "Ajouter une étape bandit ou semgrep bloquante à la CI.",
+        "evidence_page": "/repo/paiement-api/view?path=README.md",
+        "remediation": "manual",
+        "_check": "sast",
+        "threshold_source": "PDS-2.4",
+        "id": "C4",
+        "quote": "La chaîne d'intégration continue exécute une analyse statique de sécurité (bandit, semgrep ou CodeQL) à chaque modification."
+      },
+      "test": {
+        "script": "scripts/C4_PDS-2.4.py",
+        "sha256": "d6c17796d9d3a94ead84c2c525c4ac2155e93ad8efbfe071b100b3847f3a8da5",
+        "origin": "generated",
+        "code": "import json, os, re, requests\n\nB = os.environ[\"LAB_URL\"] + \"/api/repo/paiement-api\"\nH = {\"Authorization\": \"Bearer \" + os.environ[\"LAB_TOKEN\"]}\n\n\ndef get(endpoint, **params):\n    r = requests.get(B + endpoint, headers=H, params=params, timeout=10)\n    r.raise_for_status()\n    return r.json()\n\n\ndef view(path):\n    return \"/repo/paiement-api/view?path=\" + path\n\n\ndef report(ok, observed, expected, detail, page):\n    print(json.dumps({\"status\": \"pass\" if ok else \"fail\", \"observed\": observed, \"expected\": expected,\n                      \"detail\": detail, \"evidence_page\": page}, ensure_ascii=False))\n\n\nci = [f for f in get(\"/tree\")[\"files\"] if f.startswith(\".github/workflows/\")]\nsteps, tools = [], []\nfor f in ci:\n    for i, l in enumerate(get(\"/file\", path=f)[\"lines\"], 1):\n        if \"run:\" in l:\n            steps.append({\"path\": f, \"line\": i, \"text\": l.strip()})\n        if re.search(r\"(?i)bandit|semgrep|codeql\", l):\n            tools.append(l.strip())\nreport(bool(tools), {\"matches\": steps, \"sast_tools\": tools}, \"bandit, semgrep ou CodeQL dans la CI\",\n       \"Aucune analyse statique de sécurité dans la CI.\" if not tools else \"Analyse statique présente.\",\n       view(ci[0]) if ci else view(\"README.md\"))\n"
+      },
+      "before": {
+        "status": "fail",
+        "observed": {
+          "matches": [
+            {
+              "path": ".github/workflows/ci.yml",
+              "line": 11,
+              "text": "- run: pip install -r requirements.txt pytest"
+            },
+            {
+              "path": ".github/workflows/ci.yml",
+              "line": 12,
+              "text": "- run: pytest -q"
+            }
+          ],
+          "sast_tools": []
+        },
+        "expected": "bandit, semgrep ou CodeQL dans la CI",
+        "detail": "Aucune analyse statique de sécurité dans la CI.",
+        "evidence_page": "/repo/paiement-api/view?path=.github/workflows/ci.yml"
+      },
+      "evidence_before": {
+        "image": "evidence/C4_before.png",
+        "sha256": "7b53c8bf4ec15d70db4d0f662dbfcbed5df5f61c644439baf9463e0e95d8b53b",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "lignes en cause",
+          "field_boxes": [
+            [
+              27,
+              366,
+              1068,
+              396
+            ],
+            [
+              25,
+              391,
+              1071,
+              421
+            ]
+          ],
+          "comment": "Les lignes encadrées correspondent au résultat du test.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 0,
+          "pii_masked": 0,
+          "pii_found_by_model": 0
+        },
+        "page": "/repo/paiement-api/view?path=.github/workflows/ci.yml",
+        "ts": "2026-11-03 22:48:11"
+      },
+      "status_before": "fail",
+      "finding": {
+        "id": "F-05",
+        "severity": "moyenne",
+        "status": "open",
+        "owner": "DSI — équipe de développement Paiements",
+        "due": "2027-05-02"
+      }
+    },
+    {
+      "control": {
+        "rule": "PDS-2.5",
+        "title": "Dépendances épinglées et auditées",
+        "objective": "Chaque dépendance est épinglée à une version exacte et auditée en CI.",
+        "expected": "paquet==version partout et pip-audit en CI",
+        "severity": "moyenne",
+        "references": [
+          "RTS 16(4)",
+          "RTS 16(8)"
+        ],
+        "test_procedure": "Analyse du dépôt via la passerelle en lecture seule (arborescence, fichiers, recherche).",
+        "risk": "Une version vulnérable ou compromise d'une dépendance s'installe sans contrôle.",
+        "recommendation": "Épingler les versions et ajouter pip-audit à la CI.",
+        "evidence_page": "/repo/paiement-api/view?path=README.md",
+        "remediation": "manual",
+        "_check": "deps",
+        "threshold_source": "PDS-2.5",
+        "id": "C5",
+        "quote": "Les dépendances sont épinglées à une version exacte (`paquet==version`) et auditées en intégration continue (pip-audit ou équivalent)."
+      },
+      "test": {
+        "script": "scripts/C5_PDS-2.5.py",
+        "sha256": "1b16722fb926263e6a197f52141aa17abcb03cac6f4fa50eef71e231b56db8a0",
+        "origin": "generated",
+        "code": "import json, os, re, requests\n\nB = os.environ[\"LAB_URL\"] + \"/api/repo/paiement-api\"\nH = {\"Authorization\": \"Bearer \" + os.environ[\"LAB_TOKEN\"]}\n\n\ndef get(endpoint, **params):\n    r = requests.get(B + endpoint, headers=H, params=params, timeout=10)\n    r.raise_for_status()\n    return r.json()\n\n\ndef view(path):\n    return \"/repo/paiement-api/view?path=\" + path\n\n\ndef report(ok, observed, expected, detail, page):\n    print(json.dumps({\"status\": \"pass\" if ok else \"fail\", \"observed\": observed, \"expected\": expected,\n                      \"detail\": detail, \"evidence_page\": page}, ensure_ascii=False))\n\n\nlines = get(\"/file\", path=\"requirements.txt\")[\"lines\"]\nloose = [{\"path\": \"requirements.txt\", \"line\": i, \"text\": l.strip()} for i, l in enumerate(lines, 1)\n         if l.strip() and not l.startswith(\"#\") and not re.fullmatch(r\"[A-Za-z0-9_.\\-\\[\\]]+==[0-9][\\w.]*\", l.strip())]\nci = [f for f in get(\"/tree\")[\"files\"] if f.startswith(\".github/workflows/\")]\naudit = any(re.search(r\"pip-audit|safety\", \" \".join(get(\"/file\", path=f)[\"lines\"])) for f in ci)\nreport(not loose and audit, {\"matches\": loose, \"dependency_audit_in_ci\": audit}, \"paquet==version et pip-audit en CI\",\n       f\"{len(loose)} dépendance(s) non épinglée(s) ; audit en CI : {'oui' if audit else 'non'}.\", view(\"requirements.txt\"))\n"
+      },
+      "before": {
+        "status": "fail",
+        "observed": {
+          "matches": [
+            {
+              "path": "requirements.txt",
+              "line": 1,
+              "text": "flask"
+            },
+            {
+              "path": "requirements.txt",
+              "line": 2,
+              "text": "requests>=2.0"
+            }
+          ],
+          "dependency_audit_in_ci": false
+        },
+        "expected": "paquet==version et pip-audit en CI",
+        "detail": "2 dépendance(s) non épinglée(s) ; audit en CI : non.",
+        "evidence_page": "/repo/paiement-api/view?path=requirements.txt"
+      },
+      "evidence_before": {
+        "image": "evidence/C5_before.png",
+        "sha256": "94071ff0cc3ec3013b5c4620d989ef9e69def04847069f8c7a03fba625a6574f",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "lignes en cause",
+          "field_boxes": [
+            [
+              26,
+              104,
+              1069,
+              136
+            ],
+            [
+              26,
+              132,
+              1068,
+              157
+            ]
+          ],
+          "comment": "Les lignes encadrées correspondent au résultat du test.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 0,
+          "pii_masked": 0,
+          "pii_found_by_model": 0
+        },
+        "page": "/repo/paiement-api/view?path=requirements.txt",
+        "ts": "2026-11-03 22:48:12"
+      },
+      "status_before": "fail",
+      "finding": {
+        "id": "F-06",
+        "severity": "moyenne",
+        "status": "open",
+        "owner": "DSI — équipe de développement Paiements",
+        "due": "2027-05-02"
+      }
+    },
+    {
+      "control": {
+        "rule": "PDS-2.6",
+        "title": "Données de test synthétiques",
+        "objective": "Les jeux de test sont synthétiques et déclarés comme tels ; aucun export de production.",
+        "expected": "\"synthetic\": true dans chaque jeu ; aucun export de production",
+        "severity": "elevee",
+        "references": [
+          "RTS 16(5)(a)"
+        ],
+        "test_procedure": "Analyse du dépôt via la passerelle en lecture seule (arborescence, fichiers, recherche).",
+        "risk": "Des données clients réelles sont exposées hors production.",
+        "recommendation": "Supprimer l'export, purger l'historique git et générer des données synthétiques.",
+        "evidence_page": "/repo/paiement-api/view?path=README.md",
+        "remediation": "manual",
+        "_check": "testdata",
+        "threshold_source": "PDS-2.6",
+        "id": "C6",
+        "quote": "Les données de test sont synthétiques et déclarées comme telles (champ `\"synthetic\": true`) ; aucun export de production n'est versionné."
+      },
+      "test": {
+        "script": "scripts/C6_PDS-2.6.py",
+        "sha256": "ce73fc513b7ebfeaa27bd79ca2017cb260a97b120290a02dc8a5959094c8c283",
+        "origin": "generated",
+        "code": "import json, os, re, requests\n\nB = os.environ[\"LAB_URL\"] + \"/api/repo/paiement-api\"\nH = {\"Authorization\": \"Bearer \" + os.environ[\"LAB_TOKEN\"]}\n\n\ndef get(endpoint, **params):\n    r = requests.get(B + endpoint, headers=H, params=params, timeout=10)\n    r.raise_for_status()\n    return r.json()\n\n\ndef view(path):\n    return \"/repo/paiement-api/view?path=\" + path\n\n\ndef report(ok, observed, expected, detail, page):\n    print(json.dumps({\"status\": \"pass\" if ok else \"fail\", \"observed\": observed, \"expected\": expected,\n                      \"detail\": detail, \"evidence_page\": page}, ensure_ascii=False))\n\n\nfx = [f for f in get(\"/tree\")[\"files\"] if f.startswith(\"tests/fixtures/\") and f.endswith(\".json\")]\nbad, marks = [], []\nfor f in fx:\n    lines = get(\"/file\", path=f)[\"lines\"]\n    data = json.loads(\"\\n\".join(lines))\n    if \"prod\" in f.lower() or not (isinstance(data, dict) and data.get(\"synthetic\") is True):\n        bad.append(f)\n        marks += [{\"path\": f, \"line\": i, \"text\": l.strip()} for i, l in enumerate(lines, 1) if re.search(r\"(?i)prod\", l)]\nreport(not bad, {\"files\": bad, \"matches\": marks}, \"jeux synthétiques déclarés, aucun export de production\",\n       f\"{len(bad)} jeu(x) de test non synthétique(s).\", view(bad[0]) if bad else view(\"README.md\"))\n"
+      },
+      "before": {
+        "status": "fail",
+        "observed": {
+          "files": [
+            "tests/fixtures/clients_export_prod.json"
+          ],
+          "matches": [
+            {
+              "path": "tests/fixtures/clients_export_prod.json",
+              "line": 2,
+              "text": "\"export\": \"production\","
+            },
+            {
+              "path": "tests/fixtures/clients_export_prod.json",
+              "line": 4,
+              "text": "\"source\": \"base clients paiement (prod)\","
+            }
+          ]
+        },
+        "expected": "jeux synthétiques déclarés, aucun export de production",
+        "detail": "1 jeu(x) de test non synthétique(s).",
+        "evidence_page": "/repo/paiement-api/view?path=tests/fixtures/clients_export_prod.json"
+      },
+      "evidence_before": {
+        "image": "evidence/C6_before.png",
+        "sha256": "66a5c060e56e2487eac901cc054bc83e2bc8b557c4795784929fdfcb06dd8de8",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "lignes en cause",
+          "field_boxes": [
+            [
+              29,
+              135,
+              1070,
+              156
+            ],
+            [
+              25,
+              185,
+              1069,
+              212
+            ]
+          ],
+          "comment": "Les lignes encadrées correspondent au résultat du test.",
+          "pii": [
+            {
+              "text": "Claire Morel",
+              "box": [
+                208,
+                267,
+                301,
+                284
+              ]
+            },
+            {
+              "text": "claire.morel@kerlann-banque.example",
+              "box": [
+                228,
+                291,
+                500,
+                306
+              ]
+            },
+            {
+              "text": "FR23 2561 3518 7598 0976 0773 923",
+              "box": [
+                219,
+                318,
+                475,
+                337
+              ]
+            },
+            {
+              "text": "Erwan Kerbrat",
+              "box": [
+                211,
+                424,
+                315,
+                438
+              ]
+            },
+            {
+              "text": "erwan.kerbrat@kerlann-banque.example",
+              "box": [
+                226,
+                451,
+                507,
+                464
+              ]
+            },
+            {
+              "text": "FR33 8877 8914 5968 2249 7764 183",
+              "box": [
+                217,
+                474,
+                478,
+                489
+              ]
+            },
+            {
+              "text": "Nolwenn Jaouen",
+              "box": [
+                212,
+                584,
+                317,
+                593
+              ]
+            },
+            {
+              "text": "nolwenn.jaouen@kerlann-banque.example",
+              "box": [
+                227,
+                606,
+                515,
+                622
+              ]
+            },
+            {
+              "text": "FR72 7434 3868 7641 9592 5965 810",
+              "box": [
+                217,
+                635,
+                475,
+                647
+              ]
+            },
+            {
+              "text": "Hugo Riou",
+              "box": [
+                211,
+                734,
+                277,
+                753
+              ]
+            },
+            {
+              "text": "hugo.riou@kerlann-banque.example",
+              "box": [
+                226,
+                761,
+                478,
+                777
+              ]
+            },
+            {
+              "text": "FR80 2058 0245 1470 5506 7065 011",
+              "box": [
+                216,
+                789,
+                475,
+                801
+              ]
+            },
+            {
+              "text": "Pauline Tanguy",
+              "box": [
+                212,
+                891,
+                322,
+                910
+              ]
+            },
+            {
+              "text": "pauline.tanguy@kerlann-banque.example",
+              "box": [
+                227,
+                923,
+                517,
+                934
+              ]
+            },
+            {
+              "text": "FR68 7426 2990 4837 1194 2478 260",
+              "box": [
+                217,
+                948,
+                474,
+                962
+              ]
+            }
+          ],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 15,
+          "pii_masked": 15,
+          "pii_found_by_model": 15
+        },
+        "page": "/repo/paiement-api/view?path=tests/fixtures/clients_export_prod.json",
+        "ts": "2026-11-03 22:48:13"
+      },
+      "status_before": "fail",
+      "finding": {
+        "id": "F-04",
+        "severity": "elevee",
+        "status": "open",
+        "owner": "DSI — équipe de développement Paiements",
+        "due": "2027-02-01"
+      }
+    },
+    {
+      "control": {
+        "rule": "PDS-2.7",
+        "title": "Journalisation des authentifications",
+        "objective": "Les réussites et les échecs d'authentification sont journalisés.",
+        "expected": "journalisation dans la fonction de login",
+        "severity": "moyenne",
+        "references": [
+          "RTS 12(2)(c)(i)"
+        ],
+        "test_procedure": "Analyse du dépôt via la passerelle en lecture seule (arborescence, fichiers, recherche).",
+        "risk": "Les tentatives de connexion frauduleuses passent inaperçues.",
+        "recommendation": "Journaliser chaque tentative : identifiant, résultat, horodatage.",
+        "evidence_page": "/repo/paiement-api/view?path=README.md",
+        "remediation": "manual",
+        "_check": "authlog",
+        "threshold_source": "PDS-2.7",
+        "id": "C7",
+        "quote": "Les réussites et les échecs d'authentification sont journalisés par l'application."
+      },
+      "test": {
+        "script": "scripts/C7_PDS-2.7.py",
+        "sha256": "4a9d5a0b8134b7a7cc7b1f22953fe39763843d5e14c072d5f6e08f8ff61684e8",
+        "origin": "generated",
+        "code": "import json, os, re, requests\n\nB = os.environ[\"LAB_URL\"] + \"/api/repo/paiement-api\"\nH = {\"Authorization\": \"Bearer \" + os.environ[\"LAB_TOKEN\"]}\n\n\ndef get(endpoint, **params):\n    r = requests.get(B + endpoint, headers=H, params=params, timeout=10)\n    r.raise_for_status()\n    return r.json()\n\n\ndef view(path):\n    return \"/repo/paiement-api/view?path=\" + path\n\n\ndef report(ok, observed, expected, detail, page):\n    print(json.dumps({\"status\": \"pass\" if ok else \"fail\", \"observed\": observed, \"expected\": expected,\n                      \"detail\": detail, \"evidence_page\": page}, ensure_ascii=False))\n\n\nlines = get(\"/file\", path=\"app/auth.py\")[\"lines\"]\nlogged = [l for l in lines if re.search(r\"log\\w*\\.(info|warning|error|exception)\\(\", l)]\nlogin = [{\"path\": \"app/auth.py\", \"line\": i, \"text\": l.strip()} for i, l in enumerate(lines, 1) if \"def login\" in l]\nreport(bool(logged), {\"matches\": login, \"log_calls\": len(logged)}, \"réussites et échecs journalisés\",\n       \"La fonction de login ne journalise rien.\" if not logged else \"Authentifications journalisées.\", view(\"app/auth.py\"))\n"
+      },
+      "before": {
+        "status": "fail",
+        "observed": {
+          "matches": [
+            {
+              "path": "app/auth.py",
+              "line": 11,
+              "text": "def login(username: str, password: str) -> bool:"
+            }
+          ],
+          "log_calls": 0
+        },
+        "expected": "réussites et échecs journalisés",
+        "detail": "La fonction de login ne journalise rien.",
+        "evidence_page": "/repo/paiement-api/view?path=app/auth.py"
+      },
+      "evidence_before": {
+        "image": "evidence/C7_before.png",
+        "sha256": "52576f4c4aef7f780eecc92031a14d86218bd93717f54106b030cd6b1a536c6f",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "lignes en cause",
+          "field_boxes": [
+            [
+              29,
+              365,
+              1069,
+              393
+            ]
+          ],
+          "comment": "Les lignes encadrées correspondent au résultat du test.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 0,
+          "pii_masked": 0,
+          "pii_found_by_model": 0
+        },
+        "page": "/repo/paiement-api/view?path=app/auth.py",
+        "ts": "2026-11-03 22:48:12"
+      },
+      "status_before": "fail",
+      "finding": {
+        "id": "F-07",
+        "severity": "moyenne",
+        "status": "open",
+        "owner": "DSI — équipe de développement Paiements",
+        "due": "2027-05-02"
+      }
+    }
+  ],
+  "running": false,
+  "decisions": [],
+  "remediation_requested": false,
+  "usage": {
+    "rows": [
+      {
+        "model": "mock",
+        "calls": 15,
+        "input": 22215,
+        "output": 5206,
+        "seconds": 0.08402848243713379,
+        "images": 0,
+        "cost_usd": null
+      },
+      {
+        "model": "sam-3.1 (mock)",
+        "calls": 7,
+        "input": 0,
+        "output": 0,
+        "seconds": 0.0,
+        "images": 7,
+        "cost_usd": null
+      }
+    ],
+    "total_usd": 0.0,
+    "unpriced": [
+      "mock",
+      "sam-3.1 (mock)"
+    ],
+    "estimated": true
+  },
+  "duration_s": 5,
+  "catalogue": {
+    "source": "studio",
+    "reviewed": true,
+    "reviewer": "Attest CI",
+    "path": "runs/studio/20261103-224808-33a2/catalogue.json",
+    "validated_at": "2026-11-03 22:48"
+  },
+  "interpretation": {
+    "target": "repo:paiement-api",
+    "texts": [
+      "RTS 2024/1774 — article 16 : acquisition, développement et maintenance des systèmes TIC",
+      "Politique interne PDS-2 (Banque Kerlann, fictive) — développement sécurisé"
+    ],
+    "text_sha256": "9599c89158746dc4af50b366c7467471958a611d958785640830c3432048790e",
+    "model": "mock",
+    "requirements": [
+      {
+        "ref": "PDS-2.1",
+        "quote": "Aucun secret (mot de passe, clé, jeton) n'est écrit en clair dans le code source ni dans la configuration versionnée : les secrets viennent d'un coffre ou de variables d'environnement.",
+        "quote_verified": true,
+        "summary": "Aucun secret (mot de passe, clé, jeton) n'est écrit en clair dans le code source ni dans la configuration versionnée : les secrets viennent d'un coffre ou de variables d'environnement.",
+        "testability": "automated",
+        "why": "Vérifiable par l'interface en lecture seule de la cible.",
+        "controls": [
+          {
+            "rule": "PDS-2.1",
+            "title": "Aucun secret en clair dans le code",
+            "objective": "Aucun mot de passe, clé ou jeton n'est écrit en clair dans le code ou la configuration versionnée.",
+            "expected": "aucune affectation littérale de secret hors des tests",
+            "severity": "critique",
+            "references": [
+              "RTS 7(2)"
+            ],
+            "test_procedure": "Analyse du dépôt via la passerelle en lecture seule (arborescence, fichiers, recherche).",
+            "risk": "Un secret versionné est exposé à toute personne ayant accès au dépôt et reste dans l'historique git.",
+            "recommendation": "Retirer et révoquer le secret, puis le charger depuis le coffre-fort ou une variable d'environnement.",
+            "evidence_page": "/repo/paiement-api/view?path=README.md",
+            "remediation": "manual",
+            "_check": "secrets",
+            "threshold_source": "PDS-2.1",
+            "id": "C1",
+            "quote": "Aucun secret (mot de passe, clé, jeton) n'est écrit en clair dans le code source ni dans la configuration versionnée : les secrets viennent d'un coffre ou de variables d'environnement."
+          }
+        ],
+        "covered_by": []
+      },
+      {
+        "ref": "PDS-2.2",
+        "quote": "Tout appel réseau sortant vérifie le certificat TLS du serveur : la vérification n'est jamais désactivée (`verify=False` interdit).",
+        "quote_verified": true,
+        "summary": "Tout appel réseau sortant vérifie le certificat TLS du serveur : la vérification n'est jamais désactivée (`verify=False` interdit).",
+        "testability": "automated",
+        "why": "Vérifiable par l'interface en lecture seule de la cible.",
+        "controls": [
+          {
+            "rule": "PDS-2.2",
+            "title": "Vérification TLS des appels sortants",
+            "objective": "Tout appel réseau sortant vérifie le certificat du serveur.",
+            "expected": "aucun verify=False",
+            "severity": "elevee",
+            "references": [
+              "DORA 9(3)(a)",
+              "RTS 6(2)(a)"
+            ],
+            "test_procedure": "Analyse du dépôt via la passerelle en lecture seule (arborescence, fichiers, recherche).",
+            "risk": "Un attaquant placé sur le réseau peut intercepter ou modifier les ordres de virement.",
+            "recommendation": "Supprimer verify=False et épingler l'autorité de certification du prestataire.",
+            "evidence_page": "/repo/paiement-api/view?path=README.md",
+            "remediation": "manual",
+            "_check": "tls",
+            "threshold_source": "PDS-2.2",
+            "id": "C2",
+            "quote": "Tout appel réseau sortant vérifie le certificat TLS du serveur : la vérification n'est jamais désactivée (`verify=False` interdit)."
+          }
+        ],
+        "covered_by": []
+      },
+      {
+        "ref": "PDS-2.3",
+        "quote": "Les mots de passe sont hachés avec argon2, bcrypt, scrypt ou PBKDF2. MD5 et SHA-1 sont interdits pour tout usage de sécurité.",
+        "quote_verified": true,
+        "summary": "Les mots de passe sont hachés avec argon2, bcrypt, scrypt ou PBKDF2. MD5 et SHA-1 sont interdits pour tout usage de sécurité.",
+        "testability": "automated",
+        "why": "Vérifiable par l'interface en lecture seule de la cible.",
+        "controls": [
+          {
+            "rule": "PDS-2.3",
+            "title": "Hachage robuste des mots de passe",
+            "objective": "Les mots de passe sont hachés avec argon2, bcrypt, scrypt ou PBKDF2.",
+            "expected": "ni MD5 ni SHA-1 pour un usage de sécurité",
+            "severity": "elevee",
+            "references": [
+              "RTS 6(3)",
+              "RTS 6(4)"
+            ],
+            "test_procedure": "Analyse du dépôt via la passerelle en lecture seule (arborescence, fichiers, recherche).",
+            "risk": "En cas de fuite de la base, les mots de passe sont retrouvés en quelques secondes.",
+            "recommendation": "Migrer vers argon2id, avec renouvellement des empreintes à la prochaine connexion.",
+            "evidence_page": "/repo/paiement-api/view?path=README.md",
+            "remediation": "manual",
+            "_check": "hash",
+            "threshold_source": "PDS-2.3",
+            "id": "C3",
+            "quote": "Les mots de passe sont hachés avec argon2, bcrypt, scrypt ou PBKDF2. MD5 et SHA-1 sont interdits pour tout usage de sécurité."
+          }
+        ],
+        "covered_by": []
+      },
+      {
+        "ref": "PDS-2.4",
+        "quote": "La chaîne d'intégration continue exécute une analyse statique de sécurité (bandit, semgrep ou CodeQL) à chaque modification.",
+        "quote_verified": true,
+        "summary": "La chaîne d'intégration continue exécute une analyse statique de sécurité (bandit, semgrep ou CodeQL) à chaque modification.",
+        "testability": "automated",
+        "why": "Vérifiable par l'interface en lecture seule de la cible.",
+        "controls": [
+          {
+            "rule": "PDS-2.4",
+            "title": "Analyse statique de sécurité en CI",
+            "objective": "La chaîne d'intégration continue exécute une analyse statique de sécurité.",
+            "expected": "bandit, semgrep ou CodeQL dans la CI",
+            "severity": "moyenne",
+            "references": [
+              "RTS 16(3)"
+            ],
+            "test_procedure": "Analyse du dépôt via la passerelle en lecture seule (arborescence, fichiers, recherche).",
+            "risk": "Des vulnérabilités atteignent la production sans détection.",
+            "recommendation": "Ajouter une étape bandit ou semgrep bloquante à la CI.",
+            "evidence_page": "/repo/paiement-api/view?path=README.md",
+            "remediation": "manual",
+            "_check": "sast",
+            "threshold_source": "PDS-2.4",
+            "id": "C4",
+            "quote": "La chaîne d'intégration continue exécute une analyse statique de sécurité (bandit, semgrep ou CodeQL) à chaque modification."
+          }
+        ],
+        "covered_by": []
+      },
+      {
+        "ref": "PDS-2.5",
+        "quote": "Les dépendances sont épinglées à une version exacte (`paquet==version`) et auditées en intégration continue (pip-audit ou équivalent).",
+        "quote_verified": true,
+        "summary": "Les dépendances sont épinglées à une version exacte (`paquet==version`) et auditées en intégration continue (pip-audit ou équivalent).",
+        "testability": "automated",
+        "why": "Vérifiable par l'interface en lecture seule de la cible.",
+        "controls": [
+          {
+            "rule": "PDS-2.5",
+            "title": "Dépendances épinglées et auditées",
+            "objective": "Chaque dépendance est épinglée à une version exacte et auditée en CI.",
+            "expected": "paquet==version partout et pip-audit en CI",
+            "severity": "moyenne",
+            "references": [
+              "RTS 16(4)",
+              "RTS 16(8)"
+            ],
+            "test_procedure": "Analyse du dépôt via la passerelle en lecture seule (arborescence, fichiers, recherche).",
+            "risk": "Une version vulnérable ou compromise d'une dépendance s'installe sans contrôle.",
+            "recommendation": "Épingler les versions et ajouter pip-audit à la CI.",
+            "evidence_page": "/repo/paiement-api/view?path=README.md",
+            "remediation": "manual",
+            "_check": "deps",
+            "threshold_source": "PDS-2.5",
+            "id": "C5",
+            "quote": "Les dépendances sont épinglées à une version exacte (`paquet==version`) et auditées en intégration continue (pip-audit ou équivalent)."
+          }
+        ],
+        "covered_by": []
+      },
+      {
+        "ref": "PDS-2.6",
+        "quote": "Les données de test sont synthétiques et déclarées comme telles (champ `\"synthetic\": true`) ; aucun export de production n'est versionné.",
+        "quote_verified": true,
+        "summary": "Les données de test sont synthétiques et déclarées comme telles (champ `\"synthetic\": true`) ; aucun export de production n'est versionné.",
+        "testability": "automated",
+        "why": "Vérifiable par l'interface en lecture seule de la cible.",
+        "controls": [
+          {
+            "rule": "PDS-2.6",
+            "title": "Données de test synthétiques",
+            "objective": "Les jeux de test sont synthétiques et déclarés comme tels ; aucun export de production.",
+            "expected": "\"synthetic\": true dans chaque jeu ; aucun export de production",
+            "severity": "elevee",
+            "references": [
+              "RTS 16(5)(a)"
+            ],
+            "test_procedure": "Analyse du dépôt via la passerelle en lecture seule (arborescence, fichiers, recherche).",
+            "risk": "Des données clients réelles sont exposées hors production.",
+            "recommendation": "Supprimer l'export, purger l'historique git et générer des données synthétiques.",
+            "evidence_page": "/repo/paiement-api/view?path=README.md",
+            "remediation": "manual",
+            "_check": "testdata",
+            "threshold_source": "PDS-2.6",
+            "id": "C6",
+            "quote": "Les données de test sont synthétiques et déclarées comme telles (champ `\"synthetic\": true`) ; aucun export de production n'est versionné."
+          }
+        ],
+        "covered_by": []
+      },
+      {
+        "ref": "PDS-2.7",
+        "quote": "Les réussites et les échecs d'authentification sont journalisés par l'application.",
+        "quote_verified": true,
+        "summary": "Les réussites et les échecs d'authentification sont journalisés par l'application.",
+        "testability": "automated",
+        "why": "Vérifiable par l'interface en lecture seule de la cible.",
+        "controls": [
+          {
+            "rule": "PDS-2.7",
+            "title": "Journalisation des authentifications",
+            "objective": "Les réussites et les échecs d'authentification sont journalisés.",
+            "expected": "journalisation dans la fonction de login",
+            "severity": "moyenne",
+            "references": [
+              "RTS 12(2)(c)(i)"
+            ],
+            "test_procedure": "Analyse du dépôt via la passerelle en lecture seule (arborescence, fichiers, recherche).",
+            "risk": "Les tentatives de connexion frauduleuses passent inaperçues.",
+            "recommendation": "Journaliser chaque tentative : identifiant, résultat, horodatage.",
+            "evidence_page": "/repo/paiement-api/view?path=README.md",
+            "remediation": "manual",
+            "_check": "authlog",
+            "threshold_source": "PDS-2.7",
+            "id": "C7",
+            "quote": "Les réussites et les échecs d'authentification sont journalisés par l'application."
+          }
+        ],
+        "covered_by": []
+      },
+      {
+        "ref": "",
+        "quote": "the procedure shall contain source code reviews covering both static and dynamic testing, including security testing for internet-exposed systems and applications. Financial entities shall:",
+        "quote_verified": true,
+        "summary": "the procedure shall contain source code reviews covering both static and dynamic testing, including security testing for",
+        "testability": "automated",
+        "why": "Couverte par les contrôles de la politique interne.",
+        "controls": [],
+        "covered_by": [
+          "PDS-2.4"
+        ]
+      },
+      {
+        "ref": "",
+        "quote": "non-production environments only store anonymised, pseudonymised, or randomised production data;",
+        "quote_verified": true,
+        "summary": "non-production environments only store anonymised, pseudonymised, or randomised production data;",
+        "testability": "automated",
+        "why": "Couverte par les contrôles de la politique interne.",
+        "controls": [],
+        "covered_by": [
+          "PDS-2.6"
+        ]
+      },
+      {
+        "ref": "",
+        "quote": "the procedure shall contain security testing of software packages no later than at the integration phase.",
+        "quote_verified": true,
+        "summary": "the procedure shall contain security testing of software packages no later than at the integration phase.",
+        "testability": "automated",
+        "why": "Couverte par les contrôles de la politique interne.",
+        "controls": [],
+        "covered_by": [
+          "PDS-2.5"
+        ]
+      },
+      {
+        "ref": "",
+        "quote": "monitor the implementation of that action plan.",
+        "quote_verified": true,
+        "summary": "monitor the implementation of that action plan.",
+        "testability": "interview",
+        "why": "Nécessite une revue.",
+        "controls": [],
+        "covered_by": []
+      },
+      {
+        "ref": "",
+        "quote": "financial entities shall develop, document and implement a policy governing the acquisition, development, and maintenance of ICT systems. That policy shall:",
+        "quote_verified": true,
+        "summary": "financial entities shall develop, document and implement a policy governing the acquisition, development, and maintenanc",
+        "testability": "document",
+        "why": "Nécessite une revue.",
+        "controls": [],
+        "covered_by": []
+      },
+      {
+        "ref": "?",
+        "quote": "La banque doit tout chiffrer en quantique.",
+        "quote_verified": false,
+        "summary": "Citation inventée (test du garde-fou).",
+        "testability": "automated",
+        "why": "",
+        "controls": [],
+        "covered_by": []
+      }
+    ],
+    "counts": {
+      "document": 1,
+      "automated": 10,
+      "interview": 1,
+      "requirements": 13,
+      "rejected": 1,
+      "controls": 7,
+      "covered": 3
+    }
+  },
+  "opinion_initial": "insuffisant",
+  "opinion_final": "insuffisant",
+  "injection_detected": false,
+  "trail_head": "3935a0dca8f6d47cb463375cd124af6ee09ac78c0a0de3b59cd63767bf5e009e"
+}

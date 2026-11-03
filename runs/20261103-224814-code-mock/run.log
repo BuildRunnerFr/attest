@@ -1,0 +1,11 @@
+interprétation : {"document": 1, "automated": 10, "interview": 1, "requirements": 13, "rejected": 1, "controls": 7, "covered": 3}
+22:48:08 Work programme : 7 · studio
+22:48:11 Test C4 PDS-2.4 · Analyse statique de sécurité en CI → Non-compliant · evidence sealed
+22:48:11 Test C3 PDS-2.3 · Hachage robuste des mots de passe → Non-compliant · evidence sealed
+22:48:11 Test C2 PDS-2.2 · Vérification TLS des appels sortants → Non-compliant · evidence sealed
+22:48:11 Test C1 PDS-2.1 · Aucun secret en clair dans le code → Non-compliant · evidence sealed
+22:48:12 Test C5 PDS-2.5 · Dépendances épinglées et auditées → Non-compliant · evidence sealed
+22:48:12 Test C7 PDS-2.7 · Journalisation des authentifications → Non-compliant · evidence sealed
+22:48:13 Test C6 PDS-2.6 · Données de test synthétiques → Non-compliant · evidence sealed
+22:48:14 Report : out/code/studio/20261103-224808-33a2/audit/report.html · report.pdf
+audit : {'pdf': True, 'report': True, 'state': 'done'}
