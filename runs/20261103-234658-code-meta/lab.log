@@ -1,0 +1,39 @@
+ * Serving Flask app 'app'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5050
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [03/Nov/2026 23:40:27] "[33mGET / HTTP/1.1[0m" 404 -
+127.0.0.1 - - [03/Nov/2026 23:42:08] "[31m[1mGET /api/security HTTP/1.1[0m" 401 -
+127.0.0.1 - - [03/Nov/2026 23:42:08] "GET /api/journal HTTP/1.1" 200 -
+127.0.0.1 - - [03/Nov/2026 23:43:12] "GET /api/repo/paiement-api/tree HTTP/1.1" 200 -
+127.0.0.1 - - [03/Nov/2026 23:43:12] "GET /api/repo/paiement-api/file?path=.github/workflows/ci.yml HTTP/1.1" 200 -
+127.0.0.1 - - [03/Nov/2026 23:43:12] "GET /api/repo/paiement-api/search?q=(bandit|semgrep|codeql) HTTP/1.1" 200 -
+127.0.0.1 - - [03/Nov/2026 23:43:13] "GET /repo/paiement-api/view?path=.github/workflows/ci.yml HTTP/1.1" 200 -
+127.0.0.1 - - [03/Nov/2026 23:43:59] "GET /api/repo/paiement-api/search?q=verify\\s*%3D\\s*False HTTP/1.1" 200 -
+127.0.0.1 - - [03/Nov/2026 23:43:59] "GET /api/repo/paiement-api/search?q=ssl\\._create_unverified_context HTTP/1.1" 200 -
+127.0.0.1 - - [03/Nov/2026 23:43:59] "GET /api/repo/paiement-api/search?q=CERT_NONE HTTP/1.1" 200 -
+127.0.0.1 - - [03/Nov/2026 23:43:59] "GET /api/repo/paiement-api/file?path=app/payments.py HTTP/1.1" 200 -
+127.0.0.1 - - [03/Nov/2026 23:44:00] "GET /repo/paiement-api/view?path=app/payments.py HTTP/1.1" 200 -
+127.0.0.1 - - [03/Nov/2026 23:44:13] "GET /api/repo/paiement-api/tree HTTP/1.1" 200 -
+127.0.0.1 - - [03/Nov/2026 23:44:13] "GET /api/repo/paiement-api/search?q=(password|passwd|secret|api[_-]?key|token)\\s*%3D\\s*['"][^'"]%2B['"] HTTP/1.1" 200 -
+127.0.0.1 - - [03/Nov/2026 23:44:13] "GET /api/repo/paiement-api/search?q=BEGIN.*PRIVATE+KEY HTTP/1.1" 200 -
+127.0.0.1 - - [03/Nov/2026 23:44:13] "GET /api/repo/paiement-api/file?path=app/config.py HTTP/1.1" 200 -
+127.0.0.1 - - [03/Nov/2026 23:44:13] "GET /repo/paiement-api/view?path=app/config.py HTTP/1.1" 200 -
+127.0.0.1 - - [03/Nov/2026 23:44:32] "GET /api/repo/paiement-api/search?q=(argon2|bcrypt|scrypt|PBKDF2|passlib|hashlib\\.pbkdf2) HTTP/1.1" 200 -
+127.0.0.1 - - [03/Nov/2026 23:44:32] "GET /api/repo/paiement-api/search?q=(hashlib\\.md5|hashlib\\.sha1|\\bmd5\\(|\\bsha1\\() HTTP/1.1" 200 -
+127.0.0.1 - - [03/Nov/2026 23:44:32] "GET /api/repo/paiement-api/file?path=app/auth.py HTTP/1.1" 200 -
+127.0.0.1 - - [03/Nov/2026 23:44:32] "GET /repo/paiement-api/view?path=app/auth.py HTTP/1.1" 200 -
+127.0.0.1 - - [03/Nov/2026 23:45:08] "GET /api/repo/paiement-api/file?path=requirements.txt HTTP/1.1" 200 -
+127.0.0.1 - - [03/Nov/2026 23:45:08] "GET /api/repo/paiement-api/tree HTTP/1.1" 200 -
+127.0.0.1 - - [03/Nov/2026 23:45:08] "GET /api/repo/paiement-api/file?path=.github/workflows/ci.yml HTTP/1.1" 200 -
+127.0.0.1 - - [03/Nov/2026 23:45:08] "GET /api/repo/paiement-api/search?q=(pip-audit|safety|dependabot) HTTP/1.1" 200 -
+127.0.0.1 - - [03/Nov/2026 23:45:09] "GET /repo/paiement-api/view?path=requirements.txt HTTP/1.1" 200 -
+127.0.0.1 - - [03/Nov/2026 23:45:41] "GET /api/repo/paiement-api/tree HTTP/1.1" 200 -
+127.0.0.1 - - [03/Nov/2026 23:45:41] "GET /api/repo/paiement-api/search?q="synthetic"\\s*:\\s*true HTTP/1.1" 200 -
+127.0.0.1 - - [03/Nov/2026 23:45:41] "GET /api/repo/paiement-api/search?q=(production|prod_dump|real_iban|export.*prod) HTTP/1.1" 200 -
+127.0.0.1 - - [03/Nov/2026 23:45:42] "GET /repo/paiement-api/view?path=tests/fixtures/clients_export_prod.json HTTP/1.1" 200 -
+127.0.0.1 - - [03/Nov/2026 23:46:23] "GET /api/repo/paiement-api/search?q=(login|authenticate|auth).*log HTTP/1.1" 200 -
+127.0.0.1 - - [03/Nov/2026 23:46:23] "GET /api/repo/paiement-api/search?q=logger\\.(info|warning|error) HTTP/1.1" 200 -
+127.0.0.1 - - [03/Nov/2026 23:46:23] "GET /api/repo/paiement-api/search?q=(authentication.*(success|fail)|login.*(success|fail)) HTTP/1.1" 200 -
+127.0.0.1 - - [03/Nov/2026 23:46:24] "GET /repo/paiement-api/view?path=app/config.py HTTP/1.1" 200 -
