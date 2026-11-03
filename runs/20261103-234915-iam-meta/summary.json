@@ -1,0 +1,42 @@
+{
+  "id": "20261103-234915-iam-meta",
+  "utc": "20261103-234915",
+  "kind": "iam",
+  "backend": "meta",
+  "note": "cycle 1 : audit IAM EN avec remédiation sous la nouvelle garde (aab3076)",
+  "commit": "aab3076",
+  "workflow_run": "41741881088",
+  "status": "success",
+  "budget_spent_usd": 0.3609,
+  "priced_usd": 0.1209,
+  "unpriced": [
+    "sam-3.1"
+  ],
+  "audits": [
+    {
+      "folder": "iam",
+      "controls": 7,
+      "status_before": [
+        "fail",
+        "fail",
+        "fail",
+        "fail",
+        "fail",
+        "pass",
+        "fail"
+      ],
+      "status_after": [
+        "pass",
+        "pass",
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "evidence_errors": 0,
+      "opinion_initial": "insuffisant",
+      "opinion_final": "ameliorer",
+      "injection_detected": false,
+      "cost_usd": 0.12094500000000001
+    }
+  ]
+}
