@@ -6,6 +6,7 @@ Trois backends (variable ATTEST_BACKEND) :
           vLLM ou SGLang) : aucune donnée d'audit ne sort du SI. SAM via l'API si MODEL_API_KEY est défini.
 - mock  : réponses préenregistrées, pour développer et tester sans clé.
 """
+import atexit
 import base64
 import json
 import mimetypes
@@ -46,6 +47,8 @@ class Usage:
             m["calls"] += 1; m["input"] += inp; m["output"] += out; m["seconds"] += seconds; m["images"] += images
             t = self.by_task[task]
             t["calls"] += 1; t["input"] += inp; t["output"] += out
+        if self is not TOTAL:
+            TOTAL.add(model, task, inp, out, seconds, images)
 
     def cost(self) -> dict:
         prices = config.pricing()
@@ -65,7 +68,38 @@ class Usage:
         return {"rows": rows, "total_usd": total, "unpriced": unknown, "estimated": self.estimated}
 
 
-USAGE = Usage()
+USAGE = Usage()        # coût de la mission en cours (remis à zéro à chaque mission)
+TOTAL = Usage()        # cumul du processus, jamais remis à zéro : sert au plafond de dépense
+
+
+# ---------- plafond de dépense ----------
+
+class BudgetExceeded(RuntimeError):
+    """Plafond ATTEST_BUDGET_USD atteint : aucun nouvel appel payant n'est envoyé."""
+
+
+SAM_BUDGET_PER_IMAGE = float(os.getenv("ATTEST_SAM_BUDGET_PER_IMAGE", "0.02"))   # prix SAM non publié : prudence
+
+
+def spent_usd() -> float:
+    """Dépense du processus, prudente : prix connus + estimation majorée pour les images au prix non publié."""
+    c = TOTAL.cost()
+    return c["total_usd"] + sum(r["images"] * SAM_BUDGET_PER_IMAGE for r in c["rows"]
+                                if r["cost_usd"] is None and not r["model"].endswith("(mock)"))
+
+
+def check_budget():
+    cap = os.getenv("ATTEST_BUDGET_USD")
+    if cap and BACKEND != "mock" and spent_usd() >= float(cap):
+        raise BudgetExceeded(f"plafond de dépense atteint : {spent_usd():.2f} $ ≥ {float(cap):.2f} $ (ATTEST_BUDGET_USD)")
+
+
+@atexit.register
+def _write_total():
+    """ATTEST_USAGE_FILE : la dépense réelle du processus, même si l'audit s'est interrompu."""
+    path = os.getenv("ATTEST_USAGE_FILE")
+    if path:
+        Path(path).write_text(json.dumps({**TOTAL.cost(), "budget_spent_usd": round(spent_usd(), 4)}, indent=2))
 
 
 # ---------- appels ----------
@@ -106,6 +140,7 @@ def ask(task: str, system: str, user: str, image: Path | None = None, code: bool
                   time.time() - t0)
         return out
 
+    check_budget()
     if BACKEND == "local":
         content = [{"type": "text", "text": user}]
         if image:

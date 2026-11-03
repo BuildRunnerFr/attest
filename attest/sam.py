@@ -90,6 +90,7 @@ def _call_sam(image: Path, boxes, size) -> list[dict]:
         return parse(mock.sam_output(boxes, size))
 
     import time
+    llm.check_budget()
     t0 = time.time()
 
     public = os.getenv("PUBLIC_EVIDENCE_BASE_URL")  # si l'API refuse les data: URL
@@ -102,5 +103,7 @@ def _call_sam(image: Path, boxes, size) -> list[dict]:
         ]}],
         metadata={"mask_encoding": "one_bit", "include_confidence": "true"},
     )
-    llm.USAGE.add("sam-3.1", "segment", seconds=time.time() - t0, images=1)
+    u = getattr(r, "usage", None)
+    llm.USAGE.add("sam-3.1", "segment", getattr(u, "input_tokens", 0) or 0, getattr(u, "output_tokens", 0) or 0,
+                  seconds=time.time() - t0, images=1)
     return parse(r.output_text)

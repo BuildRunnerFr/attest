@@ -136,3 +136,31 @@ def test_model_boxes_are_read_tolerantly():
     rows = [(28, 100, 1068, 124), (28, 124, 1068, 148), (28, 148, 1068, 172)]
     assert to_rows((100, 118, 300, 150), rows) == (28, 124, 1068, 148)     # ligne entière
     assert to_rows((100, 400, 300, 420), rows) is None                       # hors du code : ignoré
+
+
+# ---------- plafond de dépense ----------
+
+def test_budget_cap_stops_paid_calls(monkeypatch):
+    monkeypatch.setattr(llm, "BACKEND", "meta")
+    monkeypatch.setenv("ATTEST_BUDGET_USD", "1.0")
+    total = llm.Usage()
+    monkeypatch.setattr(llm, "TOTAL", total)
+    total.add("muse-spark-1.3", "plan", inp=400_000)              # 0,50 $ au prix publié
+    llm.check_budget()                                            # sous le plafond : l'appel part
+    total.add("sam-3.1", "segment", images=30)                    # prix non publié : 30 × 0,02 $ comptés
+    assert llm.spent_usd() == pytest.approx(1.10)
+    with pytest.raises(llm.BudgetExceeded):
+        llm.check_budget()
+
+
+def test_ledger_counts_only_real_runs(tmp_path):
+    import importlib.util
+    from attest import config
+    spec = importlib.util.spec_from_file_location("budget", config.ROOT / "ops" / "budget.py")
+    budget = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(budget)
+    ledger = tmp_path / "ledger.jsonl"
+    ledger.write_text('{"backend": "meta", "budget_spent_usd": 0.65}\n{"backend": "mock", "budget_spent_usd": 9}\n'
+                      '{"backend": "meta", "budget_spent_usd": 0.30}\n')
+    assert budget.spent(ledger) == pytest.approx(0.95)
+    assert budget.spent(tmp_path / "absent.jsonl") == 0.0

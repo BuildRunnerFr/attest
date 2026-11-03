@@ -1,0 +1,108 @@
+name: real-audit
+# Audit réel avec les modèles Meta (Muse Spark 1.3 + SAM 3.1), lancé à la demande (gh workflow run real-audit.yml).
+# Résultats et registre de dépense : branche real-results. Plafond cumulé : variable de dépôt
+# ATTEST_BUDGET_TOTAL_USD (130 par défaut) ; au-delà, aucun appel n'est envoyé.
+# Une exécution à la fois : attendre la fin d'une exécution avant d'en lancer une autre.
+on:
+  workflow_dispatch:
+    inputs:
+      kind:
+        description: "bench | iam | code | studio-iam | injection"
+        required: true
+        default: bench
+      backend:
+        description: "meta (modèles réels) | mock (vérifie le circuit, sans clé)"
+        required: true
+        default: meta
+      lang:
+        description: "en | fr"
+        required: true
+        default: en
+      only:
+        description: "bench : scénarios (ex. 02,05) ; vide = les 8"
+        required: false
+        default: ""
+      note:
+        description: "raison de l'exécution"
+        required: false
+        default: ""
+
+concurrency:
+  group: real-audit
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    env:
+      ATTEST_BACKEND: ${{ inputs.backend }}
+      ATTEST_LANG: ${{ inputs.lang }}
+      ATTEST_AUDITOR: Attest CI
+      ATTEST_WORKERS: "4"
+      ATTEST_USAGE_FILE: /tmp/attest-usage.json
+      MODEL_API_KEY: ${{ secrets.MODEL_API_KEY }}
+      KIND: ${{ inputs.kind }}
+      BACKEND: ${{ inputs.backend }}
+      NOTE: ${{ inputs.note }}
+      BENCH_ONLY: ${{ inputs.only }}
+      BUDGET_TOTAL_USD: ${{ vars.ATTEST_BUDGET_TOTAL_USD || '130' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: real-results
+          path: results
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Dépendances
+        run: |
+          pip install -r requirements.txt
+          python -m playwright install --with-deps chromium
+
+      - name: Plafond de dépense
+        id: budget
+        run: python ops/budget.py results/ledger.jsonl "$BUDGET_TOTAL_USD"
+
+      - name: Clé de l'API
+        if: inputs.backend == 'meta'
+        run: |
+          if [ -z "$MODEL_API_KEY" ]; then
+            echo "::error::Secret MODEL_API_KEY absent : Settings > Secrets and variables > Actions"; exit 1
+          fi
+
+      - name: Audit
+        id: audit
+        if: inputs.backend != 'meta' || steps.budget.outputs.ok == 'true'
+        continue-on-error: true
+        env:
+          ATTEST_BUDGET_USD: ${{ inputs.backend == 'meta' && steps.budget.outputs.remaining || '' }}
+        run: bash ops/real_run.sh "$KIND" out
+
+      - name: Publication (branche real-results)
+        if: always() && steps.audit.outcome != 'skipped'
+        env:
+          RUN_STATUS: ${{ steps.audit.outcome }}
+        run: |
+          python ops/publish.py out results "$KIND" "$BACKEND" "$NOTE"
+          cd results
+          git config user.name "attest-ci"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -q -m "$KIND ($BACKEND) : exécution ${{ github.run_id }}"
+          for i in 1 2 3; do git push -q origin HEAD:real-results && break; git pull -q --rebase origin real-results; done
+
+      - name: Plafond atteint
+        if: inputs.backend == 'meta' && steps.budget.outputs.ok != 'true'
+        run: |
+          echo "::warning::Plafond de dépense atteint : aucun appel envoyé."
+
+      - name: Résultat
+        if: steps.audit.outcome == 'failure'
+        run: |
+          echo "::error::L'audit a échoué : voir run.log dans la branche real-results"; exit 1
