@@ -46,13 +46,16 @@ personal data spotted by the AI vs masked in the end, injection attempts flagged
 |---|---|---|---|---|---|---|---|
 | Mock (pipeline sanity check, CI) | 56 | 100 % | 0 | 0 | 50 % / 100 % | 1/1 | — |
 | **Muse Spark 1.3 + SAM 3.1** (2 Nov 2026, [scorecard](../examples/evaluation-en/scorecard.md)) | 56 | **100 %** | **0** | **0** | 70 % (178/256) / **100 %** | 1/1 | $0.65 for 8 systems, 240 s |
+| **Muse Spark 1.3 + SAM 3.1**, replay in GitHub Actions (3 Nov 2026, ledger `20261103-232326-bench-meta`) | 56 | **100 %** | **0** | **0** | 34 % (87/256) / **100 %** | 1/1 | $0.53 for 8 systems, 300 s |
+
+Costs are the Muse Spark tokens priced from `pricing.toml`; SAM 3.1 has no published price yet, so the spending cap counts it with a conservative estimate instead.
 
 The code-repository target (Attest Studio) is not yet part of this set; the next step is a compliant twin of `paiement-api` with labelled flaws, scored the same way.
 
 What these numbers do and do not say: 56/56 is the score on a small test set that we designed ourselves, with a
 policy clarified after the first real run. It shows the pipeline holds on thresholds, generic accounts and prompt
 injection; it does not prove general accuracy. Next steps: a blind set written by someone else, and the code target.
-The model alone spotted 70 % of the personal data on the pages; the deterministic safety net masked the remaining 30 %.
+The model alone spotted 70 % of the personal data on the pages on the first run and 34 % on the replay; the deterministic safety net masked the rest both times. Verdicts were stable across the two runs (56/56 twice); the model's recall of personal data was not — which is exactly why masking does not depend on it.
 
 Known weaknesses found so far on real runs (see [`examples/README.md`](../examples/README.md)): IP-address boxes drawn
 too short by the model (caught by the deterministic safety net), and an over-strict reading of an ambiguous policy rule

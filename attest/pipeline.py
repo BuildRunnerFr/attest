@@ -83,7 +83,15 @@ def run_test(e: dict, ctx: Ctx):
     if code is None:
         origin, error = "generated", None
         for _ in range(2):                                  # une auto-correction autorisée
-            code = _write_test(c, error, ctx.doc)
+            try:
+                code = _write_test(c, error, ctx.doc)
+            except llm.BudgetExceeded:
+                raise                                       # plafond de dépense : l'audit s'arrête
+            except Exception as ex:                         # panne du modèle : contrôle non concluant
+                code = f"# {t('log.nocode')} : {type(ex).__name__}: {str(ex)[:200]}\n"
+                res = {"status": "error", "detail": f"{t('log.model_error')} : {type(ex).__name__}: {str(ex)[:240]}"}
+                log(f"  {c['id']} {res['detail']}")
+                break
             res = _safe_run(code, ctx)
             if res["status"] != "error":
                 catalog.library_put(c, code, ctx.doc)
@@ -301,12 +309,21 @@ def observe(e: dict, ctx: Ctx, refresh):
 
 def propose_fix(e: dict, ctx: Ctx) -> dict:
     c = e["control"]
-    prop = llm.extract_json(llm.ask(
-        "fix", prompts.FIX_SYSTEM,
-        prompts.FIX_USER.format(control=json.dumps(shown(c), ensure_ascii=False),
-                                result=json.dumps(e["before"], ensure_ascii=False),
-                                api_doc=ctx.doc, lang=config.lang_name()),
-        mock_ctx={"control": c, "kind": ctx.target["kind"]}))
+    try:
+        prop = llm.extract_json(llm.ask(
+            "fix", prompts.FIX_SYSTEM,
+            prompts.FIX_USER.format(control=json.dumps(shown(c), ensure_ascii=False),
+                                    result=json.dumps(e["before"], ensure_ascii=False),
+                                    api_doc=ctx.doc, lang=config.lang_name()),
+            mock_ctx={"control": c, "kind": ctx.target["kind"]}))
+        if not isinstance(prop, dict):
+            raise ValueError("réponse de remédiation inattendue")
+    except llm.BudgetExceeded:
+        raise
+    except Exception as ex:                             # pas de correctif automatique : plan d'action manuel
+        log(f"  {c['id']} {t('log.fix_error')} : {type(ex).__name__}: {str(ex)[:160]}")
+        ctx.trail.log("fix_proposal_failed", control=c["id"], error=f"{type(ex).__name__}: {str(ex)[:240]}")
+        prop = {"type": "manual", "rationale": t("f.fix_fallback")}
     if c["remediation"] == "manual" or prop.get("type") == "manual" or not ctx.target["remediable"]:
         return {"type": "manual", "actions": prop.get("actions") or [c["recommendation"]],
                 "rationale": prop.get("rationale", c["recommendation"])}
@@ -356,13 +373,12 @@ def preflight(mission) -> None:
     try:
         anon = requests.get(url + "/api/security", timeout=5)
     except requests.RequestException:
-        sys.exit(f"Système audité injoignable sur {url} : lance « python -m lab.app » dans un autre terminal.")
+        sys.exit(t("pre.unreachable").format(url=url))
     if anon.status_code != 401:
-        sys.exit("Le système audité accepte les requêtes sans authentification : c'est une ancienne version de la "
-                 "console. Arrête-la (Ctrl+C dans son terminal) puis relance « python -m lab.app ».")
+        sys.exit(t("pre.noauth"))
     ro = requests.get(url + "/api/journal", timeout=5, headers={"Authorization": f"Bearer {config.AUDIT_TOKEN}"})
     if ro.status_code != 200:
-        sys.exit(f"Le compte d'audit est refusé (HTTP {ro.status_code}) : vérifie LAB_AUDIT_TOKEN.")
+        sys.exit(t("pre.token").format(code=ro.status_code))
 
 
 def remediation(entries: list, ctx: Ctx, approve_all: bool, approver: str) -> list:
@@ -370,7 +386,7 @@ def remediation(entries: list, ctx: Ctx, approve_all: bool, approver: str) -> li
     if not findings:
         return []
     if approver.strip().lower() == ctx.mission.lead_auditor.strip().lower():
-        sys.exit("Séparation des tâches : l'approbateur des changements ne peut pas être l'auditeur.")
+        sys.exit(t("pre.sod"))
     log(f"{t('log.remediation')} : {len(findings)}")
     with ThreadPoolExecutor(WORKERS) as pool:
         proposals = list(pool.map(lambda e: propose_fix(e, ctx), findings))
@@ -415,7 +431,7 @@ def remediation(entries: list, ctx: Ctx, approve_all: bool, approver: str) -> li
         if not ok:
             f["status"] = "rejected" if mode == "interactive" else "pending"
             continue
-        e["change"].update(approved_by=approver, approved_at=time.strftime("%Y-%m-%d %H:%M:%S"),
+        e["change"].update(approved_by=approver, approved_at=time.strftime("%Y-%m-%d %H:%M:%S"), mode=mode,
                            **apply_change(prop, ticket, approver, ctx))
         ctx.trail.log("change_applied", ticket=ticket, http=e["change"]["http"],
                       journal_recorded=bool(e["change"]["journal"]))
@@ -443,11 +459,14 @@ def verify_fix(e: dict, ctx: Ctx, refresh):
 
 # ---------- synthèse ----------
 
-def opinion(severities: list) -> str:
+def opinion(severities: list, inconclusive: int = 0) -> str:
+    """Opinion fondée sur les constats ; un contrôle non concluant (erreur de test) ne vaut jamais conformité."""
     if "critique" in severities:
         return "insuffisant"
     if "elevee" in severities:
         return "ameliorer"
+    if inconclusive:
+        return "reserve"
     return "globalement" if severities else "satisfaisant"
 
 
@@ -462,6 +481,30 @@ def raise_findings(entries: list, mission) -> None:
                         "due": (today + timedelta(days=int(mission.sla_days.get(sev, 180)))).isoformat()}
 
 
+def issue(state: dict, ctx: Ctx, refresh) -> None:
+    """Émission de fin : rapport HTML/PDF, result.json, piste et manifeste (chemin normal comme chemin d'échec)."""
+    out_dir, trail = ctx.out, ctx.trail
+    state["running"] = False
+    state["trail_head"] = trail.head
+    refresh()
+    html = out_dir / "report.html"
+    pdf = out_dir / "report.pdf"
+    try:
+        report.to_pdf(html, pdf)
+    except Exception as ex:
+        log(f"PDF non généré : {ex}")
+    result = out_dir / "result.json"
+    result.write_text(json.dumps({k: v for k, v in state.items()}, ensure_ascii=False, indent=2, default=str))
+    trail.log("report_issued", file="report.html", sha256=sha256_file(html), aborted=bool(state.get("aborted")),
+              pdf_sha256=sha256_file(pdf) if pdf.exists() else None, result_sha256=sha256_file(result))
+    files = sorted(p for p in out_dir.rglob("*") if p.is_file() and p.name not in ("manifest.json", "trail.jsonl"))
+    (out_dir / "manifest.json").write_text(json.dumps({
+        "mission": state["mission"]["id"], "run_id": state["run_id"], "issued_at": time.strftime("%Y-%m-%dT%H:%M:%S"),
+        "trail_head": trail.head, "aborted": state.get("aborted"),
+        "files": [{"path": ctx.rel(p), "sha256": sha256_file(p)} for p in files]}, indent=2))
+    log(f"{t('log.report')} : {html}" + (f" · {pdf.name}" if pdf.exists() else ""))
+
+
 def run(mission, out_dir: Path, remediate: bool = False, approve_all: bool = False,
         approver: str = "", fresh: bool = False, replan: bool = False, reset_lab: bool = False,
         controls: list | None = None, catalogue_meta: dict | None = None, interpretation: dict | None = None,
@@ -474,10 +517,6 @@ def run(mission, out_dir: Path, remediate: bool = False, approve_all: bool = Fal
     ctx = Ctx(mission, out_dir, trail, fresh)
     trail.log("engagement_opened", mission=mission.id, system=mission.system, backend=llm.BACKEND,
               lead_auditor=mission.lead_auditor, framework=str(mission.requirement_path.name))
-    if reset_lab:
-        requests.post(mission.lab_url + "/api/reset", timeout=5,
-                      headers={"Authorization": f"Bearer {config.CHANGE_TOKEN}"})
-        trail.log("demo_environment_reset")
 
     def portable(v):                     # jamais de chemin absolu (nom d'utilisateur, arborescence locale)
         if isinstance(v, Path):
@@ -502,6 +541,29 @@ def run(mission, out_dir: Path, remediate: bool = False, approve_all: bool = Fal
             state["duration_s"] = round(time.time() - t0)
             report.write(state, out_dir)
 
+    try:
+        _phases(state, ctx, refresh, remediate, approve_all, approver, replan, reset_lab,
+                controls, catalogue_meta, interpretation)
+    except BaseException as ex:                     # y compris BudgetExceeded, SystemExit, Ctrl+C
+        state["aborted"] = f"{type(ex).__name__}: {str(ex)[:300]}"
+        trail.log("engagement_aborted", error=state["aborted"])
+        log(f"{t('log.aborted')} : {state['aborted']}")
+        try:
+            issue(state, ctx, refresh)
+        except Exception as ex2:                    # ne masque jamais l'erreur d'origine
+            log(f"émission impossible : {type(ex2).__name__}: {ex2}")
+        raise
+    issue(state, ctx, refresh)
+    return state
+
+
+def _phases(state, ctx, refresh, remediate, approve_all, approver, replan, reset_lab,
+            controls, catalogue_meta, interpretation):
+    mission, out_dir, trail = ctx.mission, ctx.out, ctx.trail
+    if reset_lab:
+        requests.post(mission.lab_url + "/api/reset", timeout=5,
+                      headers={"Authorization": f"Bearer {config.CHANGE_TOKEN}"})
+        trail.log("demo_environment_reset")
     refresh()
     if controls is None:
         controls, cat_meta = catalog.load_or_plan(mission, trail, replan=replan)
@@ -519,7 +581,8 @@ def run(mission, out_dir: Path, remediate: bool = False, approve_all: bool = Fal
     with ThreadPoolExecutor(WORKERS) as pool:                         # Phase 1 — constat
         list(pool.map(lambda e: observe(e, ctx, refresh), entries))
     raise_findings(entries, mission)
-    state["opinion_initial"] = opinion([e["finding"]["severity"] for e in entries if e.get("finding")])
+    inconclusive = sum(1 for e in entries if e.get("status_before") == "error")
+    state["opinion_initial"] = opinion([e["finding"]["severity"] for e in entries if e.get("finding")], inconclusive)
     refresh()
 
     if remediate:                                                       # Phase 2 — remédiation
@@ -536,28 +599,7 @@ def run(mission, out_dir: Path, remediate: bool = False, approve_all: bool = Fal
                       sha256=state["journal_evidence"]["sha256"], page="/admin/journal")
 
     state["opinion_final"] = opinion([e["finding"]["severity"] for e in entries
-                                      if e.get("finding") and e["finding"]["status"] != "closed"])
+                                      if e.get("finding") and e["finding"]["status"] != "closed"], inconclusive)
     state["injection_detected"] = any(
         (e.get(k) or {}).get("inspection", {}).get("injection_detected") for e in entries
         for k in ("evidence_before", "evidence_after"))
-    state["running"] = False
-    state["trail_head"] = trail.head
-    refresh()
-
-    html = out_dir / "report.html"
-    pdf = out_dir / "report.pdf"
-    try:
-        report.to_pdf(html, pdf)
-    except Exception as ex:
-        log(f"PDF non généré : {ex}")
-    result = out_dir / "result.json"
-    result.write_text(json.dumps({k: v for k, v in state.items()}, ensure_ascii=False, indent=2, default=str))
-    trail.log("report_issued", file="report.html", sha256=sha256_file(html),
-              pdf_sha256=sha256_file(pdf) if pdf.exists() else None, result_sha256=sha256_file(result))
-    files = sorted(p for p in out_dir.rglob("*") if p.is_file() and p.name not in ("manifest.json", "trail.jsonl"))
-    (out_dir / "manifest.json").write_text(json.dumps({
-        "mission": mission.id, "run_id": state["run_id"], "issued_at": time.strftime("%Y-%m-%dT%H:%M:%S"),
-        "trail_head": trail.head,
-        "files": [{"path": ctx.rel(p), "sha256": sha256_file(p)} for p in files]}, indent=2))
-    log(f"{t('log.report')} : {html}" + (f" · {pdf.name}" if pdf.exists() else ""))
-    return state

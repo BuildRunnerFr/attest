@@ -12,6 +12,7 @@ from PIL import Image
 
 from . import llm
 
+MAX_OBJECTS = 16   # limite de SAM 3.1 par requête (erreur 400 « exceed this model's limit of 16 »)
 RECORD = re.compile(r"(\d+)<\|box;([^|]*)\|><\|mask;([^|]*)\|>")
 
 
@@ -62,13 +63,17 @@ def segment_boxes(image: Path, boxes: list[tuple[int, int, int, int]]) -> list[n
     size = Image.open(image).size
     if not boxes:
         return []
-    try:
-        objs = _call_sam(image, boxes, size)
-        by_id = {o["id"]: full_mask(o, size) for o in objs}
-        return [by_id.get(i + 1, _box_mask(b, size)) for i, b in enumerate(boxes)]
-    except Exception as e:  # la démo ne doit jamais casser sur SAM
-        print(f"  [SAM] repli sur les boîtes : {e}")
-        return [_box_mask(b, size) for b in boxes]
+    out = []
+    for k in range(0, len(boxes), MAX_OBJECTS):       # SAM 3.1 refuse plus de 16 objets par requête
+        batch = boxes[k:k + MAX_OBJECTS]
+        try:
+            objs = _call_sam(image, batch, size)
+            by_id = {o["id"]: full_mask(o, size) for o in objs}
+            out += [by_id.get(i + 1, _box_mask(b, size)) for i, b in enumerate(batch)]
+        except Exception as e:  # la démo ne doit jamais casser sur SAM
+            print(f"  [SAM] repli sur les boîtes : {e}")
+            out += [_box_mask(b, size) for b in batch]
+    return out
 
 
 def _box_mask(b, size):

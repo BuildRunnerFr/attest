@@ -58,7 +58,7 @@ that API an ICT third-party provider under DORA. See [docs/BUSINESS_CASE.md](doc
 ## Built the way a bank would have to run it
 
 - **Independence and least privilege**: tests use a read-only token; even if a generated script tried to write, the
-  audited system would refuse (403). The static guard refuses write calls before execution anyway.
+  audited system would refuse (403). Before that, a static guard and a runtime audit hook refuse write calls, file and process access, and any network destination other than the audited system (`tests/test_sandbox.py` replays the bypasses our own red-team review found).
 - **Segregation of duties**: changes need an approver who is not the lead auditor; Attest refuses to run otherwise.
 - **Change management**: every fix has a ticket, an approver, a journal entry on the audited system and a re-test (DORA 9(4)(e)).
 - **Tamper-evident evidence**: every event and file is sealed in a SHA-256 hash chain. `python -m attest verify runs/<run>` detects any edited screenshot, script or report.

@@ -11,6 +11,8 @@ import threading
 from datetime import datetime, timezone
 from pathlib import Path
 
+from .redact import scrub
+
 GENESIS = "0" * 64
 
 
@@ -38,7 +40,7 @@ class Trail:
         self._lock = threading.Lock()
 
     def log(self, event: str, **data) -> str:
-        data = json.loads(json.dumps(data, default=str, ensure_ascii=False))   # JSON pur, hachable
+        data = scrub(json.loads(json.dumps(data, default=str, ensure_ascii=False)))   # JSON pur, hachable, sans secret
         with self._lock:
             self.seq += 1
             body = {"seq": self.seq, "ts": datetime.now(timezone.utc).isoformat(timespec="milliseconds"),

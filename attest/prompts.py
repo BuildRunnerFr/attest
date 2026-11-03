@@ -36,6 +36,8 @@ CODE_SYSTEM = f"""You write small, read-only Python audit tests. Rules:
 - Base URL: os.environ["LAB_URL"]. Every request sends the header
   {{"Authorization": "Bearer " + os.environ["LAB_TOKEN"]}} (read-only audit token).
 - Only HTTP GET via requests.get. Never modify the system.
+- Plain code only: no getattr/setattr, no private or dunder attributes, no requests.Session, no file,
+  process or socket access (a static guard and a runtime hook refuse them; the script would fail).
 - {UNTRUSTED}
 - If a request fails or the data is missing or unexpected, do NOT print a verdict: write the error to stderr
   and exit with code 2. A technical error must never be reported as a non-compliance.

@@ -33,7 +33,7 @@ h3{font-size:15px;margin:22px 0 10px}
 .op{border:1px solid var(--line);border-radius:10px;padding:14px 16px}
 .op span{display:block;font-size:12px;color:var(--mute);text-transform:uppercase;letter-spacing:.06em}
 .op b{display:inline-block;margin-top:6px;font:600 20px/1.2 Georgia,serif}
-.op.insuffisant b{color:var(--crit)}.op.ameliorer b{color:var(--high)}.op.globalement b{color:var(--med)}.op.satisfaisant b{color:var(--ok)}
+.op.insuffisant b{color:var(--crit)}.op.reserve b{color:var(--med)}.op.ameliorer b{color:var(--high)}.op.globalement b{color:var(--med)}.op.satisfaisant b{color:var(--ok)}
 .kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:20px}
 .kpi{background:#f6f7f9;border-radius:8px;padding:12px 14px}
 .kpi b{display:block;font:600 24px/1.1 Georgia,serif}.kpi span{font-size:12.5px;color:var(--mute)}
@@ -78,6 +78,7 @@ blockquote{margin:8px 0 0;padding:6px 10px;border-left:3px solid var(--line);col
 .tb.document,.tb.interview{background:#fdf3e1;color:#8a5a00}.tb.rejected{background:#fde8e8;color:var(--ko)}
 .small{font-size:12.5px;color:var(--mute)}
 .hash{font:11.5px ui-monospace,Menlo,monospace;color:var(--mute);word-break:break-all}
+.alert.abort{border-color:#e5a3a3;background:#fdecec;color:var(--ko);font-weight:600}
 .alert{border:1px solid #f1c27d;background:#fff8eb;border-radius:8px;padding:10px 14px;margin:12px 0;font-size:13.5px}
 .live{display:inline-block;width:8px;height:8px;border-radius:50%;background:#ef4444;margin-right:6px;animation:p 1s infinite}
 @keyframes p{50%{opacity:.25}}
@@ -169,7 +170,8 @@ def change_box(en):
         lines.append(f'⚠ {e(ch["guard_refusal"])}')
     if ch.get("approved_by"):
         lines.append(f'{e(t("f.approved"))}{colon()}<b>{e(ch["approved_by"])}</b> · {e(ch.get("approved_at", ""))} · '
-                     f'{e(t("f.applied") if ch.get("applied") else t("f.notapplied"))}')
+                     + (f'{e(t("mode." + ch["mode"]))} · ' if ch.get("mode", "interactive") != "interactive" else "")
+                     + f'{e(t("f.applied") if ch.get("applied") else t("f.notapplied"))}')
     j = ch.get("journal")
     if j:
         lines.append(f'{e(t("f.journal"))}{colon()}{e(j["ts"])} · {e(j["actor"])} · {e("; ".join(j["changes"]))}')
@@ -266,7 +268,7 @@ def coverage(state: dict) -> str:
     summary = t("cov.summary").format(n=k["requirements"], a=k["automated"], d=k["document"], i=k["interview"],
                                       r=k["rejected"], c=k["controls"], v=k.get("covered", 0))
     return (f'<h3>{e(t("a.coverage"))}</h3><p class="small">{e(summary)}</p><div class="tbl"><table><tr>'
-            f'<th>Réf.</th><th>{e(t("cov.quote"))}</th><th>{e(t("cov.test"))}</th><th>{e(t("a.control"))}</th>'
+            f'<th>{e(t("t.id"))}</th><th>{e(t("cov.quote"))}</th><th>{e(t("cov.test"))}</th><th>{e(t("a.control"))}</th>'
             f'<th></th></tr>{rows}</table></div>')
 
 
@@ -276,7 +278,8 @@ def write(state: dict, out: Path):
     findings = [x for x in entries if x.get("finding")]
     closed = [x for x in findings if x["finding"]["status"] == "closed"]
     still_open = [x for x in findings if x["finding"]["status"] != "closed"]
-    review = [x for x in entries if x.get("status_before") in ("review", "error")]
+    review = [x for x in entries if x.get("status_before") == "review"]
+    errors = [x for x in entries if x.get("status_before") == "error"]     # non concluants : jamais conformes
     sev_count = {s: sum(1 for x in findings if x["finding"]["severity"] == s)
                  for s in ("critique", "elevee", "moyenne", "faible")}
     pii = sum((x.get(k) or {}).get("metrics", {}).get("pii_masked", 0)
@@ -288,10 +291,13 @@ def write(state: dict, out: Path):
 
     # ---- 1. synthèse
     ops = f'<div class="op {e(state.get("opinion_initial", ""))}"><span>{e(t("opinion.initial"))}</span><b>{e(t("op." + state["opinion_initial"])) if state.get("opinion_initial") else "…"}</b></div>'
-    if state.get("remediation_requested") and not running:
+    if state.get("remediation_requested") and not running and state.get("opinion_final"):
         ops += f'<div class="op {e(state.get("opinion_final", ""))}"><span>{e(t("opinion.final"))}</span><b>{e(t("op." + state["opinion_final"]))}</b></div>'
-    approvals = sum(1 for d in state.get("decisions", []) if d["approved"])
-    kpis = "".join(f'<div class="kpi"><b>{v}</b><span>{e(t(k))}</span></div>' for k, v in [
+    # seule une approbation interactive est une approbation humaine ; la pré-approbation de démo est signalée à part
+    approvals = sum(1 for d in state.get("decisions", []) if d["approved"] and d.get("mode") == "interactive")
+    pre = sum(1 for d in state.get("decisions", []) if d["approved"] and d.get("mode") == "pre-approved")
+    pre_txt = f' · {pre} {t("k.preapproved")}' if pre else ""
+    kpis = "".join(f'<div class="kpi"><b>{v}</b><span>{e(t(k))}{e(pre_txt) if k == "k.approvals" else ""}</span></div>' for k, v in [
         ("k.controls", len(entries)), ("k.findings", len(findings)), ("k.closed", len(closed)),
         ("k.open", len(still_open)), ("k.approvals", approvals), ("k.pii", pii),
         ("k.duration", f"{dur // 60} min {dur % 60:02d} s"), ("k.cost", e(cost))])
@@ -300,11 +306,15 @@ def write(state: dict, out: Path):
     dist = "".join(f'<i style="width:{100 * n / total:.1f}%;background:{colors[s]}"></i>' for s, n in sev_count.items() if n)
     legend = "".join(f'<span><i style="background:{colors[s]}"></i>{e(t("sev." + s))}{colon()}{n}</span>' for s, n in sev_count.items())
     msgs = key_messages(state.get("lang", "fr"), len(entries), len(findings), sev_count, len(closed),
-                        len(still_open), len(review)) if entries and not running else []
+                        len(still_open), len(review)) if entries and not running and not state.get("aborted") else []
+    if errors and not running:
+        msgs.append(t("msg.error").format(n=len(errors)))
     no_ev = sum(1 for x in entries if x.get("evidence_error"))
     if no_ev and not running:
         msgs.append(t("msg.noevidence").format(n=no_ev))
     inj = f'<div class="alert">⚠ {e(t("msg.injection"))}</div>' if state.get("injection_detected") else ""
+    if state.get("aborted"):                      # échec visible : le rapport partiel ne vaut pas opinion
+        inj = f'<div class="alert abort">⛔ {e(t("aborted"))}<br><span class="mono">{e(redact(state["aborted"]))}</span></div>' + inj
     s1 = (f'<section id="s1"><h2>{e(t("s1"))}</h2><div class="ops">{ops}</div><div class="kpis">{kpis}</div>'
           + (f'<div class="dist">{dist}</div><div class="legend">{legend}</div>' if findings else "")
           + inj + (f'<h3>{e(t("msg.title"))}</h3><ul class="msgs">' + "".join(f"<li>{e(x)}</li>" for x in msgs) + "</ul>" if msgs else "")
@@ -366,7 +376,7 @@ def write(state: dict, out: Path):
         for r in usage["rows"])
     urows += f'<tr><td><b>{e(t("a.total"))}</b></td><td></td><td></td><td></td><td></td><td><b>{usage["total_usd"]:.4f}</b></td></tr>'
     dec = "".join(f'<tr><td class="mono">{e(d["ticket"])}</td><td>{e(d["finding"])}</td><td>{"✔" if d["approved"] else "✘"}</td>'
-                  f'<td>{e(d["approver"])}</td><td>{e(d["mode"])}</td><td>{e(d["ts"])}</td></tr>' for d in state.get("decisions", []))
+                  f'<td>{e(d["approver"])}</td><td>{e(t("mode." + d["mode"]))}</td><td>{e(d["ts"])}</td></tr>' for d in state.get("decisions", []))
     journal = ""
     if je:
         journal = (f'<h3>{e(t("a.journal"))}</h3><figure><img src="{e(je["image"])}" alt="journal"><figcaption class="hash">'
@@ -386,8 +396,8 @@ def write(state: dict, out: Path):
                f'<th>{e(t("a.hash"))}</th></tr>{"".join(evid)}</table></div>'
                f'<h3>{e(t("a.ai"))}</h3><div class="tbl"><table><tr><th>{e(t("a.model"))}</th><th>{e(t("a.calls"))}</th>'
                f'<th>{e(t("a.in"))}</th><th>{e(t("a.out"))}</th><th>{e(t("a.images"))}</th><th>{e(t("a.cost"))}</th></tr>{urows}</table></div>{note}'
-               + (f'<h3>{e(t("a.human"))}</h3><div class="tbl"><table><tr><th>Ticket</th><th>{e(t("t.id"))}</th><th></th>'
-                  f'<th>{e(t("f.approved"))}</th><th>Mode</th><th>{e(t("m.date"))}</th></tr>{dec}</table></div>' if dec else "")
+               + (f'<h3>{e(t("a.human"))}</h3><div class="tbl"><table><tr><th>{e(t("a.ticket"))}</th><th>{e(t("t.id"))}</th><th></th>'
+                  f'<th>{e(t("f.approved"))}</th><th>{e(t("a.mode"))}</th><th>{e(t("m.date"))}</th></tr>{dec}</table></div>' if dec else "")
                + f'<h3>{e(t("a.guards"))}</h3><ul>' + "".join(f"<li>{e(x)}</li>" for x in t("a.guards_list")) + "</ul>"
                f'<h3>{e(t("a.integrity"))}</h3><p class="small">{e(t("a.integrity_text"))}</p>'
                f'<p class="hash">{e(state.get("trail_head", "…"))}</p>{journal}{coverage(state)}</section>')
@@ -401,7 +411,7 @@ def write(state: dict, out: Path):
 <div class="cover"><p class="eyebrow">{e(t("report"))} · {e(m["id"])}</p><h1>{e(m["title"])}</h1>
 <p class="sys">{e(m["entity"])} · {e(m["system"])}</p>
 <div class="meta"><span>{e(t("m.auditor"))}{colon()}<b>{e(m["lead_auditor"])}</b></span><span>{e(t("m.owner"))}{colon()}<b>{e(m["owner"])}</b></span>
-<span>{e(t("m.date"))}{colon()}<b>{e(state["started"])}</b></span><span>Run{colon()}<b>{e(state["run_id"])}</b></span></div></div>
+<span>{e(t("m.date"))}{colon()}<b>{e(state["started"])}</b></span><span>{e(t("run"))}{colon()}<b>{e(state["run_id"])}</b></span></div></div>
 {s1}{s2}{s3}{s4}{annexes}
 <footer><span>{e(m["classification"])}</span><span>Attest · {e(state["backend"])} · {e(state["models"]["reason"])} + {e(state["models"]["segmentation"])}</span></footer>
 </div></body></html>"""
