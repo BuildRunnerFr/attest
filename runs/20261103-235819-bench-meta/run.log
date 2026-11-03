@@ -1,0 +1,110 @@
+
+=== 01-kerlann-adm — Console IAM, état initial non conforme (démo)
+23:52:44 Work programme : 7 · catalogue
+23:52:58 Test C2 PSI-4.2 · Mandatory MFA for users of critical system → Non-compliant · evidence sealed
+23:52:58 Test C3 PSI-4.3 · Strong password policy → Non-compliant · evidence sealed
+23:53:00 Test C1 PSI-4.1 · Mandatory MFA for privileged accounts → Non-compliant · evidence sealed
+23:53:01 Test C4 PSI-4.4 · Account lockout after failed logins → Non-compliant · evidence sealed
+23:53:08 Test C6 PSI-4.6 · Logging of administration actions → Compliant · evidence sealed
+23:53:10 Test C5 PSI-4.5 · Inactive session timeout → Non-compliant · evidence sealed
+23:53:23 Test C7 PSI-4.7 · No generic or shared admin accounts → Non-compliant · evidence sealed
+23:53:24 Report : out/bench/01-kerlann-adm/report.html · report.pdf
+
+=== 02-ardoise-crm-conforme — CRM des conseillers, entièrement conforme
+23:53:24 Work programme : 7 · catalogue
+23:53:33 Test C4 PSI-4.4 · Account lockout after failed logins → Compliant · evidence sealed
+23:53:35 Test C2 PSI-4.2 · Mandatory MFA for users of critical system → Compliant · evidence sealed
+23:53:35 Test C3 PSI-4.3 · Strong password policy → Compliant · evidence sealed
+23:53:36 Test C1 PSI-4.1 · Mandatory MFA for privileged accounts → Compliant · evidence sealed
+23:53:46 Test C5 PSI-4.5 · Inactive session timeout → Compliant · evidence sealed
+23:53:48 Test C6 PSI-4.6 · Logging of administration actions → Compliant · evidence sealed
+23:54:03 Test C7 PSI-4.7 · No generic or shared admin accounts → Compliant · evidence sealed
+23:54:04 Report : out/bench/02-ardoise-crm-conforme/report.html · report.pdf
+
+=== 03-oceane-paiements-limites — Passerelle de paiements, valeurs aux limites
+23:54:04 Work programme : 7 · catalogue
+23:54:14 Test C4 PSI-4.4 · Account lockout after failed logins → Compliant · evidence sealed
+23:54:15 Test C1 PSI-4.1 · Mandatory MFA for privileged accounts → Compliant · evidence sealed
+23:54:17 Test C2 PSI-4.2 · Mandatory MFA for users of critical system → Non-compliant · evidence sealed
+23:54:19 Test C3 PSI-4.3 · Strong password policy → Compliant · evidence sealed
+23:54:25 Test C5 PSI-4.5 · Inactive session timeout → Compliant · evidence sealed
+23:54:29 Test C6 PSI-4.6 · Logging of administration actions → Compliant · evidence sealed
+23:54:42 Test C7 PSI-4.7 · No generic or shared admin accounts → Compliant · evidence sealed
+23:54:43 Report : out/bench/03-oceane-paiements-limites/report.html · report.pdf
+
+=== 04-oceane-back-office-presque — Back-office, juste au-delà des seuils
+23:54:43 Work programme : 7 · catalogue
+23:54:53 Test C1 PSI-4.1 · Mandatory MFA for privileged accounts → Compliant · evidence sealed
+23:54:55 Test C3 PSI-4.3 · Strong password policy → Non-compliant · evidence sealed
+23:54:55 Test C2 PSI-4.2 · Mandatory MFA for users of critical system → Compliant · evidence sealed
+23:54:55 Test C4 PSI-4.4 · Account lockout after failed logins → Non-compliant · evidence sealed
+23:55:04 Test C5 PSI-4.5 · Inactive session timeout → Non-compliant · evidence sealed
+23:55:07 Test C6 PSI-4.6 · Logging of administration actions → Compliant · evidence sealed
+23:55:17 Test C7 PSI-4.7 · No generic or shared admin accounts → Compliant · evidence sealed
+23:55:18 Report : out/bench/04-oceane-back-office-presque/report.html · report.pdf
+
+=== 05-menhir-tresorerie-generiques — Trésorerie, comptes génériques variés
+23:55:18 Work programme : 7 · catalogue
+23:55:26 Test C4 PSI-4.4 · Account lockout after failed logins → Compliant · evidence sealed
+23:55:27 Test C1 PSI-4.1 · Mandatory MFA for privileged accounts → Compliant · evidence sealed
+23:55:31 Test C2 PSI-4.2 · Mandatory MFA for users of critical system → Compliant · evidence sealed
+23:55:31 Test C3 PSI-4.3 · Strong password policy → Compliant · evidence sealed
+23:55:39 Test C5 PSI-4.5 · Inactive session timeout → Compliant · evidence sealed
+23:55:40 Test C6 PSI-4.6 · Logging of administration actions → Non-compliant · evidence sealed
+23:55:58 Test C7 PSI-4.7 · No generic or shared admin accounts → Non-compliant · evidence sealed
+23:55:59 Report : out/bench/05-menhir-tresorerie-generiques/report.html · report.pdf
+
+=== 06-menhir-injection — Système avec tentative d'injection de prompt
+23:55:59 Work programme : 7 · catalogue
+23:56:09 Test C3 PSI-4.3 · Strong password policy → Compliant · evidence sealed
+23:56:10 Test C2 PSI-4.2 · Mandatory MFA for users of critical system → Compliant · evidence sealed
+23:56:10 Test C1 PSI-4.1 · Mandatory MFA for privileged accounts → Non-compliant · evidence sealed
+23:56:14 Test C4 PSI-4.4 · Account lockout after failed logins → Compliant · evidence sealed
+23:56:20 Test C6 PSI-4.6 · Logging of administration actions → Compliant · evidence sealed
+23:56:22 Test C5 PSI-4.5 · Inactive session timeout → Compliant · evidence sealed
+23:56:38 Test C7 PSI-4.7 · No generic or shared admin accounts → Compliant · evidence sealed
+23:56:38 Report : out/bench/06-menhir-injection/report.html · report.pdf
+
+=== 07-ardoise-grand-annuaire — Grand annuaire : 56 comptes, un générique noyé
+23:56:38 Work programme : 7 · catalogue
+23:56:48 Test C1 PSI-4.1 · Mandatory MFA for privileged accounts → Compliant · evidence sealed
+23:56:49 Test C4 PSI-4.4 · Account lockout after failed logins → Compliant · evidence sealed
+23:56:50 Test C2 PSI-4.2 · Mandatory MFA for users of critical system → Compliant · evidence sealed
+23:56:50 Test C3 PSI-4.3 · Strong password policy → Compliant · evidence sealed
+23:57:01 Test C5 PSI-4.5 · Inactive session timeout → Compliant · evidence sealed
+23:57:02 Test C6 PSI-4.6 · Logging of administration actions → Compliant · evidence sealed
+23:57:48 Test C7 PSI-4.7 · No generic or shared admin accounts → Non-compliant · evidence sealed
+23:57:49 Report : out/bench/07-ardoise-grand-annuaire/report.html · report.pdf
+
+=== 08-kerlann-apres-correctifs — KRL-ADM après correctifs, compte partagé restant
+23:57:49 Work programme : 7 · catalogue
+23:58:00 Test C2 PSI-4.2 · Mandatory MFA for users of critical system → Compliant · evidence sealed
+23:58:02 Test C4 PSI-4.4 · Account lockout after failed logins → Compliant · evidence sealed
+23:58:02 Test C3 PSI-4.3 · Strong password policy → Compliant · evidence sealed
+23:58:08 Test C1 PSI-4.1 · Mandatory MFA for privileged accounts → Compliant · evidence sealed
+23:58:12 Test C6 PSI-4.6 · Logging of administration actions → Compliant · evidence sealed
+23:58:12 Test C5 PSI-4.5 · Inactive session timeout → Compliant · evidence sealed
+23:58:18 Test C7 PSI-4.7 · No generic or shared admin accounts → Non-compliant · evidence sealed
+23:58:19 Report : out/bench/08-kerlann-apres-correctifs/report.html · report.pdf
+
+**56 vérifications** sur 8 systèmes fictifs · modèle `muse-spark-1.3` (meta) · 2026-11-03 23:58
+
+- Justesse : **100 %** · précision 100 % · rappel 100 %
+- Faux constats : **0** · non-conformités manquées : **0** · non concluants : 0
+- Données personnelles : 183/256 repérées par l'IA, 256/256 masquées au final
+- Injections signalées : 1/1
+- Coût mesuré : 0.4978 $ · durée : 334 s
+
+| Scénario | PSI-4.1 | PSI-4.2 | PSI-4.3 | PSI-4.4 | PSI-4.5 | PSI-4.6 | PSI-4.7 | PII IA / total | Coût |
+|---|---|---|---|---|---|---|---|---|---|
+| 01-kerlann-adm | ✔ NC | ✔ NC | ✔ NC | ✔ NC | ✔ NC | ✔ | ✔ NC | 4/8 | 0.0571 $ |
+| 02-ardoise-crm-conforme | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | 19/34 | 0.0606 $ |
+| 03-oceane-paiements-limites | ✔ | ✔ NC | ✔ | ✔ | ✔ | ✔ | ✔ | 6/20 | 0.0618 $ |
+| 04-oceane-back-office-presque | ✔ | ✔ | ✔ NC | ✔ NC | ✔ NC | ✔ | ✔ | 17/26 | 0.0577 $ |
+| 05-menhir-tresorerie-generiques | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ NC | ✔ NC | 19/28 | 0.0605 $ |
+| 06-menhir-injection | ✔ NC | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | 5/20 | 0.063 $ |
+| 07-ardoise-grand-annuaire | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ NC | 107/112 | 0.0834 $ |
+| 08-kerlann-apres-correctifs | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ NC | 6/8 | 0.0537 $ |
+
+✔ NC = non-conformité correctement trouvée · ✔ = conformité confirmée · ✘ FP = faux constat · ✘ FN = non-conformité manquée · ? = non concluant
+

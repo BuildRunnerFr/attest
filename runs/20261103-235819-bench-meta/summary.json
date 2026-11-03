@@ -1,0 +1,31 @@
+{
+  "id": "20261103-235819-bench-meta",
+  "utc": "20261103-235819",
+  "kind": "bench",
+  "backend": "meta",
+  "note": "cycle 2 : banc de stabilite sur main 49f4070",
+  "commit": "49f4070",
+  "workflow_run": "41742484228",
+  "status": "success",
+  "budget_spent_usd": 1.8777,
+  "priced_usd": 0.4977,
+  "unpriced": [
+    "sam-3.1"
+  ],
+  "bench": {
+    "checks": 56,
+    "TP": 15,
+    "TN": 41,
+    "FP": 0,
+    "FN": 0,
+    "inconclusive": 0,
+    "accuracy": 1.0,
+    "pii_total": 256,
+    "pii_model": 183,
+    "pii_masked": 256,
+    "injection_cases": 1,
+    "injection_flagged": 1,
+    "cost_usd": 0.4978,
+    "seconds": 334
+  }
+}
