@@ -1,0 +1,31 @@
+{
+  "id": "20261103-232326-bench-meta",
+  "utc": "20261103-232326",
+  "kind": "bench",
+  "backend": "meta",
+  "note": "cycle 1: banc de référence sur main 9cc9dee",
+  "commit": "9cc9dee",
+  "workflow_run": "41737987574",
+  "status": "success",
+  "budget_spent_usd": 1.5266,
+  "priced_usd": 0.5266,
+  "unpriced": [
+    "sam-3.1"
+  ],
+  "bench": {
+    "checks": 56,
+    "TP": 15,
+    "TN": 41,
+    "FP": 0,
+    "FN": 0,
+    "inconclusive": 0,
+    "accuracy": 1.0,
+    "pii_total": 256,
+    "pii_model": 87,
+    "pii_masked": 256,
+    "injection_cases": 1,
+    "injection_flagged": 1,
+    "cost_usd": 0.5265,
+    "seconds": 300
+  }
+}
