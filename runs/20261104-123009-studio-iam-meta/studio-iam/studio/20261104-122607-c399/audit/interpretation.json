@@ -1,0 +1,389 @@
+{
+  "target": "iam-console",
+  "texts": [
+    "DORA — Article 9(4): access, strong authentication, change management",
+    "RTS 2024/1774 — Article 21: access control",
+    "Internal policy PSI-4 (Banque Kerlann, fictitious) — authentication and access"
+  ],
+  "text_sha256": "9a15779029abf8666b8ec0e875b785467e4d2e3258626f31c3122767bc7c8864",
+  "model": "muse-spark-1.3",
+  "requirements": [
+    {
+      "ref": "DORA 9(4)(c)",
+      "quote": "implement policies that limit the physical or logical access to information assets and ICT assets to what is required for legitimate and approved functions and activities only, and establish to that end a set of policies, procedures and controls that address access rights and ensure a sound administration thereof;",
+      "quote_verified": true,
+      "summary": "Access must be limited to legitimate approved needs with sound access-rights administration.",
+      "testability": "automated",
+      "why": "Testable here through lockout, session and generic-account settings checked by the covering policy controls.",
+      "controls": [],
+      "covered_by": [
+        "PSI-4.4",
+        "PSI-4.5",
+        "PSI-4.7"
+      ]
+    },
+    {
+      "ref": "DORA 9(4)(d)",
+      "quote": "implement policies and protocols for strong authentication mechanisms, based on relevant standards and dedicated control systems, and protection measures of cryptographic keys whereby data is encrypted based on results of approved data classification and ICT risk assessment processes;",
+      "quote_verified": true,
+      "summary": "Strong authentication and key protection must be implemented based on standards and classification.",
+      "testability": "automated",
+      "why": "Testable here through MFA and password settings checked by the covering policy controls.",
+      "controls": [],
+      "covered_by": [
+        "PSI-4.1",
+        "PSI-4.2",
+        "PSI-4.3"
+      ]
+    },
+    {
+      "ref": "DORA 9(4)(e)",
+      "quote": "implement documented policies, procedures and controls for ICT change management, including changes to software, hardware, firmware components, systems or security parameters, that are based on a risk assessment approach and are an integral part of the financial entity's overall change management process, in order to ensure that all changes to ICT systems are recorded, tested, assessed, approved, implemented and verified in a controlled manner;",
+      "quote_verified": true,
+      "summary": "All ICT changes must follow documented risk-based change management with recording and approval.",
+      "testability": "document",
+      "why": "Not testable here because the read-only interface shows only journal entries, not documented policies for testing and assessment.",
+      "controls": [],
+      "covered_by": []
+    },
+    {
+      "ref": "DORA 9(4)(f)",
+      "quote": "have appropriate and comprehensive documented policies for patches and updates.",
+      "quote_verified": true,
+      "summary": "Documented patch and update policies must exist.",
+      "testability": "document",
+      "why": "Not testable here because the read-only interface exposes no patch policy documents.",
+      "controls": [],
+      "covered_by": []
+    },
+    {
+      "ref": "RTS 21(1)(a)",
+      "quote": "the assignment of access rights to ICT assets based on need-to-know, need-to-use and least privilege principles;",
+      "quote_verified": true,
+      "summary": "Access rights must follow need-to-know, need-to-use and least privilege.",
+      "testability": "document",
+      "why": "Not testable here because the user list shows roles but not the need-to-know justification.",
+      "controls": [],
+      "covered_by": []
+    },
+    {
+      "ref": "RTS 21(1)(b)",
+      "quote": "the segregation of duties designed to prevent unjustified access to critical data […];",
+      "quote_verified": true,
+      "summary": "Segregation of duties must prevent unjustified access to critical data.",
+      "testability": "document",
+      "why": "Not testable here because segregation rules require policy and role-design review beyond the user list.",
+      "controls": [],
+      "covered_by": []
+    },
+    {
+      "ref": "RTS 21(1)(c)",
+      "quote": "a provision on user accountability, by limiting to the extent possible the use of generic and shared user accounts;",
+      "quote_verified": true,
+      "summary": "User accountability requires limiting generic and shared accounts.",
+      "testability": "automated",
+      "why": "Testable here through the admin user inventory checked by the covering policy control.",
+      "controls": [],
+      "covered_by": [
+        "PSI-4.7"
+      ]
+    },
+    {
+      "ref": "RTS 21(1)(d)",
+      "quote": "a provision on restrictions of access to ICT assets, setting out controls and tools to prevent unauthorised access;",
+      "quote_verified": true,
+      "summary": "Restrictions and tools must prevent unauthorised access to ICT assets.",
+      "testability": "document",
+      "why": "Not testable here because the generic provision requires document review of controls and tools.",
+      "controls": [],
+      "covered_by": []
+    },
+    {
+      "ref": "RTS 21(1)(e)",
+      "quote": "account management procedures to grant, change or revoke access rights for user and generic accounts, including:",
+      "quote_verified": true,
+      "summary": "Account management procedures must govern granting and revoking access.",
+      "testability": "document",
+      "why": "Not testable here because procedures require document review beyond the current user list.",
+      "controls": [],
+      "covered_by": []
+    },
+    {
+      "ref": "RTS 21(1)(e)(ii)",
+      "quote": "assignment of privileged, emergency, and administrator access on a need-to-use or an ad-hoc basis for all ICT systems;",
+      "quote_verified": true,
+      "summary": "Privileged and administrator access must be assigned on need-to-use basis.",
+      "testability": "automated",
+      "why": "Testable here through the admin user inventory checked by the covering policy control.",
+      "controls": [],
+      "covered_by": [
+        "PSI-4.7"
+      ]
+    },
+    {
+      "ref": "RTS 21(1)(e)(iv)",
+      "quote": "update of access rights where changes are necessary and at least once a year for all ICT systems […];",
+      "quote_verified": true,
+      "summary": "Access rights must be updated when needed and at least yearly.",
+      "testability": "document",
+      "why": "Not testable here because the journal shows no access-review periodicity.",
+      "controls": [],
+      "covered_by": []
+    },
+    {
+      "ref": "RTS 21(1)(f)",
+      "quote": "authentication methods, including all of the following:",
+      "quote_verified": true,
+      "summary": "Authentication methods policy must cover the listed cases.",
+      "testability": "document",
+      "why": "Not testable here because the chapeau requires document review of the authentication policy.",
+      "controls": [],
+      "covered_by": []
+    },
+    {
+      "ref": "RTS 21(1)(f)(i)",
+      "quote": "the use of authentication methods commensurate to the classification established […];",
+      "quote_verified": true,
+      "summary": "Authentication strength must match data classification.",
+      "testability": "document",
+      "why": "Not testable here because classification mapping requires document review beyond MFA flags.",
+      "controls": [],
+      "covered_by": []
+    },
+    {
+      "ref": "RTS 21(1)(f)(ii)",
+      "quote": "the use of strong authentication methods in accordance with leading practices and techniques for remote access, […] privileged access, for access to ICT assets supporting critical or important functions.",
+      "quote_verified": true,
+      "summary": "Strong authentication is required for privileged and critical-function access.",
+      "testability": "automated",
+      "why": "Testable here through MFA enforcement flags and per-user MFA checked by covering controls.",
+      "controls": [],
+      "covered_by": [
+        "PSI-4.1",
+        "PSI-4.2"
+      ]
+    },
+    {
+      "ref": "PSI-4.1",
+      "quote": "Authentification multifacteur obligatoire pour tout compte à privilèges (administrateur).",
+      "quote_verified": true,
+      "summary": "MFA is mandatory for all privileged administrator accounts.",
+      "testability": "automated",
+      "why": "Testable here because the security API and user list expose MFA enforcement and per-admin MFA status.",
+      "controls": [
+        {
+          "rule": "PSI-4.1",
+          "title": "Mandatory MFA for privileged administrator accounts",
+          "objective": "Verify MFA is enforced for all privileged admin accounts.",
+          "test_procedure": "GET /api/security verify mfa_admin is true; GET /api/users verify every user with role admin has mfa true.",
+          "expected": "mfa_admin == true and 100% of users with role admin have mfa == true",
+          "threshold_source": "PSI-4.1",
+          "severity": "critique",
+          "references": [
+            "DORA 9(4)(d)",
+            "RTS 21(1)(f)(ii)"
+          ],
+          "risk": "Admin takeover without second factor allows full compromise of critical IAM console.",
+          "recommendation": "Enforce MFA for all admin accounts and re-verify enrollment within 30 days.",
+          "cause": "MFA enforcement disabled or admin account enrolled without MFA.",
+          "evidence_page": "/admin/users",
+          "remediation": "config",
+          "id": "C1",
+          "quote": "Authentification multifacteur obligatoire pour tout compte à privilèges (administrateur)."
+        }
+      ],
+      "covered_by": []
+    },
+    {
+      "ref": "PSI-4.2",
+      "quote": "Authentification multifacteur obligatoire pour les utilisateurs d'un système supportant une fonction critique ou importante.",
+      "quote_verified": true,
+      "summary": "MFA is mandatory for users of a system supporting a critical function.",
+      "testability": "automated",
+      "why": "Testable here because KRL-ADM supports critical functions and exposes MFA flags and per-user MFA.",
+      "controls": [
+        {
+          "rule": "PSI-4.2",
+          "title": "Mandatory MFA for users of critical system",
+          "objective": "Verify MFA is enforced for all users of critical system KRL-ADM.",
+          "test_procedure": "GET /api/security verify mfa_users is true; GET /api/users verify every user has mfa true given KRL-ADM supports critical functions.",
+          "expected": "mfa_users == true and 100% of users have mfa == true",
+          "threshold_source": "PSI-4.2",
+          "severity": "elevee",
+          "references": [
+            "DORA 9(4)(d)",
+            "RTS 21(1)(f)(ii)"
+          ],
+          "risk": "Account takeover of standard users on critical system enables lateral movement.",
+          "recommendation": "Enforce MFA for all users and re-verify enrollment within 90 days.",
+          "cause": "MFA enforcement for standard users disabled or users not enrolled.",
+          "evidence_page": "/admin/users",
+          "remediation": "config",
+          "id": "C2",
+          "quote": "Authentification multifacteur obligatoire pour les utilisateurs d'un système supportant une fonction critique ou importante."
+        }
+      ],
+      "covered_by": []
+    },
+    {
+      "ref": "PSI-4.3",
+      "quote": "Mot de passe de 12 caractères minimum, avec exigence de complexité.",
+      "quote_verified": true,
+      "summary": "Passwords must have 12 characters minimum with complexity.",
+      "testability": "automated",
+      "why": "Testable here because the security API exposes minimum length and complexity flags.",
+      "controls": [
+        {
+          "rule": "PSI-4.3",
+          "title": "Password length and complexity",
+          "objective": "Verify 12-character minimum and complexity are enforced.",
+          "test_procedure": "GET /api/security check password_min_length and password_require_complexity.",
+          "expected": "password_min_length >= 12 and password_require_complexity == true",
+          "threshold_source": "PSI-4.3",
+          "severity": "moyenne",
+          "references": [
+            "DORA 9(4)(d) (bonnes pratiques)"
+          ],
+          "risk": "Weak passwords enable brute-force and credential stuffing.",
+          "recommendation": "Set minimum length to 12 and enable complexity within 180 days.",
+          "cause": "Weak password policy configuration.",
+          "evidence_page": "/admin/security",
+          "remediation": "config",
+          "id": "C3",
+          "quote": "Mot de passe de 12 caractères minimum, avec exigence de complexité."
+        }
+      ],
+      "covered_by": []
+    },
+    {
+      "ref": "PSI-4.4",
+      "quote": "Verrouillage du compte après 5 échecs de connexion au plus (et jamais désactivé).",
+      "quote_verified": true,
+      "summary": "Accounts must lock after at most 5 failed logins and never be disabled.",
+      "testability": "automated",
+      "why": "Testable here because the security API exposes lockout threshold with 0 meaning never.",
+      "controls": [
+        {
+          "rule": "PSI-4.4",
+          "title": "Account lockout after failed logins",
+          "objective": "Verify lockout occurs after at most 5 failures and is enabled.",
+          "test_procedure": "GET /api/security check lockout_threshold.",
+          "expected": "1 <= lockout_threshold <= 5 (0 fails as never locks)",
+          "threshold_source": "PSI-4.4",
+          "severity": "moyenne",
+          "references": [
+            "DORA 9(4)(c)"
+          ],
+          "risk": "No lockout allows unlimited password guessing.",
+          "recommendation": "Set lockout threshold to 5 or less and never to 0 within 180 days.",
+          "cause": "Lockout disabled or threshold set too high.",
+          "evidence_page": "/admin/security",
+          "remediation": "config",
+          "id": "C4",
+          "quote": "Verrouillage du compte après 5 échecs de connexion au plus (et jamais désactivé)."
+        }
+      ],
+      "covered_by": []
+    },
+    {
+      "ref": "PSI-4.5",
+      "quote": "Expiration des sessions inactives après 15 minutes au plus (et jamais désactivée).",
+      "quote_verified": true,
+      "summary": "Inactive sessions must expire after at most 15 minutes.",
+      "testability": "automated",
+      "why": "Testable here because the security API exposes session timeout with 0 meaning never.",
+      "controls": [
+        {
+          "rule": "PSI-4.5",
+          "title": "Inactive session timeout",
+          "objective": "Verify inactive sessions expire after at most 15 minutes.",
+          "test_procedure": "GET /api/security check session_timeout_minutes.",
+          "expected": "1 <= session_timeout_minutes <= 15 (0 fails as never expires)",
+          "threshold_source": "PSI-4.5",
+          "severity": "moyenne",
+          "references": [
+            "DORA 9(4)(c)"
+          ],
+          "risk": "Abandoned sessions allow hijacking on shared workstations.",
+          "recommendation": "Set inactive timeout to 15 minutes or less and never to 0 within 180 days.",
+          "cause": "Session timeout disabled or set too long.",
+          "evidence_page": "/admin/security",
+          "remediation": "config",
+          "id": "C5",
+          "quote": "Expiration des sessions inactives après 15 minutes au plus (et jamais désactivée)."
+        }
+      ],
+      "covered_by": []
+    },
+    {
+      "ref": "PSI-4.6",
+      "quote": "Journalisation de toutes les actions d'administration.",
+      "quote_verified": true,
+      "summary": "All administration actions must be logged.",
+      "testability": "automated",
+      "why": "Testable here because the security API exposes the admin audit logging flag.",
+      "controls": [
+        {
+          "rule": "PSI-4.6",
+          "title": "Logging of administration actions",
+          "objective": "Verify administration actions are logged.",
+          "test_procedure": "GET /api/security verify admin_audit_log is true; GET /api/journal confirm entries exist.",
+          "expected": "admin_audit_log == true",
+          "threshold_source": "PSI-4.6",
+          "severity": "elevee",
+          "references": [
+            "RTS 12(2)(c)(i)"
+          ],
+          "risk": "Missing admin logs prevent detection and forensic investigation.",
+          "recommendation": "Enable administration audit logging within 90 days.",
+          "cause": "Audit logging flag disabled.",
+          "evidence_page": "/admin/security",
+          "remediation": "config",
+          "id": "C6",
+          "quote": "Journalisation de toutes les actions d'administration."
+        }
+      ],
+      "covered_by": []
+    },
+    {
+      "ref": "PSI-4.7",
+      "quote": "Aucun compte générique ou partagé ne dispose de droits d'administration.",
+      "quote_verified": true,
+      "summary": "No generic or shared account must have administration rights.",
+      "testability": "automated",
+      "why": "Testable here because the user list exposes login, email and role for generic-account detection.",
+      "controls": [
+        {
+          "rule": "PSI-4.7",
+          "title": "No generic shared admin accounts",
+          "objective": "Verify no admin role is held by a generic or shared account.",
+          "test_procedure": "GET /api/users filter role admin; flag login without initiale.nom form (e.g. ops, admin, root) or email with shared box (ops-partage@, admin@).",
+          "expected": "0 users with role admin having generic login or shared mailbox",
+          "threshold_source": "PSI-4.7",
+          "severity": "elevee",
+          "references": [
+            "DORA 9(4)(c)",
+            "RTS 21(1)(c) et 21(1)(e)(ii)"
+          ],
+          "risk": "Shared admin accounts destroy accountability and enable undetected abuse.",
+          "recommendation": "Remove admin rights from generic accounts and replace with nominative initiale.nom accounts within 90 days.",
+          "cause": "Legacy functional admin account retained with admin role.",
+          "evidence_page": "/admin/users",
+          "remediation": "manual",
+          "id": "C7",
+          "quote": "Aucun compte générique ou partagé ne dispose de droits d'administration."
+        }
+      ],
+      "covered_by": []
+    }
+  ],
+  "counts": {
+    "automated": 12,
+    "document": 9,
+    "interview": 0,
+    "requirements": 21,
+    "rejected": 0,
+    "controls": 7,
+    "covered": 5
+  }
+}

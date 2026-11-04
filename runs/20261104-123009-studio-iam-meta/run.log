@@ -1,0 +1,59 @@
+interprétation : {"automated": 12, "document": 9, "interview": 0, "requirements": 21, "rejected": 0, "controls": 7, "covered": 5}
+12:26:07 Work programme: 7 · studio
+12:26:59 Test C1 PSI-4.1 · Mandatory MFA for privileged administrator accounts → Non-compliant · evidence sealed
+12:27:28 Test C3 PSI-4.3 · Password length and complexity → Non-compliant · evidence sealed
+12:27:32 Test C4 PSI-4.4 · Account lockout after failed logins → Non-compliant · evidence sealed
+12:28:09 Test C2 PSI-4.2 · Mandatory MFA for users of critical system → Non-compliant · evidence sealed
+12:28:13 Test C5 PSI-4.5 · Inactive session timeout → Non-compliant · evidence sealed
+12:29:06 Test C6 PSI-4.6 · Logging of administration actions → Non-compliant · evidence sealed
+12:29:11 Test C7 PSI-4.7 · No generic shared admin accounts → Non-compliant · evidence sealed
+12:29:11 Remediation: 7
+
+  ┌─ Change request CHG-AUD-20261104-C399-01
+  │ F-01 · PSI-4.1 · Critical · Mandatory MFA for privileged administrator accounts
+  │ PATCH /api/security {"mfa_admin": true}
+  │ MFA enforcement for privileged accounts is disabled with 0 of 2 admins enrolled, violating PSI-4.1.
+  │ Expected impact: The 2 admin accounts without MFA will be required to enroll at next login.
+  └─
+12:29:39   CHG-AUD-20261104-C399-01 → applied and logged
+
+  ┌─ Change request CHG-AUD-20261104-C399-02
+  │ F-02 · PSI-4.2 · High · Mandatory MFA for users of critical system
+  │ PATCH /api/security {"mfa_users": true}
+  │ Enforce mandatory MFA for all standard users on critical system KRL-ADM as required by PSI-4.2.
+  │ Expected impact: Standard users will be required to enroll in and use MFA at next login.
+  └─
+12:29:39   CHG-AUD-20261104-C399-02 → applied and logged
+12:29:39   F-03 PSI-4.6 → Action plan
+12:29:39   F-04 PSI-4.7 → Action plan
+
+  ┌─ Change request CHG-AUD-20261104-C399-05
+  │ F-05 · PSI-4.3 · Medium · Password length and complexity
+  │ PATCH /api/security {"password_min_length": 12, "password_require_complexity": true}
+  │ Observed policy of 6 characters without complexity violates PSI-4.3 requiring 12 characters minimum with complexity.
+  │ Expected impact: Users will be required to choose 12-character complex passwords at next creation or reset.
+  └─
+12:29:39   CHG-AUD-20261104-C399-05 → applied and logged
+
+  ┌─ Change request CHG-AUD-20261104-C399-06
+  │ F-06 · PSI-4.4 · Medium · Account lockout after failed logins
+  │ PATCH /api/security {"lockout_threshold": 5}
+  │ Lockout is disabled with threshold 0, so set it to 5 to meet PSI-4.4 requirement of 1 to 5.
+  │ Expected impact: Users will be locked out after 5 consecutive failed logins and will require unlock or reset.
+  └─
+12:29:39   CHG-AUD-20261104-C399-06 → applied and logged
+
+  ┌─ Change request CHG-AUD-20261104-C399-07
+  │ F-07 · PSI-4.5 · Medium · Inactive session timeout
+  │ PATCH /api/security {"session_timeout_minutes": 15}
+  │ Set inactive session timeout to 15 minutes to satisfy PSI-4.5.
+  │ Expected impact: Users inactive for 15 minutes will be logged out and must re-authenticate.
+  └─
+12:29:39   CHG-AUD-20261104-C399-07 → applied and logged
+12:29:54 Re-test C1 → Compliant
+12:29:55 Re-test C2 → Compliant
+12:29:56 Re-test C4 → Compliant
+12:29:56 Re-test C3 → Compliant
+12:30:06 Re-test C5 → Compliant
+12:30:08 Report: out/studio-iam/studio/20261104-122607-c399/audit/report.html · report.pdf
+audit : {'pdf': True, 'report': True, 'state': 'done'}

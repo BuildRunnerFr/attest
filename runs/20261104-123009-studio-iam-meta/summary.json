@@ -1,0 +1,42 @@
+{
+  "id": "20261104-123009-studio-iam-meta",
+  "utc": "20261104-123009",
+  "kind": "studio-iam",
+  "backend": "meta",
+  "note": "cycle 8 : documents Studio encadrés, CI durcie",
+  "commit": "91b45c7",
+  "workflow_run": "41828883298",
+  "status": "success",
+  "budget_spent_usd": 0.6977,
+  "priced_usd": 0.4577,
+  "unpriced": [
+    "sam-3.1"
+  ],
+  "audits": [
+    {
+      "folder": "studio-iam/studio/20261104-122607-c399/audit",
+      "controls": 7,
+      "status_before": [
+        "fail",
+        "fail",
+        "fail",
+        "fail",
+        "fail",
+        "fail",
+        "fail"
+      ],
+      "status_after": [
+        "pass",
+        "pass",
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "evidence_errors": 0,
+      "opinion_initial": "insuffisant",
+      "opinion_final": "insuffisant",
+      "injection_detected": false,
+      "cost_usd": 0.45773875
+    }
+  ]
+}

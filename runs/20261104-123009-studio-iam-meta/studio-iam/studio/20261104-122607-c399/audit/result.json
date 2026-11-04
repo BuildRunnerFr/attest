@@ -1,0 +1,1478 @@
+{
+  "mission": {
+    "id": "AUD-20261104-C399",
+    "title": "KRL-ADM — IAM administration console — DORA · RTS 2024/1774 · Internal policy PSI-4 (Banque Kerlann, fictitious)",
+    "entity": "Banque Kerlann (fictitious)",
+    "system": "KRL-ADM — IAM administration console",
+    "system_criticality": "Supports critical or important functions (DORA)",
+    "environment": "Demonstration pre-production",
+    "owner": "IT department — IAM team",
+    "lead_auditor": "Attest CI",
+    "classification": "TLP:AMBER+STRICT",
+    "requirement_path": "exigences/dora_authentification.md",
+    "lab_url": "http://127.0.0.1:5050",
+    "scope_in": [
+      "Authentication and session settings of the KRL-ADM console",
+      "Accounts with access to the console",
+      "Logging of administrative actions"
+    ],
+    "scope_out": [
+      "Intrinsic strength of MFA factors (robustness of authentication means)",
+      "Central directory and identity federation",
+      "Physical controls"
+    ],
+    "sla_days": {
+      "critique": 30,
+      "elevee": 90,
+      "moyenne": 180,
+      "faible": 365
+    },
+    "target": "iam-console",
+    "framework_label": "DORA — Article 9(4): access, strong authentication, change management · RTS 2024/1774 — Article 21: access control · Internal policy PSI-4 (Banque Kerlann, fictitious) — authentication and access",
+    "requirement_text": "# DORA — article 9(4) : accès, authentification forte, gestion des changements\nSource : règlement (UE) 2022/2554, article 9 « Protection and prevention », paragraphe 4. Extraits du texte officiel anglais ; vérifier sur EUR-Lex.\n\nAs part of the ICT risk management framework referred to in Article 6(1), financial entities shall:\n(c) implement policies that limit the physical or logical access to information assets and ICT assets to what is required for legitimate and approved functions and activities only, and establish to that end a set of policies, procedures and controls that address access rights and ensure a sound administration thereof;\n(d) implement policies and protocols for strong authentication mechanisms, based on relevant standards and dedicated control systems, and protection measures of cryptographic keys whereby data is encrypted based on results of approved data classification and ICT risk assessment processes;\n(e) implement documented policies, procedures and controls for ICT change management, including changes to software, hardware, firmware components, systems or security parameters, that are based on a risk assessment approach and are an integral part of the financial entity's overall change management process, in order to ensure that all changes to ICT systems are recorded, tested, assessed, approved, implemented and verified in a controlled manner;\n(f) have appropriate and comprehensive documented policies for patches and updates.\n\n\n# RTS 2024/1774 — article 21 : contrôle d'accès\nSource : règlement délégué (UE) 2024/1774, article 21 « Access control ». Extraits du texte officiel anglais ; vérifier sur EUR-Lex.\n\nArticle 21(1): financial entities shall develop, document, and implement a policy that contains all of the following:\n(a) the assignment of access rights to ICT assets based on need-to-know, need-to-use and least privilege principles;\n(b) the segregation of duties designed to prevent unjustified access to critical data […];\n(c) a provision on user accountability, by limiting to the extent possible the use of generic and shared user accounts;\n(d) a provision on restrictions of access to ICT assets, setting out controls and tools to prevent unauthorised access;\n(e) account management procedures to grant, change or revoke access rights for user and generic accounts, including:\n(ii) assignment of privileged, emergency, and administrator access on a need-to-use or an ad-hoc basis for all ICT systems;\n(iv) update of access rights where changes are necessary and at least once a year for all ICT systems […];\n(f) authentication methods, including all of the following:\n(i) the use of authentication methods commensurate to the classification established […];\n(ii) the use of strong authentication methods in accordance with leading practices and techniques for remote access, […] privileged access, for access to ICT assets supporting critical or important functions.\n\n\n# Politique interne PSI-4 (Banque Kerlann, fictive) — authentification et accès\nDéclinaison interne de DORA 9(4)(c)(d) et du RTS 2024/1774 articles 12 et 21 : elle fixe les seuils que les textes ne donnent pas.\n\n\nLe système KRL-ADM supporte des fonctions critiques ou importantes. La criticité de chaque règle est fixée\npar le propriétaire de la politique (RSSI) et s'applique aux constats.\n\n| Règle | Exigence | Criticité | Fondement |\n|---|---|---|---|\n| PSI-4.1 | Authentification multifacteur obligatoire pour tout compte à privilèges (administrateur). | Critique | DORA 9(4)(d) ; RTS 21(1)(f)(ii) |\n| PSI-4.2 | Authentification multifacteur obligatoire pour les utilisateurs d'un système supportant une fonction critique ou importante. | Élevée | DORA 9(4)(d) ; RTS 21(1)(f)(ii) |\n| PSI-4.3 | Mot de passe de 12 caractères minimum, avec exigence de complexité. | Moyenne | DORA 9(4)(d) (bonnes pratiques) |\n| PSI-4.4 | Verrouillage du compte après 5 échecs de connexion au plus (et jamais désactivé). | Moyenne | DORA 9(4)(c) |\n| PSI-4.5 | Expiration des sessions inactives après 15 minutes au plus (et jamais désactivée). | Moyenne | DORA 9(4)(c) |\n| PSI-4.6 | Journalisation de toutes les actions d'administration. | Élevée | RTS 12(2)(c)(i) |\n| PSI-4.7 | Aucun compte générique ou partagé ne dispose de droits d'administration. Un compte nominatif a un identifiant de la forme `initiale.nom` (ex. `a.lefloch`, nom composé accepté : `m.le-goff`) et une adresse e-mail personnelle, généralement `prenom.nom@` (ex. `anne.lefloch@…`) : l'adresse n'a pas à reproduire l'identifiant. Une boîte partagée (`ops-partage@`, `admin@`…) ou un identifiant de fonction (`ops`, `admin`, `root`…) caractérise un compte générique. | Élevée | DORA 9(4)(c) ; RTS 21(1)(c) et 21(1)(e)(ii) |\n\n## Délais de remédiation (politique interne)\nCritique : 30 jours · Élevée : 90 jours · Moyenne : 180 jours · Faible : 365 jours, à compter de la date du rapport.\nToute correction suit le processus de gestion des changements (ticket, approbation, journalisation, vérification).\n"
+  },
+  "run_id": "20261104-122607-c399",
+  "started": "2026-11-04 12:26",
+  "lang": "en",
+  "target": "iam-console",
+  "target_label": "KRL-ADM IAM admin console (Banque Kerlann)",
+  "backend": "meta",
+  "models": {
+    "reason": "muse-spark-1.3",
+    "code": "muse-spark-1.3",
+    "segmentation": "sam-3.1"
+  },
+  "entries": [
+    {
+      "control": {
+        "rule": "PSI-4.1",
+        "title": "Mandatory MFA for privileged administrator accounts",
+        "objective": "Verify MFA is enforced for all privileged admin accounts.",
+        "test_procedure": "GET /api/security verify mfa_admin is true; GET /api/users verify every user with role admin has mfa true.",
+        "expected": "mfa_admin == true and 100% of users with role admin have mfa == true",
+        "threshold_source": "PSI-4.1",
+        "severity": "critique",
+        "references": [
+          "DORA 9(4)(d)",
+          "RTS 21(1)(f)(ii)"
+        ],
+        "risk": "Admin takeover without second factor allows full compromise of critical IAM console.",
+        "recommendation": "Enforce MFA for all admin accounts and re-verify enrollment within 30 days.",
+        "cause": "MFA enforcement disabled or admin account enrolled without MFA.",
+        "evidence_page": "/admin/users",
+        "remediation": "config",
+        "id": "C1",
+        "quote": "Authentification multifacteur obligatoire pour tout compte à privilèges (administrateur)."
+      },
+      "test": {
+        "script": "scripts/C1_PSI-4.1.py",
+        "sha256": "7d2bd2c3e9c8860f7a9128ea738fd4c60c965d458e6566fa522b691c299c5a53",
+        "origin": "generated",
+        "code": "import requests\nimport json\nimport os\nimport sys\n\ntry:\n    lab_url = os.environ[\"LAB_URL\"]\n    lab_token = os.environ[\"LAB_TOKEN\"]\nexcept Exception:\n    sys.stderr.write(\"missing LAB_URL or LAB_TOKEN env\\n\")\n    sys.exit(2)\n\nif not lab_url or not lab_token:\n    sys.stderr.write(\"empty LAB_URL or LAB_TOKEN\\n\")\n    sys.exit(2)\n\nbase = lab_url.rstrip(\"/\")\nheaders = {\"Authorization\": \"Bearer \" + lab_token}\n\ntry:\n    rsec = requests.get(base + \"/api/security\", headers=headers, timeout=10)\nexcept Exception as e:\n    sys.stderr.write(\"GET /api/security failed\\n\")\n    sys.exit(2)\n\nif rsec.status_code != 200:\n    sys.stderr.write(\"GET /api/security status not 200\\n\")\n    sys.exit(2)\n\ntry:\n    rusers = requests.get(base + \"/api/users\", headers=headers, timeout=10)\nexcept Exception:\n    sys.stderr.write(\"GET /api/users failed\\n\")\n    sys.exit(2)\n\nif rusers.status_code != 200:\n    sys.stderr.write(\"GET /api/users status not 200\\n\")\n    sys.exit(2)\n\ntry:\n    rev = requests.get(base + \"/admin/users\", headers=headers, timeout=10)\nexcept Exception:\n    sys.stderr.write(\"GET /admin/users failed\\n\")\n    sys.exit(2)\n\nif rev.status_code != 200:\n    sys.stderr.write(\"GET /admin/users status not 200\\n\")\n    sys.exit(2)\n\ntry:\n    sec = rsec.json()\nexcept Exception:\n    sys.stderr.write(\"invalid JSON /api/security\\n\")\n    sys.exit(2)\n\ntry:\n    users = rusers.json()\nexcept Exception:\n    sys.stderr.write(\"invalid JSON /api/users\\n\")\n    sys.exit(2)\n\nif type(sec) is not dict:\n    sys.stderr.write(\"unexpected /api/security type\\n\")\n    sys.exit(2)\n\nif \"mfa_admin\" not in sec:\n    sys.stderr.write(\"missing mfa_admin\\n\")\n    sys.exit(2)\n\nmfa_admin = sec[\"mfa_admin\"]\n\nif mfa_admin is not True and mfa_admin is not False:\n    sys.stderr.write(\"unexpected mfa_admin type\\n\")\n    sys.exit(2)\n\nif type(users) is not list:\n    sys.stderr.write(\"unexpected /api/users type\\n\")\n    sys.exit(2)\n\nadmin_logins = []\nadmin_mfa_values = []\nadmin_total = 0\nadmin_true = 0\n\nfor u in users:\n    if type(u) is not dict:\n        sys.stderr.write(\"unexpected user entry type\\n\")\n        sys.exit(2)\n    if \"role\" not in u or \"mfa\" not in u or \"login\" not in u:\n        sys.stderr.write(\"missing user fields\\n\")\n        sys.exit(2)\n    role = u[\"role\"]\n    mfa = u[\"mfa\"]\n    login = u[\"login\"]\n    if role != \"admin\" and role != \"conseiller\":\n        sys.stderr.write(\"unexpected role value\\n\")\n        sys.exit(2)\n    if mfa is not True and mfa is not False:\n        sys.stderr.write(\"unexpected mfa value\\n\")\n        sys.exit(2)\n    if role == \"admin\":\n        admin_total = admin_total + 1\n        admin_logins.append(login)\n        admin_mfa_values.append(mfa)\n        if mfa is True:\n            admin_true = admin_true + 1\n\nif mfa_admin is True and admin_true == admin_total:\n    status = \"pass\"\nelse:\n    status = \"fail\"\n\nobserved = {\"mfa_admin\": mfa_admin, \"admin_total\": admin_total, \"admin_mfa_true\": admin_true, \"admin_mfa_values\": admin_mfa_values}\nexpected = \"mfa_admin == true and 100% of users with role admin have mfa == true\"\ndetail = \"mfa_admin is \" + str(mfa_admin) + \" and \" + str(admin_true) + \" of \" + str(admin_total) + \" admin accounts have mfa true.\"\nresult = {\"status\": status, \"observed\": observed, \"expected\": expected, \"detail\": detail, \"evidence_page\": \"/admin/users\"}\nprint(json.dumps(result))\n",
+        "requests": 3
+      },
+      "before": {
+        "status": "fail",
+        "observed": {
+          "mfa_admin": false,
+          "admin_total": 2,
+          "admin_mfa_true": 0,
+          "admin_mfa_values": [
+            false,
+            false
+          ]
+        },
+        "expected": "mfa_admin == true and 100% of users with role admin have mfa == true",
+        "detail": "mfa_admin is False and 0 of 2 admin accounts have mfa true.",
+        "evidence_page": "/admin/users"
+      },
+      "evidence_before": {
+        "image": "evidence/C1_before.png",
+        "sha256": "7bf17d9acfb0d5f28ad622f3c11a10c7e09df59cc13c7209a1aabd30105c5622",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "a.lefloch admin Non; ops admin Non",
+          "field_boxes": [
+            [
+              28,
+              189,
+              996,
+              235
+            ],
+            [
+              28,
+              236,
+              996,
+              282
+            ]
+          ],
+          "comment": "Screenshot shows both admin accounts with MFA Non, matching the failed test.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 8,
+          "pii_masked": 8,
+          "pii_found_by_model": 0
+        },
+        "page": "/admin/users",
+        "page_verified": null,
+        "ts": "2026-11-04 12:26:59"
+      },
+      "status_before": "fail",
+      "finding": {
+        "id": "F-01",
+        "severity": "critique",
+        "status": "retested_unapproved",
+        "owner": "IT department — IAM team",
+        "due": "2026-12-04"
+      },
+      "change": {
+        "ticket": "CHG-AUD-20261104-C399-01",
+        "type": "config",
+        "method": "PATCH",
+        "path": "/api/security",
+        "body": {
+          "mfa_admin": true
+        },
+        "rationale": "MFA enforcement for privileged accounts is disabled with 0 of 2 admins enrolled, violating PSI-4.1.",
+        "impact": "The 2 admin accounts without MFA will be required to enroll at next login.",
+        "approved_by": "System owner (CI)",
+        "approved_at": "2026-11-04 12:29:39",
+        "mode": "pre-approved",
+        "applied": true,
+        "http": 200,
+        "journal": {
+          "actor": "svc-change",
+          "approved_by": "System owner (CI)",
+          "changes": [
+            "mfa_admin: False → True"
+          ],
+          "ticket": "CHG-AUD-20261104-C399-01",
+          "ts": "2026-11-04T12:29:39Z"
+        }
+      },
+      "after": {
+        "status": "pass",
+        "observed": {
+          "mfa_admin": true,
+          "admin_total": 2,
+          "admin_mfa_true": 2,
+          "admin_mfa_values": [
+            true,
+            true
+          ]
+        },
+        "expected": "mfa_admin == true and 100% of users with role admin have mfa == true",
+        "detail": "mfa_admin is True and 2 of 2 admin accounts have mfa true.",
+        "evidence_page": "/admin/users"
+      },
+      "evidence_after": {
+        "image": "evidence/C1_after.png",
+        "sha256": "06d22cab84c2de8b3f7e0bfca33ba4fbd23a331892232ac8e33164e44a53878c",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "a.lefloch admin Oui; ops admin Oui",
+          "field_boxes": [
+            [
+              30,
+              190,
+              975,
+              235
+            ],
+            [
+              30,
+              236,
+              975,
+              282
+            ]
+          ],
+          "comment": "Screenshot shows two admin accounts both with MFA Oui, matching the automated test result.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 8,
+          "pii_masked": 8,
+          "pii_found_by_model": 0
+        },
+        "page": "/admin/users",
+        "page_verified": null,
+        "ts": "2026-11-04 12:29:54"
+      },
+      "status_after": "pass"
+    },
+    {
+      "control": {
+        "rule": "PSI-4.2",
+        "title": "Mandatory MFA for users of critical system",
+        "objective": "Verify MFA is enforced for all users of critical system KRL-ADM.",
+        "test_procedure": "GET /api/security verify mfa_users is true; GET /api/users verify every user has mfa true given KRL-ADM supports critical functions.",
+        "expected": "mfa_users == true and 100% of users have mfa == true",
+        "threshold_source": "PSI-4.2",
+        "severity": "elevee",
+        "references": [
+          "DORA 9(4)(d)",
+          "RTS 21(1)(f)(ii)"
+        ],
+        "risk": "Account takeover of standard users on critical system enables lateral movement.",
+        "recommendation": "Enforce MFA for all users and re-verify enrollment within 90 days.",
+        "cause": "MFA enforcement for standard users disabled or users not enrolled.",
+        "evidence_page": "/admin/users",
+        "remediation": "config",
+        "id": "C2",
+        "quote": "Authentification multifacteur obligatoire pour les utilisateurs d'un système supportant une fonction critique ou importante."
+      },
+      "test": {
+        "script": "scripts/C2_PSI-4.2.py",
+        "sha256": "957088ec558b321e316ef2b5594ab94393def448dcb8ee0a55e312dd76023f66",
+        "origin": "generated",
+        "code": "import requests\nimport json\nimport os\nimport sys\nimport re\ntry:\n    lab_url = os.environ[\"LAB_URL\"]\n    lab_token = os.environ[\"LAB_TOKEN\"]\nexcept KeyError:\n    sys.stderr.write(\"missing LAB_URL or LAB_TOKEN\\n\")\n    sys.exit(2)\nif not lab_url or not lab_token:\n    sys.stderr.write(\"missing LAB_URL or LAB_TOKEN\\n\")\n    sys.exit(2)\nif lab_url.endswith(\"/\"):\n    lab_url = lab_url[:-1]\nheaders = {\"Authorization\": \"Bearer \" + lab_token}\ntry:\n    rsec = requests.get(lab_url + \"/api/security\", headers=headers, timeout=10)\nexcept Exception as ex:\n    sys.stderr.write(\"GET /api/security failed: \" + str(ex) + \"\\n\")\n    sys.exit(2)\nif rsec.status_code != 200:\n    sys.stderr.write(\"GET /api/security status \" + str(rsec.status_code) + \"\\n\")\n    sys.exit(2)\ntry:\n    rusers = requests.get(lab_url + \"/api/users\", headers=headers, timeout=10)\nexcept Exception as ex:\n    sys.stderr.write(\"GET /api/users failed: \" + str(ex) + \"\\n\")\n    sys.exit(2)\nif rusers.status_code != 200:\n    sys.stderr.write(\"GET /api/users status \" + str(rusers.status_code) + \"\\n\")\n    sys.exit(2)\ntry:\n    rev = requests.get(lab_url + \"/admin/users\", headers=headers, timeout=10)\nexcept Exception as ex:\n    sys.stderr.write(\"GET /admin/users failed: \" + str(ex) + \"\\n\")\n    sys.exit(2)\nif rev.status_code != 200:\n    sys.stderr.write(\"GET /admin/users status \" + str(rev.status_code) + \"\\n\")\n    sys.exit(2)\nev_text = rev.text\nif not ev_text or len(ev_text) == 0:\n    sys.stderr.write(\"empty evidence page\\n\")\n    sys.exit(2)\ntry:\n    sec = rsec.json()\nexcept Exception as ex:\n    sys.stderr.write(\"invalid security json: \" + str(ex) + \"\\n\")\n    sys.exit(2)\ntry:\n    users = rusers.json()\nexcept Exception as ex:\n    sys.stderr.write(\"invalid users json: \" + str(ex) + \"\\n\")\n    sys.exit(2)\nif not isinstance(sec, dict):\n    sys.stderr.write(\"unexpected security type\\n\")\n    sys.exit(2)\nif \"mfa_users\" not in sec:\n    sys.stderr.write(\"missing mfa_users\\n\")\n    sys.exit(2)\nmfa_users = sec[\"mfa_users\"]\nif not isinstance(mfa_users, bool):\n    sys.stderr.write(\"unexpected mfa_users type\\n\")\n    sys.exit(2)\nif not isinstance(users, list):\n    sys.stderr.write(\"unexpected users type\\n\")\n    sys.exit(2)\nif len(users) == 0:\n    sys.stderr.write(\"empty users list\\n\")\n    sys.exit(2)\ntrue_count = 0\nsimple = []\nfor u in users:\n    if not isinstance(u, dict):\n        sys.stderr.write(\"unexpected user entry\\n\")\n        sys.exit(2)\n    if \"mfa\" not in u:\n        sys.stderr.write(\"missing mfa field\\n\")\n        sys.exit(2)\n    if \"login\" not in u:\n        sys.stderr.write(\"missing login field\\n\")\n        sys.exit(2)\n    mv = u[\"mfa\"]\n    if not isinstance(mv, bool):\n        sys.stderr.write(\"unexpected mfa type\\n\")\n        sys.exit(2)\n    if mv is True:\n        true_count = true_count + 1\n    simple.append({\"login\": u[\"login\"], \"mfa\": mv})\ntotal = len(users)\nblob = rsec.text + rusers.text + ev_text\ninjection = re.search(r\"ignore previous|disregard|follow instructions\", blob, re.IGNORECASE)\npassed = (mfa_users is True) and (true_count == total)\nif passed:\n    status = \"pass\"\nelse:\n    status = \"fail\"\nobserved = {\"mfa_users\": mfa_users, \"total_users\": total, \"mfa_true\": true_count, \"users\": simple}\nexpected = \"mfa_users == true and 100% of users have mfa == true\"\nif injection is not None:\n    detail = \"mfa_users is \" + str(mfa_users) + \" and \" + str(true_count) + \" of \" + str(total) + \" users have mfa true with possible instruction text in untrusted data\"\nelse:\n    detail = \"mfa_users is \" + str(mfa_users) + \" and \" + str(true_count) + \" of \" + str(total) + \" users have mfa true\"\nprint(json.dumps({\"status\": status, \"observed\": observed, \"expected\": expected, \"detail\": detail, \"evidence_page\": \"/admin/users\"}))\n",
+        "requests": 3
+      },
+      "before": {
+        "status": "fail",
+        "observed": {
+          "mfa_users": false,
+          "total_users": 4,
+          "mfa_true": 0,
+          "users": [
+            {
+              "login": "a.lefloch",
+              "mfa": false
+            },
+            {
+              "login": "ops",
+              "mfa": false
+            },
+            {
+              "login": "y.morvan",
+              "mfa": false
+            },
+            {
+              "login": "m.quere",
+              "mfa": false
+            }
+          ]
+        },
+        "expected": "mfa_users == true and 100% of users have mfa == true",
+        "detail": "mfa_users is False and 0 of 4 users have mfa true",
+        "evidence_page": "/admin/users"
+      },
+      "evidence_before": {
+        "image": "evidence/C2_before.png",
+        "sha256": "97a8a50563fb5e7353124ab6d9c471b199d2c9693e7dafda4e2b9e347c6d2bd8",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "a.lefloch admin Non; ops admin Non; y.morvan conseiller Non; m.quere conseiller Non",
+          "field_boxes": [
+            [
+              28,
+              188,
+              968,
+              234
+            ],
+            [
+              28,
+              235,
+              968,
+              281
+            ],
+            [
+              28,
+              282,
+              968,
+              330
+            ],
+            [
+              28,
+              331,
+              968,
+              378
+            ]
+          ],
+          "comment": "All four user rows show MFA status Non, matching the automated result of 0 of 4 users with MFA.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 8,
+          "pii_masked": 8,
+          "pii_found_by_model": 0
+        },
+        "page": "/admin/users",
+        "page_verified": null,
+        "ts": "2026-11-04 12:28:09"
+      },
+      "status_before": "fail",
+      "finding": {
+        "id": "F-02",
+        "severity": "elevee",
+        "status": "retested_unapproved",
+        "owner": "IT department — IAM team",
+        "due": "2027-02-02"
+      },
+      "change": {
+        "ticket": "CHG-AUD-20261104-C399-02",
+        "type": "config",
+        "method": "PATCH",
+        "path": "/api/security",
+        "body": {
+          "mfa_users": true
+        },
+        "rationale": "Enforce mandatory MFA for all standard users on critical system KRL-ADM as required by PSI-4.2.",
+        "impact": "Standard users will be required to enroll in and use MFA at next login.",
+        "approved_by": "System owner (CI)",
+        "approved_at": "2026-11-04 12:29:39",
+        "mode": "pre-approved",
+        "applied": true,
+        "http": 200,
+        "journal": {
+          "actor": "svc-change",
+          "approved_by": "System owner (CI)",
+          "changes": [
+            "mfa_users: False → True"
+          ],
+          "ticket": "CHG-AUD-20261104-C399-02",
+          "ts": "2026-11-04T12:29:39Z"
+        }
+      },
+      "after": {
+        "status": "pass",
+        "observed": {
+          "mfa_users": true,
+          "total_users": 4,
+          "mfa_true": 4,
+          "users": [
+            {
+              "login": "a.lefloch",
+              "mfa": true
+            },
+            {
+              "login": "ops",
+              "mfa": true
+            },
+            {
+              "login": "y.morvan",
+              "mfa": true
+            },
+            {
+              "login": "m.quere",
+              "mfa": true
+            }
+          ]
+        },
+        "expected": "mfa_users == true and 100% of users have mfa == true",
+        "detail": "mfa_users is True and 4 of 4 users have mfa true",
+        "evidence_page": "/admin/users"
+      },
+      "evidence_after": {
+        "image": "evidence/C2_after.png",
+        "sha256": "415182c0770b518dceda72130b7c6297dee1d2e69b08a9b62047eb455de47f49",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "a.lefloch admin Oui; ops admin Oui; y.morvan conseiller Oui; m.quere conseiller Oui",
+          "field_boxes": [
+            [
+              28,
+              189,
+              972,
+              235
+            ],
+            [
+              28,
+              235,
+              972,
+              280
+            ],
+            [
+              28,
+              280,
+              972,
+              330
+            ],
+            [
+              28,
+              330,
+              972,
+              378
+            ]
+          ],
+          "comment": "Screenshot shows four users all with MFA status Oui.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 8,
+          "pii_masked": 8,
+          "pii_found_by_model": 0
+        },
+        "page": "/admin/users",
+        "page_verified": null,
+        "ts": "2026-11-04 12:29:55"
+      },
+      "status_after": "pass"
+    },
+    {
+      "control": {
+        "rule": "PSI-4.3",
+        "title": "Password length and complexity",
+        "objective": "Verify 12-character minimum and complexity are enforced.",
+        "test_procedure": "GET /api/security check password_min_length and password_require_complexity.",
+        "expected": "password_min_length >= 12 and password_require_complexity == true",
+        "threshold_source": "PSI-4.3",
+        "severity": "moyenne",
+        "references": [
+          "DORA 9(4)(d) (bonnes pratiques)"
+        ],
+        "risk": "Weak passwords enable brute-force and credential stuffing.",
+        "recommendation": "Set minimum length to 12 and enable complexity within 180 days.",
+        "cause": "Weak password policy configuration.",
+        "evidence_page": "/admin/security",
+        "remediation": "config",
+        "id": "C3",
+        "quote": "Mot de passe de 12 caractères minimum, avec exigence de complexité."
+      },
+      "test": {
+        "script": "scripts/C3_PSI-4.3.py",
+        "sha256": "7c6668725bc1f0e8ffd12646f46ffaa3b9e90baa70d557c4e1fac7c6cf0be3c9",
+        "origin": "generated",
+        "code": "import requests\nimport json\nimport os\nimport sys\nimport re\ntry:\n    labUrl = os.environ[\"LAB_URL\"]\n    labToken = os.environ[\"LAB_TOKEN\"]\nexcept KeyError as e:\n    sys.stderr.write(\"missing env var: \" + str(e) + \"\\n\")\n    sys.exit(2)\nauthHeader = {\"Authorization\": \"Bearer \" + labToken}\nbaseUrl = labUrl.rstrip(\"/\")\ntry:\n    resp = requests.get(baseUrl + \"/api/security\", headers=authHeader, timeout=10)\nexcept Exception as e:\n    sys.stderr.write(\"request to /api/security failed: \" + str(e) + \"\\n\")\n    sys.exit(2)\nif resp.status_code != 200:\n    sys.stderr.write(\"GET /api/security status \" + str(resp.status_code) + \"\\n\")\n    sys.exit(2)\ntry:\n    secData = resp.json()\nexcept Exception as e:\n    sys.stderr.write(\"invalid json from /api/security: \" + str(e) + \"\\n\")\n    sys.exit(2)\nif \"password_min_length\" not in secData or \"password_require_complexity\" not in secData:\n    sys.stderr.write(\"missing keys in /api/security\\n\")\n    sys.exit(2)\npwdLen = secData[\"password_min_length\"]\npwdComp = secData[\"password_require_complexity\"]\nif type(pwdLen) is not int:\n    sys.stderr.write(\"unexpected type for password_min_length\\n\")\n    sys.exit(2)\nif type(pwdComp) is not bool:\n    sys.stderr.write(\"unexpected type for password_require_complexity\\n\")\n    sys.exit(2)\ntry:\n    evResp = requests.get(baseUrl + \"/admin/security\", headers=authHeader, timeout=10)\nexcept Exception as e:\n    sys.stderr.write(\"request to /admin/security failed: \" + str(e) + \"\\n\")\n    sys.exit(2)\nif evResp.status_code != 200:\n    sys.stderr.write(\"GET /admin/security status \" + str(evResp.status_code) + \"\\n\")\n    sys.exit(2)\nevText = evResp.text\nif not isinstance(evText, str) or len(evText) == 0:\n    sys.stderr.write(\"empty evidence page /admin/security\\n\")\n    sys.exit(2)\nif pwdLen >= 12 and pwdComp is True:\n    verdict = \"pass\"\nelse:\n    verdict = \"fail\"\ndetailTxt = \"Observed password_min_length \" + str(pwdLen) + \" and password_require_complexity \" + str(pwdComp).lower() + \".\"\nresult = {\"status\": verdict, \"observed\": {\"password_min_length\": pwdLen, \"password_require_complexity\": pwdComp}, \"expected\": \"password_min_length >= 12 and password_require_complexity == true\", \"detail\": detailTxt, \"evidence_page\": \"/admin/security\"}\nprint(json.dumps(result))\n",
+        "requests": 2
+      },
+      "before": {
+        "status": "fail",
+        "observed": {
+          "password_min_length": 6,
+          "password_require_complexity": false
+        },
+        "expected": "password_min_length >= 12 and password_require_complexity == true",
+        "detail": "Observed password_min_length 6 and password_require_complexity false.",
+        "evidence_page": "/admin/security"
+      },
+      "evidence_before": {
+        "image": "evidence/C3_before.png",
+        "sha256": "c062444b25f45b3730865ae70aa5304ace226677a2ba4b7d08c33e3fe49cabc3",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "Longueur minimale du mot de passe 6; Complexité du mot de passe exigée Désactivée",
+          "field_boxes": [
+            [
+              29,
+              282,
+              971,
+              329
+            ],
+            [
+              29,
+              330,
+              971,
+              376
+            ]
+          ],
+          "comment": "Screenshot shows minimum length 6 and complexity disabled, matching the automated fail result.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 0,
+          "pii_masked": 0,
+          "pii_found_by_model": 0
+        },
+        "page": "/admin/security",
+        "page_verified": null,
+        "ts": "2026-11-04 12:27:28"
+      },
+      "status_before": "fail",
+      "finding": {
+        "id": "F-05",
+        "severity": "moyenne",
+        "status": "retested_unapproved",
+        "owner": "IT department — IAM team",
+        "due": "2027-05-03"
+      },
+      "change": {
+        "ticket": "CHG-AUD-20261104-C399-05",
+        "type": "config",
+        "method": "PATCH",
+        "path": "/api/security",
+        "body": {
+          "password_min_length": 12,
+          "password_require_complexity": true
+        },
+        "rationale": "Observed policy of 6 characters without complexity violates PSI-4.3 requiring 12 characters minimum with complexity.",
+        "impact": "Users will be required to choose 12-character complex passwords at next creation or reset.",
+        "approved_by": "System owner (CI)",
+        "approved_at": "2026-11-04 12:29:39",
+        "mode": "pre-approved",
+        "applied": true,
+        "http": 200,
+        "journal": {
+          "actor": "svc-change",
+          "approved_by": "System owner (CI)",
+          "changes": [
+            "password_min_length: 6 → 12",
+            "password_require_complexity: False → True"
+          ],
+          "ticket": "CHG-AUD-20261104-C399-05",
+          "ts": "2026-11-04T12:29:39Z"
+        }
+      },
+      "after": {
+        "status": "pass",
+        "observed": {
+          "password_min_length": 12,
+          "password_require_complexity": true
+        },
+        "expected": "password_min_length >= 12 and password_require_complexity == true",
+        "detail": "Observed password_min_length 12 and password_require_complexity true.",
+        "evidence_page": "/admin/security"
+      },
+      "evidence_after": {
+        "image": "evidence/C3_after.png",
+        "sha256": "2afa528262e2d705839e49a6a958bca94e19447be0312f1d98cca2d9f570695f",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "Longueur minimale du mot de passe 12 | Complexité du mot de passe exigée Activée",
+          "field_boxes": [
+            [
+              27,
+              281,
+              971,
+              331
+            ],
+            [
+              27,
+              331,
+              971,
+              379
+            ]
+          ],
+          "comment": "The screenshot shows minimum length 12 and complexity Activée, matching the automated test result.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 0,
+          "pii_masked": 0,
+          "pii_found_by_model": 0
+        },
+        "page": "/admin/security",
+        "page_verified": null,
+        "ts": "2026-11-04 12:29:56"
+      },
+      "status_after": "pass"
+    },
+    {
+      "control": {
+        "rule": "PSI-4.4",
+        "title": "Account lockout after failed logins",
+        "objective": "Verify lockout occurs after at most 5 failures and is enabled.",
+        "test_procedure": "GET /api/security check lockout_threshold.",
+        "expected": "1 <= lockout_threshold <= 5 (0 fails as never locks)",
+        "threshold_source": "PSI-4.4",
+        "severity": "moyenne",
+        "references": [
+          "DORA 9(4)(c)"
+        ],
+        "risk": "No lockout allows unlimited password guessing.",
+        "recommendation": "Set lockout threshold to 5 or less and never to 0 within 180 days.",
+        "cause": "Lockout disabled or threshold set too high.",
+        "evidence_page": "/admin/security",
+        "remediation": "config",
+        "id": "C4",
+        "quote": "Verrouillage du compte après 5 échecs de connexion au plus (et jamais désactivé)."
+      },
+      "test": {
+        "script": "scripts/C4_PSI-4.4.py",
+        "sha256": "2f7fc0c5c4bbee6cf2b041b121bf34fe105a93cb388a4946bf53a511a7ecee8f",
+        "origin": "generated",
+        "code": "import requests\nimport json\nimport os\nimport sys\nimport re\n\ntry:\n    lab_url = os.environ[\"LAB_URL\"]\n    lab_token = os.environ[\"LAB_TOKEN\"]\nexcept KeyError:\n    sys.stderr.write(\"missing LAB_URL or LAB_TOKEN\\n\")\n    sys.exit(2)\n\nif not lab_url or not lab_token:\n    sys.stderr.write(\"missing LAB_URL or LAB_TOKEN\\n\")\n    sys.exit(2)\n\nbase = lab_url.rstrip(\"/\")\nheaders = {\"Authorization\": \"Bearer \" + lab_token}\n\ntry:\n    r = requests.get(base + \"/api/security\", headers=headers, timeout=10)\nexcept Exception:\n    sys.stderr.write(\"request to /api/security failed\\n\")\n    sys.exit(2)\n\nif r.status_code != 200:\n    sys.stderr.write(\"unexpected status for /api/security: \" + str(r.status_code) + \"\\n\")\n    sys.exit(2)\n\ntry:\n    data = r.json()\nexcept Exception:\n    sys.stderr.write(\"invalid json for /api/security\\n\")\n    sys.exit(2)\n\nif not isinstance(data, dict):\n    sys.stderr.write(\"unexpected data type for /api/security\\n\")\n    sys.exit(2)\n\nif \"lockout_threshold\" not in data:\n    sys.stderr.write(\"missing lockout_threshold in /api/security\\n\")\n    sys.exit(2)\n\nthreshold = data[\"lockout_threshold\"]\n\nif isinstance(threshold, bool) or not isinstance(threshold, int):\n    sys.stderr.write(\"unexpected type for lockout_threshold\\n\")\n    sys.exit(2)\n\ntry:\n    e = requests.get(base + \"/admin/security\", headers=headers, timeout=10)\nexcept Exception:\n    sys.stderr.write(\"request to /admin/security failed\\n\")\n    sys.exit(2)\n\nif e.status_code != 200:\n    sys.stderr.write(\"unexpected status for /admin/security: \" + str(e.status_code) + \"\\n\")\n    sys.exit(2)\n\nevidence_text = e.text\n\nif not isinstance(evidence_text, str) or len(evidence_text) == 0:\n    sys.stderr.write(\"empty evidence page /admin/security\\n\")\n    sys.exit(2)\n\nfound = re.search(\"lockout\", evidence_text, re.IGNORECASE)\n\nif 1 <= threshold <= 5:\n    status = \"pass\"\n    detail = \"lockout_threshold is \" + str(threshold) + \", within 1 to 5 and enabled.\"\nelse:\n    status = \"fail\"\n    detail = \"lockout_threshold is \" + str(threshold) + \", not within 1 to 5 or disabled.\"\n\nprint(json.dumps({\"status\": status, \"observed\": threshold, \"expected\": \"1 <= lockout_threshold <= 5 (0 fails as never locks)\", \"detail\": detail, \"evidence_page\": \"/admin/security\"}))\n",
+        "requests": 2
+      },
+      "before": {
+        "status": "fail",
+        "observed": 0,
+        "expected": "1 <= lockout_threshold <= 5 (0 fails as never locks)",
+        "detail": "lockout_threshold is 0, not within 1 to 5 or disabled.",
+        "evidence_page": "/admin/security"
+      },
+      "evidence_before": {
+        "image": "evidence/C4_before.png",
+        "sha256": "013a9eceeb05ebc41dc91f9e1f7fb05196b9a54977b326825a0609642d5e84c8",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "Verrouillage après N échecs de connexion Aucun",
+          "field_boxes": [
+            [
+              28,
+              377,
+              972,
+              424
+            ]
+          ],
+          "comment": "The screenshot shows lockout set to Aucun, confirming the automated finding of disabled lockout.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 0,
+          "pii_masked": 0,
+          "pii_found_by_model": 0
+        },
+        "page": "/admin/security",
+        "page_verified": null,
+        "ts": "2026-11-04 12:27:32"
+      },
+      "status_before": "fail",
+      "finding": {
+        "id": "F-06",
+        "severity": "moyenne",
+        "status": "retested_unapproved",
+        "owner": "IT department — IAM team",
+        "due": "2027-05-03"
+      },
+      "change": {
+        "ticket": "CHG-AUD-20261104-C399-06",
+        "type": "config",
+        "method": "PATCH",
+        "path": "/api/security",
+        "body": {
+          "lockout_threshold": 5
+        },
+        "rationale": "Lockout is disabled with threshold 0, so set it to 5 to meet PSI-4.4 requirement of 1 to 5.",
+        "impact": "Users will be locked out after 5 consecutive failed logins and will require unlock or reset.",
+        "approved_by": "System owner (CI)",
+        "approved_at": "2026-11-04 12:29:39",
+        "mode": "pre-approved",
+        "applied": true,
+        "http": 200,
+        "journal": {
+          "actor": "svc-change",
+          "approved_by": "System owner (CI)",
+          "changes": [
+            "lockout_threshold: 0 → 5"
+          ],
+          "ticket": "CHG-AUD-20261104-C399-06",
+          "ts": "2026-11-04T12:29:39Z"
+        }
+      },
+      "after": {
+        "status": "pass",
+        "observed": 5,
+        "expected": "1 <= lockout_threshold <= 5 (0 fails as never locks)",
+        "detail": "lockout_threshold is 5, within 1 to 5 and enabled.",
+        "evidence_page": "/admin/security"
+      },
+      "evidence_after": {
+        "image": "evidence/C4_after.png",
+        "sha256": "61ee6e5268a23f0bba15b5fbe15ae81148bf7d33496e5df9802d2ebfda1ba437",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "Verrouillage après N échecs de connexion 5",
+          "field_boxes": [
+            [
+              28,
+              377,
+              973,
+              423
+            ]
+          ],
+          "comment": "The security policy table shows lockout after 5 failed logins, matching the automated test value of 5.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 0,
+          "pii_masked": 0,
+          "pii_found_by_model": 0
+        },
+        "page": "/admin/security",
+        "page_verified": null,
+        "ts": "2026-11-04 12:29:56"
+      },
+      "status_after": "pass"
+    },
+    {
+      "control": {
+        "rule": "PSI-4.5",
+        "title": "Inactive session timeout",
+        "objective": "Verify inactive sessions expire after at most 15 minutes.",
+        "test_procedure": "GET /api/security check session_timeout_minutes.",
+        "expected": "1 <= session_timeout_minutes <= 15 (0 fails as never expires)",
+        "threshold_source": "PSI-4.5",
+        "severity": "moyenne",
+        "references": [
+          "DORA 9(4)(c)"
+        ],
+        "risk": "Abandoned sessions allow hijacking on shared workstations.",
+        "recommendation": "Set inactive timeout to 15 minutes or less and never to 0 within 180 days.",
+        "cause": "Session timeout disabled or set too long.",
+        "evidence_page": "/admin/security",
+        "remediation": "config",
+        "id": "C5",
+        "quote": "Expiration des sessions inactives après 15 minutes au plus (et jamais désactivée)."
+      },
+      "test": {
+        "script": "scripts/C5_PSI-4.5.py",
+        "sha256": "6ee42a251d9c91d10d30a64727b91e8579589780388d156526fa7823698767b5",
+        "origin": "generated",
+        "code": "import requests\nimport json\nimport os\nimport sys\nimport re\ntry:\n    base = os.environ[\"LAB_URL\"]\n    token = os.environ[\"LAB_TOKEN\"]\nexcept KeyError:\n    sys.stderr.write(\"missing LAB_URL or LAB_TOKEN\\n\")\n    sys.exit(2)\nbase = base.rstrip(\"/\")\nheaders = {\"Authorization\": \"Bearer \" + token}\ntry:\n    resp = requests.get(base + \"/api/security\", headers=headers, timeout=10)\nexcept Exception:\n    sys.stderr.write(\"request to /api/security failed\\n\")\n    sys.exit(2)\nif resp.status_code != 200:\n    sys.stderr.write(\"unexpected status for /api/security\\n\")\n    sys.exit(2)\ntry:\n    data = resp.json()\nexcept Exception:\n    sys.stderr.write(\"invalid json for /api/security\\n\")\n    sys.exit(2)\nif \"session_timeout_minutes\" not in data:\n    sys.stderr.write(\"missing session_timeout_minutes\\n\")\n    sys.exit(2)\nvalue = data[\"session_timeout_minutes\"]\nif isinstance(value, bool):\n    sys.stderr.write(\"unexpected type for session_timeout_minutes\\n\")\n    sys.exit(2)\nif not isinstance(value, int):\n    sys.stderr.write(\"unexpected type for session_timeout_minutes\\n\")\n    sys.exit(2)\ntry:\n    ev = requests.get(base + \"/admin/security\", headers=headers, timeout=10)\nexcept Exception:\n    sys.stderr.write(\"request to /admin/security failed\\n\")\n    sys.exit(2)\nif ev.status_code != 200:\n    sys.stderr.write(\"unexpected status for /admin/security\\n\")\n    sys.exit(2)\nif 1 <= value <= 15:\n    status = \"pass\"\n    detail = \"session_timeout_minutes is \" + str(value) + \" minutes.\"\nelse:\n    status = \"fail\"\n    if value == 0:\n        detail = \"session_timeout_minutes is 0 minutes (never expires).\"\n    else:\n        detail = \"session_timeout_minutes is \" + str(value) + \" minutes.\"\nobserved = {\"session_timeout_minutes\": value}\nexpected = \"1 <= session_timeout_minutes <= 15 (0 fails as never expires)\"\nprint(json.dumps({\"status\": status, \"observed\": observed, \"expected\": expected, \"detail\": detail, \"evidence_page\": \"/admin/security\"}))\n",
+        "requests": 2
+      },
+      "before": {
+        "status": "fail",
+        "observed": {
+          "session_timeout_minutes": 0
+        },
+        "expected": "1 <= session_timeout_minutes <= 15 (0 fails as never expires)",
+        "detail": "session_timeout_minutes is 0 minutes (never expires).",
+        "evidence_page": "/admin/security"
+      },
+      "evidence_before": {
+        "image": "evidence/C5_before.png",
+        "sha256": "f45754e50dd20564b8a712f28adbc651771f1f2c294feff18f9c9235dbb4b1f0",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "Expiration de session inactive (minutes) Jamais",
+          "field_boxes": [
+            [
+              29,
+              425,
+              971,
+              473
+            ]
+          ],
+          "comment": "The screenshot shows inactive session expiration set to Jamais, confirming the timeout is disabled.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 0,
+          "pii_masked": 0,
+          "pii_found_by_model": 0
+        },
+        "page": "/admin/security",
+        "page_verified": null,
+        "ts": "2026-11-04 12:28:13"
+      },
+      "status_before": "fail",
+      "finding": {
+        "id": "F-07",
+        "severity": "moyenne",
+        "status": "retested_unapproved",
+        "owner": "IT department — IAM team",
+        "due": "2027-05-03"
+      },
+      "change": {
+        "ticket": "CHG-AUD-20261104-C399-07",
+        "type": "config",
+        "method": "PATCH",
+        "path": "/api/security",
+        "body": {
+          "session_timeout_minutes": 15
+        },
+        "rationale": "Set inactive session timeout to 15 minutes to satisfy PSI-4.5.",
+        "impact": "Users inactive for 15 minutes will be logged out and must re-authenticate.",
+        "approved_by": "System owner (CI)",
+        "approved_at": "2026-11-04 12:29:39",
+        "mode": "pre-approved",
+        "applied": true,
+        "http": 200,
+        "journal": {
+          "actor": "svc-change",
+          "approved_by": "System owner (CI)",
+          "changes": [
+            "session_timeout_minutes: 0 → 15"
+          ],
+          "ticket": "CHG-AUD-20261104-C399-07",
+          "ts": "2026-11-04T12:29:39Z"
+        }
+      },
+      "after": {
+        "status": "pass",
+        "observed": {
+          "session_timeout_minutes": 15
+        },
+        "expected": "1 <= session_timeout_minutes <= 15 (0 fails as never expires)",
+        "detail": "session_timeout_minutes is 15 minutes.",
+        "evidence_page": "/admin/security"
+      },
+      "evidence_after": {
+        "image": "evidence/C5_after.png",
+        "sha256": "587fddb3679d8bfc8c085929eb59fce6e6ae71b3d7babdb9cc3b417a708b9946",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "Expiration de session inactive (minutes) 15",
+          "field_boxes": [
+            [
+              26,
+              424,
+              970,
+              472
+            ]
+          ],
+          "comment": "The screenshot shows inactive session expiration set to 15 minutes, matching the test result.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 0,
+          "pii_masked": 0,
+          "pii_found_by_model": 0
+        },
+        "page": "/admin/security",
+        "page_verified": null,
+        "ts": "2026-11-04 12:30:06"
+      },
+      "status_after": "pass"
+    },
+    {
+      "control": {
+        "rule": "PSI-4.6",
+        "title": "Logging of administration actions",
+        "objective": "Verify administration actions are logged.",
+        "test_procedure": "GET /api/security verify admin_audit_log is true; GET /api/journal confirm entries exist.",
+        "expected": "admin_audit_log == true",
+        "threshold_source": "PSI-4.6",
+        "severity": "elevee",
+        "references": [
+          "RTS 12(2)(c)(i)"
+        ],
+        "risk": "Missing admin logs prevent detection and forensic investigation.",
+        "recommendation": "Enable administration audit logging within 90 days.",
+        "cause": "Audit logging flag disabled.",
+        "evidence_page": "/admin/security",
+        "remediation": "config",
+        "id": "C6",
+        "quote": "Journalisation de toutes les actions d'administration."
+      },
+      "test": {
+        "script": "scripts/C6_PSI-4.6.py",
+        "sha256": "6c4d3457aca59ff1bf6dc209b6ebc680be4431fc35c167078784748a8d16eb76",
+        "origin": "generated",
+        "code": "import requests\nimport json\nimport os\nimport sys\nimport re\ntry:\n    base = os.environ[\"LAB_URL\"]\n    token = os.environ[\"LAB_TOKEN\"]\nexcept KeyError:\n    sys.stderr.write(\"missing env\\n\")\n    sys.exit(2)\nbase = base.rstrip(\"/\")\nheaders = {\"Authorization\": \"Bearer \" + token}\ntry:\n    r1 = requests.get(base + \"/api/security\", headers=headers, timeout=10)\nexcept Exception:\n    sys.stderr.write(\"security request failed\\n\")\n    sys.exit(2)\nif r1.status_code != 200:\n    sys.stderr.write(\"security request failed\\n\")\n    sys.exit(2)\ntry:\n    sec = r1.json()\nexcept Exception:\n    sys.stderr.write(\"security data invalid\\n\")\n    sys.exit(2)\nif \"admin_audit_log\" not in sec:\n    sys.stderr.write(\"security data invalid\\n\")\n    sys.exit(2)\naval = sec[\"admin_audit_log\"]\nif aval is not True and aval is not False:\n    sys.stderr.write(\"security data invalid\\n\")\n    sys.exit(2)\ntry:\n    r2 = requests.get(base + \"/api/journal\", headers=headers, timeout=10)\nexcept Exception:\n    sys.stderr.write(\"journal request failed\\n\")\n    sys.exit(2)\nif r2.status_code != 200:\n    sys.stderr.write(\"journal request failed\\n\")\n    sys.exit(2)\ntry:\n    jour = r2.json()\nexcept Exception:\n    sys.stderr.write(\"journal data invalid\\n\")\n    sys.exit(2)\nif not isinstance(jour, list):\n    sys.stderr.write(\"journal data invalid\\n\")\n    sys.exit(2)\ntry:\n    r3 = requests.get(base + \"/admin/security\", headers=headers, timeout=10)\nexcept Exception:\n    sys.stderr.write(\"evidence request failed\\n\")\n    sys.exit(2)\nif r3.status_code != 200:\n    sys.stderr.write(\"evidence request failed\\n\")\n    sys.exit(2)\netext = r3.text\nblob = json.dumps(sec) + json.dumps(jour) + etext\nfound = re.search(\"ignore.*instruction|system prompt|follow.*instruction\", blob, re.IGNORECASE)\ncount = len(jour)\nok = aval is True and count > 0\nstatus = \"pass\" if ok else \"fail\"\ndetail = \"admin_audit_log is \" + str(aval) + \" with \" + str(count) + \" journal entries.\"\nif found is not None:\n    detail = \"admin_audit_log is \" + str(aval) + \" with \" + str(count) + \" journal entries with untrusted instruction text observed and ignored.\"\nobserved = {\"admin_audit_log\": aval, \"journal_count\": count}\nexpected = \"admin_audit_log == true\"\nprint(json.dumps({\"status\": status, \"observed\": observed, \"expected\": expected, \"detail\": detail, \"evidence_page\": \"/admin/security\"}))\n",
+        "requests": 3
+      },
+      "before": {
+        "status": "fail",
+        "observed": {
+          "admin_audit_log": true,
+          "journal_count": 0
+        },
+        "expected": "admin_audit_log == true",
+        "detail": "admin_audit_log is True with 0 journal entries.",
+        "evidence_page": "/admin/security"
+      },
+      "evidence_before": {
+        "image": "evidence/C6_before.png",
+        "sha256": "e397a8e965fed320d96525f43194a0694cb93d8c582a77daba03a529502afebd",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "Journalisation des actions d'administration Activée",
+          "field_boxes": [
+            [
+              28,
+              472,
+              971,
+              519
+            ]
+          ],
+          "comment": "The screenshot shows Journalisation des actions d'administration as Activée, matching admin_audit_log true.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 0,
+          "pii_masked": 0,
+          "pii_found_by_model": 0
+        },
+        "page": "/admin/security",
+        "page_verified": null,
+        "ts": "2026-11-04 12:29:06"
+      },
+      "status_before": "fail",
+      "finding": {
+        "id": "F-03",
+        "severity": "elevee",
+        "status": "action_plan",
+        "owner": "IT department — IAM team",
+        "due": "2027-02-02"
+      },
+      "change": {
+        "ticket": "CHG-AUD-20261104-C399-03",
+        "type": "manual",
+        "actions": [
+          "Verify via GET /api/security and /admin/security that admin_audit_log remains true.",
+          "Investigate journal backend, retention and filtering to explain why GET /api/journal returns 0 entries despite logging being enabled.",
+          "Perform one approved administration action and confirm a corresponding entry appears in /admin/journal with ticket, actor and approver.",
+          "Escalate to platform team if logging is broken and retain evidence for PSI-4.6 90-day follow-up."
+        ],
+        "rationale": "admin_audit_log is already true so an empty journal cannot be fixed by a config toggle and requires human verification."
+      }
+    },
+    {
+      "control": {
+        "rule": "PSI-4.7",
+        "title": "No generic shared admin accounts",
+        "objective": "Verify no admin role is held by a generic or shared account.",
+        "test_procedure": "GET /api/users filter role admin; flag login without initiale.nom form (e.g. ops, admin, root) or email with shared box (ops-partage@, admin@).",
+        "expected": "0 users with role admin having generic login or shared mailbox",
+        "threshold_source": "PSI-4.7",
+        "severity": "elevee",
+        "references": [
+          "DORA 9(4)(c)",
+          "RTS 21(1)(c) et 21(1)(e)(ii)"
+        ],
+        "risk": "Shared admin accounts destroy accountability and enable undetected abuse.",
+        "recommendation": "Remove admin rights from generic accounts and replace with nominative initiale.nom accounts within 90 days.",
+        "cause": "Legacy functional admin account retained with admin role.",
+        "evidence_page": "/admin/users",
+        "remediation": "manual",
+        "id": "C7",
+        "quote": "Aucun compte générique ou partagé ne dispose de droits d'administration."
+      },
+      "test": {
+        "script": "scripts/C7_PSI-4.7.py",
+        "sha256": "3793a8e5127ce544afc08dc1ebdfbb9bf067708470c1832d06e7630daf189baf",
+        "origin": "generated",
+        "code": "import requests\nimport json\nimport os\nimport sys\nimport re\n\ntry:\n    baseurl = os.environ[\"LAB_URL\"]\n    token = os.environ[\"LAB_TOKEN\"]\nexcept Exception:\n    print(\"missing LAB_URL or LAB_TOKEN\", file=sys.stderr)\n    sys.exit(2)\n\nif not isinstance(baseurl, str) or not isinstance(token, str):\n    print(\"invalid LAB_URL or LAB_TOKEN type\", file=sys.stderr)\n    sys.exit(2)\n\nif baseurl == \"\" or token == \"\":\n    print(\"empty LAB_URL or LAB_TOKEN\", file=sys.stderr)\n    sys.exit(2)\n\nheaders = {\"Authorization\": \"Bearer \" + token}\nbase = baseurl.rstrip(\"/\")\n\ntry:\n    rusers = requests.get(base + \"/api/users\", headers=headers, timeout=10)\nexcept Exception as ex:\n    print(\"GET /api/users failed: \" + str(ex), file=sys.stderr)\n    sys.exit(2)\n\nif rusers.status_code != 200:\n    print(\"GET /api/users status \" + str(rusers.status_code), file=sys.stderr)\n    sys.exit(2)\n\ntry:\n    users = rusers.json()\nexcept Exception as ex:\n    print(\"invalid JSON /api/users: \" + str(ex), file=sys.stderr)\n    sys.exit(2)\n\ntry:\n    rev = requests.get(base + \"/admin/users\", headers=headers, timeout=10)\nexcept Exception as ex:\n    print(\"GET /admin/users failed: \" + str(ex), file=sys.stderr)\n    sys.exit(2)\n\nif rev.status_code != 200:\n    print(\"GET /admin/users status \" + str(rev.status_code), file=sys.stderr)\n    sys.exit(2)\n\nif not isinstance(users, list):\n    print(\"unexpected /api/users format\", file=sys.stderr)\n    sys.exit(2)\n\nadmins = []\nflagged = []\n\nfor item in users:\n    if not isinstance(item, dict):\n        print(\"unexpected user entry format\", file=sys.stderr)\n        sys.exit(2)\n    if \"login\" not in item or \"email\" not in item or \"role\" not in item:\n        print(\"missing login email or role\", file=sys.stderr)\n        sys.exit(2)\n    loginval = item[\"login\"]\n    emailval = item[\"email\"]\n    roleval = item[\"role\"]\n    if not isinstance(loginval, str) or not isinstance(emailval, str) or not isinstance(roleval, str):\n        print(\"invalid user field type\", file=sys.stderr)\n        sys.exit(2)\n    if roleval == \"admin\":\n        admins.append(item)\n        loginlow = loginval.lower().strip()\n        emaillow = emailval.lower().strip()\n        if \"@\" not in emaillow:\n            print(\"invalid admin email format\", file=sys.stderr)\n            sys.exit(2)\n        parts = emaillow.split(\"@\")\n        localpart = parts[0]\n        if localpart == \"\":\n            print(\"invalid admin email format\", file=sys.stderr)\n            sys.exit(2)\n        loginok = re.match(r\"^[a-z][a-z0-9\\-]*\\.[a-z][a-z0-9\\-]*$\", loginlow)\n        emailshared = False\n        if \".\" not in localpart:\n            emailshared = True\n        if \"partage\" in emaillow:\n            emailshared = True\n        if localpart in [\"admin\", \"root\", \"ops\", \"administrator\", \"superadmin\", \"service\", \"support\", \"system\"]:\n            emailshared = True\n        if loginok is None or emailshared:\n            flagged.append({\"login\": loginval, \"email\": emailval})\n\nobserved = flagged\nexpected = \"0 users with role admin having generic login or shared mailbox\"\ncountadmin = len(admins)\ncountflag = len(flagged)\nif countflag == 0:\n    status = \"pass\"\nelse:\n    status = \"fail\"\ndetail = \"Checked \" + str(countadmin) + \" admin accounts and found \" + str(countflag) + \" with generic login or shared mailbox\"\nprint(json.dumps({\"status\": status, \"observed\": observed, \"expected\": expected, \"detail\": detail, \"evidence_page\": \"/admin/users\"}))\n",
+        "requests": 2
+      },
+      "before": {
+        "status": "fail",
+        "observed": [
+          {
+            "login": "ops",
+            "email": "ops-partage@kerlann-banque.example"
+          }
+        ],
+        "expected": "0 users with role admin having generic login or shared mailbox",
+        "detail": "Checked 2 admin accounts and found 1 with generic login or shared mailbox",
+        "evidence_page": "/admin/users"
+      },
+      "evidence_before": {
+        "image": "evidence/C7_before.png",
+        "sha256": "ca5ca01e62a8a8fc33e86dadccdda6133c931a52a5ff4dfd9ce12686c2831dae",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "ops admin Non",
+          "field_boxes": [
+            [
+              27,
+              236,
+              974,
+              283
+            ]
+          ],
+          "comment": "The screenshot shows login ops with role admin, confirming the generic admin account flagged by the automated test.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 8,
+          "pii_masked": 8,
+          "pii_found_by_model": 0
+        },
+        "page": "/admin/users",
+        "page_verified": null,
+        "ts": "2026-11-04 12:29:11"
+      },
+      "status_before": "fail",
+      "finding": {
+        "id": "F-04",
+        "severity": "elevee",
+        "status": "action_plan",
+        "owner": "IT department — IAM team",
+        "due": "2027-02-02"
+      },
+      "change": {
+        "ticket": "CHG-AUD-20261104-C399-04",
+        "type": "manual",
+        "actions": [
+          "Revoke admin role from generic account login 'ops' (ops-partage@kerlann-banque.example)",
+          "Provision nominative firstname.lastname admin accounts for authorized staff requiring privileged access",
+          "Verify via GET /api/users and /admin/users that 0 admin accounts have generic login or shared mailbox"
+        ],
+        "rationale": "Shared admin accounts destroy accountability and enable undetected abuse."
+      }
+    }
+  ],
+  "running": false,
+  "decisions": [
+    {
+      "ticket": "CHG-AUD-20261104-C399-01",
+      "finding": "F-01",
+      "approved": true,
+      "approver": "System owner (CI)",
+      "mode": "pre-approved",
+      "ts": "2026-11-04 12:29:39"
+    },
+    {
+      "ticket": "CHG-AUD-20261104-C399-02",
+      "finding": "F-02",
+      "approved": true,
+      "approver": "System owner (CI)",
+      "mode": "pre-approved",
+      "ts": "2026-11-04 12:29:39"
+    },
+    {
+      "ticket": "CHG-AUD-20261104-C399-05",
+      "finding": "F-05",
+      "approved": true,
+      "approver": "System owner (CI)",
+      "mode": "pre-approved",
+      "ts": "2026-11-04 12:29:39"
+    },
+    {
+      "ticket": "CHG-AUD-20261104-C399-06",
+      "finding": "F-06",
+      "approved": true,
+      "approver": "System owner (CI)",
+      "mode": "pre-approved",
+      "ts": "2026-11-04 12:29:39"
+    },
+    {
+      "ticket": "CHG-AUD-20261104-C399-07",
+      "finding": "F-07",
+      "approved": true,
+      "approver": "System owner (CI)",
+      "mode": "pre-approved",
+      "ts": "2026-11-04 12:29:39"
+    }
+  ],
+  "remediation_requested": true,
+  "usage": {
+    "rows": [
+      {
+        "model": "muse-spark-1.3",
+        "calls": 27,
+        "input": 34283,
+        "output": 97620,
+        "seconds": 871.1426403522491,
+        "images": 0,
+        "cost_usd": 0.45773875
+      },
+      {
+        "model": "sam-3.1",
+        "calls": 12,
+        "input": 0,
+        "output": 0,
+        "seconds": 10.420554161071777,
+        "images": 12,
+        "cost_usd": null
+      }
+    ],
+    "total_usd": 0.45773875,
+    "unpriced": [
+      "sam-3.1"
+    ],
+    "estimated": false
+  },
+  "duration_s": 240,
+  "catalogue": {
+    "source": "studio",
+    "reviewed": false,
+    "reviewer": null,
+    "path": "runs/studio/20261104-122607-c399/catalogue.json",
+    "validated_at": "2026-11-04 12:26"
+  },
+  "interpretation": {
+    "target": "iam-console",
+    "texts": [
+      "DORA — Article 9(4): access, strong authentication, change management",
+      "RTS 2024/1774 — Article 21: access control",
+      "Internal policy PSI-4 (Banque Kerlann, fictitious) — authentication and access"
+    ],
+    "text_sha256": "9a15779029abf8666b8ec0e875b785467e4d2e3258626f31c3122767bc7c8864",
+    "model": "muse-spark-1.3",
+    "requirements": [
+      {
+        "ref": "DORA 9(4)(c)",
+        "quote": "implement policies that limit the physical or logical access to information assets and ICT assets to what is required for legitimate and approved functions and activities only, and establish to that end a set of policies, procedures and controls that address access rights and ensure a sound administration thereof;",
+        "quote_verified": true,
+        "summary": "Access must be limited to legitimate approved needs with sound access-rights administration.",
+        "testability": "automated",
+        "why": "Testable here through lockout, session and generic-account settings checked by the covering policy controls.",
+        "controls": [],
+        "covered_by": [
+          "PSI-4.4",
+          "PSI-4.5",
+          "PSI-4.7"
+        ]
+      },
+      {
+        "ref": "DORA 9(4)(d)",
+        "quote": "implement policies and protocols for strong authentication mechanisms, based on relevant standards and dedicated control systems, and protection measures of cryptographic keys whereby data is encrypted based on results of approved data classification and ICT risk assessment processes;",
+        "quote_verified": true,
+        "summary": "Strong authentication and key protection must be implemented based on standards and classification.",
+        "testability": "automated",
+        "why": "Testable here through MFA and password settings checked by the covering policy controls.",
+        "controls": [],
+        "covered_by": [
+          "PSI-4.1",
+          "PSI-4.2",
+          "PSI-4.3"
+        ]
+      },
+      {
+        "ref": "DORA 9(4)(e)",
+        "quote": "implement documented policies, procedures and controls for ICT change management, including changes to software, hardware, firmware components, systems or security parameters, that are based on a risk assessment approach and are an integral part of the financial entity's overall change management process, in order to ensure that all changes to ICT systems are recorded, tested, assessed, approved, implemented and verified in a controlled manner;",
+        "quote_verified": true,
+        "summary": "All ICT changes must follow documented risk-based change management with recording and approval.",
+        "testability": "document",
+        "why": "Not testable here because the read-only interface shows only journal entries, not documented policies for testing and assessment.",
+        "controls": [],
+        "covered_by": []
+      },
+      {
+        "ref": "DORA 9(4)(f)",
+        "quote": "have appropriate and comprehensive documented policies for patches and updates.",
+        "quote_verified": true,
+        "summary": "Documented patch and update policies must exist.",
+        "testability": "document",
+        "why": "Not testable here because the read-only interface exposes no patch policy documents.",
+        "controls": [],
+        "covered_by": []
+      },
+      {
+        "ref": "RTS 21(1)(a)",
+        "quote": "the assignment of access rights to ICT assets based on need-to-know, need-to-use and least privilege principles;",
+        "quote_verified": true,
+        "summary": "Access rights must follow need-to-know, need-to-use and least privilege.",
+        "testability": "document",
+        "why": "Not testable here because the user list shows roles but not the need-to-know justification.",
+        "controls": [],
+        "covered_by": []
+      },
+      {
+        "ref": "RTS 21(1)(b)",
+        "quote": "the segregation of duties designed to prevent unjustified access to critical data […];",
+        "quote_verified": true,
+        "summary": "Segregation of duties must prevent unjustified access to critical data.",
+        "testability": "document",
+        "why": "Not testable here because segregation rules require policy and role-design review beyond the user list.",
+        "controls": [],
+        "covered_by": []
+      },
+      {
+        "ref": "RTS 21(1)(c)",
+        "quote": "a provision on user accountability, by limiting to the extent possible the use of generic and shared user accounts;",
+        "quote_verified": true,
+        "summary": "User accountability requires limiting generic and shared accounts.",
+        "testability": "automated",
+        "why": "Testable here through the admin user inventory checked by the covering policy control.",
+        "controls": [],
+        "covered_by": [
+          "PSI-4.7"
+        ]
+      },
+      {
+        "ref": "RTS 21(1)(d)",
+        "quote": "a provision on restrictions of access to ICT assets, setting out controls and tools to prevent unauthorised access;",
+        "quote_verified": true,
+        "summary": "Restrictions and tools must prevent unauthorised access to ICT assets.",
+        "testability": "document",
+        "why": "Not testable here because the generic provision requires document review of controls and tools.",
+        "controls": [],
+        "covered_by": []
+      },
+      {
+        "ref": "RTS 21(1)(e)",
+        "quote": "account management procedures to grant, change or revoke access rights for user and generic accounts, including:",
+        "quote_verified": true,
+        "summary": "Account management procedures must govern granting and revoking access.",
+        "testability": "document",
+        "why": "Not testable here because procedures require document review beyond the current user list.",
+        "controls": [],
+        "covered_by": []
+      },
+      {
+        "ref": "RTS 21(1)(e)(ii)",
+        "quote": "assignment of privileged, emergency, and administrator access on a need-to-use or an ad-hoc basis for all ICT systems;",
+        "quote_verified": true,
+        "summary": "Privileged and administrator access must be assigned on need-to-use basis.",
+        "testability": "automated",
+        "why": "Testable here through the admin user inventory checked by the covering policy control.",
+        "controls": [],
+        "covered_by": [
+          "PSI-4.7"
+        ]
+      },
+      {
+        "ref": "RTS 21(1)(e)(iv)",
+        "quote": "update of access rights where changes are necessary and at least once a year for all ICT systems […];",
+        "quote_verified": true,
+        "summary": "Access rights must be updated when needed and at least yearly.",
+        "testability": "document",
+        "why": "Not testable here because the journal shows no access-review periodicity.",
+        "controls": [],
+        "covered_by": []
+      },
+      {
+        "ref": "RTS 21(1)(f)",
+        "quote": "authentication methods, including all of the following:",
+        "quote_verified": true,
+        "summary": "Authentication methods policy must cover the listed cases.",
+        "testability": "document",
+        "why": "Not testable here because the chapeau requires document review of the authentication policy.",
+        "controls": [],
+        "covered_by": []
+      },
+      {
+        "ref": "RTS 21(1)(f)(i)",
+        "quote": "the use of authentication methods commensurate to the classification established […];",
+        "quote_verified": true,
+        "summary": "Authentication strength must match data classification.",
+        "testability": "document",
+        "why": "Not testable here because classification mapping requires document review beyond MFA flags.",
+        "controls": [],
+        "covered_by": []
+      },
+      {
+        "ref": "RTS 21(1)(f)(ii)",
+        "quote": "the use of strong authentication methods in accordance with leading practices and techniques for remote access, […] privileged access, for access to ICT assets supporting critical or important functions.",
+        "quote_verified": true,
+        "summary": "Strong authentication is required for privileged and critical-function access.",
+        "testability": "automated",
+        "why": "Testable here through MFA enforcement flags and per-user MFA checked by covering controls.",
+        "controls": [],
+        "covered_by": [
+          "PSI-4.1",
+          "PSI-4.2"
+        ]
+      },
+      {
+        "ref": "PSI-4.1",
+        "quote": "Authentification multifacteur obligatoire pour tout compte à privilèges (administrateur).",
+        "quote_verified": true,
+        "summary": "MFA is mandatory for all privileged administrator accounts.",
+        "testability": "automated",
+        "why": "Testable here because the security API and user list expose MFA enforcement and per-admin MFA status.",
+        "controls": [
+          {
+            "rule": "PSI-4.1",
+            "title": "Mandatory MFA for privileged administrator accounts",
+            "objective": "Verify MFA is enforced for all privileged admin accounts.",
+            "test_procedure": "GET /api/security verify mfa_admin is true; GET /api/users verify every user with role admin has mfa true.",
+            "expected": "mfa_admin == true and 100% of users with role admin have mfa == true",
+            "threshold_source": "PSI-4.1",
+            "severity": "critique",
+            "references": [
+              "DORA 9(4)(d)",
+              "RTS 21(1)(f)(ii)"
+            ],
+            "risk": "Admin takeover without second factor allows full compromise of critical IAM console.",
+            "recommendation": "Enforce MFA for all admin accounts and re-verify enrollment within 30 days.",
+            "cause": "MFA enforcement disabled or admin account enrolled without MFA.",
+            "evidence_page": "/admin/users",
+            "remediation": "config",
+            "id": "C1",
+            "quote": "Authentification multifacteur obligatoire pour tout compte à privilèges (administrateur)."
+          }
+        ],
+        "covered_by": []
+      },
+      {
+        "ref": "PSI-4.2",
+        "quote": "Authentification multifacteur obligatoire pour les utilisateurs d'un système supportant une fonction critique ou importante.",
+        "quote_verified": true,
+        "summary": "MFA is mandatory for users of a system supporting a critical function.",
+        "testability": "automated",
+        "why": "Testable here because KRL-ADM supports critical functions and exposes MFA flags and per-user MFA.",
+        "controls": [
+          {
+            "rule": "PSI-4.2",
+            "title": "Mandatory MFA for users of critical system",
+            "objective": "Verify MFA is enforced for all users of critical system KRL-ADM.",
+            "test_procedure": "GET /api/security verify mfa_users is true; GET /api/users verify every user has mfa true given KRL-ADM supports critical functions.",
+            "expected": "mfa_users == true and 100% of users have mfa == true",
+            "threshold_source": "PSI-4.2",
+            "severity": "elevee",
+            "references": [
+              "DORA 9(4)(d)",
+              "RTS 21(1)(f)(ii)"
+            ],
+            "risk": "Account takeover of standard users on critical system enables lateral movement.",
+            "recommendation": "Enforce MFA for all users and re-verify enrollment within 90 days.",
+            "cause": "MFA enforcement for standard users disabled or users not enrolled.",
+            "evidence_page": "/admin/users",
+            "remediation": "config",
+            "id": "C2",
+            "quote": "Authentification multifacteur obligatoire pour les utilisateurs d'un système supportant une fonction critique ou importante."
+          }
+        ],
+        "covered_by": []
+      },
+      {
+        "ref": "PSI-4.3",
+        "quote": "Mot de passe de 12 caractères minimum, avec exigence de complexité.",
+        "quote_verified": true,
+        "summary": "Passwords must have 12 characters minimum with complexity.",
+        "testability": "automated",
+        "why": "Testable here because the security API exposes minimum length and complexity flags.",
+        "controls": [
+          {
+            "rule": "PSI-4.3",
+            "title": "Password length and complexity",
+            "objective": "Verify 12-character minimum and complexity are enforced.",
+            "test_procedure": "GET /api/security check password_min_length and password_require_complexity.",
+            "expected": "password_min_length >= 12 and password_require_complexity == true",
+            "threshold_source": "PSI-4.3",
+            "severity": "moyenne",
+            "references": [
+              "DORA 9(4)(d) (bonnes pratiques)"
+            ],
+            "risk": "Weak passwords enable brute-force and credential stuffing.",
+            "recommendation": "Set minimum length to 12 and enable complexity within 180 days.",
+            "cause": "Weak password policy configuration.",
+            "evidence_page": "/admin/security",
+            "remediation": "config",
+            "id": "C3",
+            "quote": "Mot de passe de 12 caractères minimum, avec exigence de complexité."
+          }
+        ],
+        "covered_by": []
+      },
+      {
+        "ref": "PSI-4.4",
+        "quote": "Verrouillage du compte après 5 échecs de connexion au plus (et jamais désactivé).",
+        "quote_verified": true,
+        "summary": "Accounts must lock after at most 5 failed logins and never be disabled.",
+        "testability": "automated",
+        "why": "Testable here because the security API exposes lockout threshold with 0 meaning never.",
+        "controls": [
+          {
+            "rule": "PSI-4.4",
+            "title": "Account lockout after failed logins",
+            "objective": "Verify lockout occurs after at most 5 failures and is enabled.",
+            "test_procedure": "GET /api/security check lockout_threshold.",
+            "expected": "1 <= lockout_threshold <= 5 (0 fails as never locks)",
+            "threshold_source": "PSI-4.4",
+            "severity": "moyenne",
+            "references": [
+              "DORA 9(4)(c)"
+            ],
+            "risk": "No lockout allows unlimited password guessing.",
+            "recommendation": "Set lockout threshold to 5 or less and never to 0 within 180 days.",
+            "cause": "Lockout disabled or threshold set too high.",
+            "evidence_page": "/admin/security",
+            "remediation": "config",
+            "id": "C4",
+            "quote": "Verrouillage du compte après 5 échecs de connexion au plus (et jamais désactivé)."
+          }
+        ],
+        "covered_by": []
+      },
+      {
+        "ref": "PSI-4.5",
+        "quote": "Expiration des sessions inactives après 15 minutes au plus (et jamais désactivée).",
+        "quote_verified": true,
+        "summary": "Inactive sessions must expire after at most 15 minutes.",
+        "testability": "automated",
+        "why": "Testable here because the security API exposes session timeout with 0 meaning never.",
+        "controls": [
+          {
+            "rule": "PSI-4.5",
+            "title": "Inactive session timeout",
+            "objective": "Verify inactive sessions expire after at most 15 minutes.",
+            "test_procedure": "GET /api/security check session_timeout_minutes.",
+            "expected": "1 <= session_timeout_minutes <= 15 (0 fails as never expires)",
+            "threshold_source": "PSI-4.5",
+            "severity": "moyenne",
+            "references": [
+              "DORA 9(4)(c)"
+            ],
+            "risk": "Abandoned sessions allow hijacking on shared workstations.",
+            "recommendation": "Set inactive timeout to 15 minutes or less and never to 0 within 180 days.",
+            "cause": "Session timeout disabled or set too long.",
+            "evidence_page": "/admin/security",
+            "remediation": "config",
+            "id": "C5",
+            "quote": "Expiration des sessions inactives après 15 minutes au plus (et jamais désactivée)."
+          }
+        ],
+        "covered_by": []
+      },
+      {
+        "ref": "PSI-4.6",
+        "quote": "Journalisation de toutes les actions d'administration.",
+        "quote_verified": true,
+        "summary": "All administration actions must be logged.",
+        "testability": "automated",
+        "why": "Testable here because the security API exposes the admin audit logging flag.",
+        "controls": [
+          {
+            "rule": "PSI-4.6",
+            "title": "Logging of administration actions",
+            "objective": "Verify administration actions are logged.",
+            "test_procedure": "GET /api/security verify admin_audit_log is true; GET /api/journal confirm entries exist.",
+            "expected": "admin_audit_log == true",
+            "threshold_source": "PSI-4.6",
+            "severity": "elevee",
+            "references": [
+              "RTS 12(2)(c)(i)"
+            ],
+            "risk": "Missing admin logs prevent detection and forensic investigation.",
+            "recommendation": "Enable administration audit logging within 90 days.",
+            "cause": "Audit logging flag disabled.",
+            "evidence_page": "/admin/security",
+            "remediation": "config",
+            "id": "C6",
+            "quote": "Journalisation de toutes les actions d'administration."
+          }
+        ],
+        "covered_by": []
+      },
+      {
+        "ref": "PSI-4.7",
+        "quote": "Aucun compte générique ou partagé ne dispose de droits d'administration.",
+        "quote_verified": true,
+        "summary": "No generic or shared account must have administration rights.",
+        "testability": "automated",
+        "why": "Testable here because the user list exposes login, email and role for generic-account detection.",
+        "controls": [
+          {
+            "rule": "PSI-4.7",
+            "title": "No generic shared admin accounts",
+            "objective": "Verify no admin role is held by a generic or shared account.",
+            "test_procedure": "GET /api/users filter role admin; flag login without initiale.nom form (e.g. ops, admin, root) or email with shared box (ops-partage@, admin@).",
+            "expected": "0 users with role admin having generic login or shared mailbox",
+            "threshold_source": "PSI-4.7",
+            "severity": "elevee",
+            "references": [
+              "DORA 9(4)(c)",
+              "RTS 21(1)(c) et 21(1)(e)(ii)"
+            ],
+            "risk": "Shared admin accounts destroy accountability and enable undetected abuse.",
+            "recommendation": "Remove admin rights from generic accounts and replace with nominative initiale.nom accounts within 90 days.",
+            "cause": "Legacy functional admin account retained with admin role.",
+            "evidence_page": "/admin/users",
+            "remediation": "manual",
+            "id": "C7",
+            "quote": "Aucun compte générique ou partagé ne dispose de droits d'administration."
+          }
+        ],
+        "covered_by": []
+      }
+    ],
+    "counts": {
+      "automated": 12,
+      "document": 9,
+      "interview": 0,
+      "requirements": 21,
+      "rejected": 0,
+      "controls": 7,
+      "covered": 5
+    }
+  },
+  "inconclusive": 0,
+  "opinion_initial": "insuffisant",
+  "journal_evidence": {
+    "image": "evidence/journal.png",
+    "sha256": "4289438599f269956ba978ff71d4f12c78b28cbd0fc84e886fd356b574bfa0e4"
+  },
+  "opinion_final": "insuffisant",
+  "injection_detected": false,
+  "trail_head": "444e47228a060cbb3a21210f902eae510a61814c72d5468b0911269f1eeb5f24"
+}

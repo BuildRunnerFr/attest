@@ -1,0 +1,145 @@
+{
+  "source": "studio",
+  "reviewed": false,
+  "reviewer": null,
+  "path": "runs/studio/20261104-122607-c399/catalogue.json",
+  "validated_at": "2026-11-04 12:26",
+  "controls": [
+    {
+      "rule": "PSI-4.1",
+      "title": "Mandatory MFA for privileged administrator accounts",
+      "objective": "Verify MFA is enforced for all privileged admin accounts.",
+      "test_procedure": "GET /api/security verify mfa_admin is true; GET /api/users verify every user with role admin has mfa true.",
+      "expected": "mfa_admin == true and 100% of users with role admin have mfa == true",
+      "threshold_source": "PSI-4.1",
+      "severity": "critique",
+      "references": [
+        "DORA 9(4)(d)",
+        "RTS 21(1)(f)(ii)"
+      ],
+      "risk": "Admin takeover without second factor allows full compromise of critical IAM console.",
+      "recommendation": "Enforce MFA for all admin accounts and re-verify enrollment within 30 days.",
+      "cause": "MFA enforcement disabled or admin account enrolled without MFA.",
+      "evidence_page": "/admin/users",
+      "remediation": "config",
+      "id": "C1",
+      "quote": "Authentification multifacteur obligatoire pour tout compte à privilèges (administrateur)."
+    },
+    {
+      "rule": "PSI-4.2",
+      "title": "Mandatory MFA for users of critical system",
+      "objective": "Verify MFA is enforced for all users of critical system KRL-ADM.",
+      "test_procedure": "GET /api/security verify mfa_users is true; GET /api/users verify every user has mfa true given KRL-ADM supports critical functions.",
+      "expected": "mfa_users == true and 100% of users have mfa == true",
+      "threshold_source": "PSI-4.2",
+      "severity": "elevee",
+      "references": [
+        "DORA 9(4)(d)",
+        "RTS 21(1)(f)(ii)"
+      ],
+      "risk": "Account takeover of standard users on critical system enables lateral movement.",
+      "recommendation": "Enforce MFA for all users and re-verify enrollment within 90 days.",
+      "cause": "MFA enforcement for standard users disabled or users not enrolled.",
+      "evidence_page": "/admin/users",
+      "remediation": "config",
+      "id": "C2",
+      "quote": "Authentification multifacteur obligatoire pour les utilisateurs d'un système supportant une fonction critique ou importante."
+    },
+    {
+      "rule": "PSI-4.3",
+      "title": "Password length and complexity",
+      "objective": "Verify 12-character minimum and complexity are enforced.",
+      "test_procedure": "GET /api/security check password_min_length and password_require_complexity.",
+      "expected": "password_min_length >= 12 and password_require_complexity == true",
+      "threshold_source": "PSI-4.3",
+      "severity": "moyenne",
+      "references": [
+        "DORA 9(4)(d) (bonnes pratiques)"
+      ],
+      "risk": "Weak passwords enable brute-force and credential stuffing.",
+      "recommendation": "Set minimum length to 12 and enable complexity within 180 days.",
+      "cause": "Weak password policy configuration.",
+      "evidence_page": "/admin/security",
+      "remediation": "config",
+      "id": "C3",
+      "quote": "Mot de passe de 12 caractères minimum, avec exigence de complexité."
+    },
+    {
+      "rule": "PSI-4.4",
+      "title": "Account lockout after failed logins",
+      "objective": "Verify lockout occurs after at most 5 failures and is enabled.",
+      "test_procedure": "GET /api/security check lockout_threshold.",
+      "expected": "1 <= lockout_threshold <= 5 (0 fails as never locks)",
+      "threshold_source": "PSI-4.4",
+      "severity": "moyenne",
+      "references": [
+        "DORA 9(4)(c)"
+      ],
+      "risk": "No lockout allows unlimited password guessing.",
+      "recommendation": "Set lockout threshold to 5 or less and never to 0 within 180 days.",
+      "cause": "Lockout disabled or threshold set too high.",
+      "evidence_page": "/admin/security",
+      "remediation": "config",
+      "id": "C4",
+      "quote": "Verrouillage du compte après 5 échecs de connexion au plus (et jamais désactivé)."
+    },
+    {
+      "rule": "PSI-4.5",
+      "title": "Inactive session timeout",
+      "objective": "Verify inactive sessions expire after at most 15 minutes.",
+      "test_procedure": "GET /api/security check session_timeout_minutes.",
+      "expected": "1 <= session_timeout_minutes <= 15 (0 fails as never expires)",
+      "threshold_source": "PSI-4.5",
+      "severity": "moyenne",
+      "references": [
+        "DORA 9(4)(c)"
+      ],
+      "risk": "Abandoned sessions allow hijacking on shared workstations.",
+      "recommendation": "Set inactive timeout to 15 minutes or less and never to 0 within 180 days.",
+      "cause": "Session timeout disabled or set too long.",
+      "evidence_page": "/admin/security",
+      "remediation": "config",
+      "id": "C5",
+      "quote": "Expiration des sessions inactives après 15 minutes au plus (et jamais désactivée)."
+    },
+    {
+      "rule": "PSI-4.6",
+      "title": "Logging of administration actions",
+      "objective": "Verify administration actions are logged.",
+      "test_procedure": "GET /api/security verify admin_audit_log is true; GET /api/journal confirm entries exist.",
+      "expected": "admin_audit_log == true",
+      "threshold_source": "PSI-4.6",
+      "severity": "elevee",
+      "references": [
+        "RTS 12(2)(c)(i)"
+      ],
+      "risk": "Missing admin logs prevent detection and forensic investigation.",
+      "recommendation": "Enable administration audit logging within 90 days.",
+      "cause": "Audit logging flag disabled.",
+      "evidence_page": "/admin/security",
+      "remediation": "config",
+      "id": "C6",
+      "quote": "Journalisation de toutes les actions d'administration."
+    },
+    {
+      "rule": "PSI-4.7",
+      "title": "No generic shared admin accounts",
+      "objective": "Verify no admin role is held by a generic or shared account.",
+      "test_procedure": "GET /api/users filter role admin; flag login without initiale.nom form (e.g. ops, admin, root) or email with shared box (ops-partage@, admin@).",
+      "expected": "0 users with role admin having generic login or shared mailbox",
+      "threshold_source": "PSI-4.7",
+      "severity": "elevee",
+      "references": [
+        "DORA 9(4)(c)",
+        "RTS 21(1)(c) et 21(1)(e)(ii)"
+      ],
+      "risk": "Shared admin accounts destroy accountability and enable undetected abuse.",
+      "recommendation": "Remove admin rights from generic accounts and replace with nominative initiale.nom accounts within 90 days.",
+      "cause": "Legacy functional admin account retained with admin role.",
+      "evidence_page": "/admin/users",
+      "remediation": "manual",
+      "id": "C7",
+      "quote": "Aucun compte générique ou partagé ne dispose de droits d'administration."
+    }
+  ]
+}
