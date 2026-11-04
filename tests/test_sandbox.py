@@ -153,6 +153,42 @@ def test_static_guard_extra(code):
         sandbox.check(code)
 
 
+FICHIER = '''
+import requests, os, json
+B, H = os.environ["LAB_URL"], {"Authorization": "Bearer " + os.environ["LAB_TOKEN"]}
+r = requests.get(B + "/api/repo/paiement-api/file", params={"path": "__PATH__"}, headers=H, timeout=10)
+print(json.dumps({"status": "fail", "observed": r.status_code, "expected": "absent",
+                  "detail": "contrôle du fichier", "evidence_page": "/repo/paiement-api/view?path=__PATH__"}))
+'''
+
+
+def test_fichier_introuvable_est_une_erreur(lab):
+    """Un 404 sur le fichier de preuve n'est pas une non-conformité constatée."""
+    code = FICHIER.replace('"__PATH__"', '"tests/fixtures.json"').replace("__PATH__", "tests%2Ffixtures.json")
+    res = sandbox.run(code, lab, "audit-ro-demo")
+    assert res["status"] == "error", res
+    assert "404" in res["detail"] and "tests/fixtures.json" in res["detail"]
+    assert res["requests"]["log"][0]["status"] == 404
+
+
+def test_fichier_existant_reste_fail(lab):
+    res = sandbox.run(FICHIER.replace("__PATH__", "app/config.py"), lab, "audit-ro-demo")
+    assert res["status"] == "fail", res
+
+
+def test_aucune_reponse_2xx_est_une_erreur(lab):
+    code = FICHIER.replace("__PATH__", "app/config.py").replace('"evidence_page"', '"x"')
+    res = sandbox.run(code, lab, "jeton-invalide")                  # 401 : rien d'observé
+    assert res["status"] == "error", res
+
+
+def test_limite_memoire(lab):
+    code = FICHIER.replace("__PATH__", "app/config.py").replace("print(", "x = bytearray(2 << 30)\nprint(")
+    res = sandbox.run(code, lab, "audit-ro-demo")
+    assert res["status"] == "error", res
+    assert "MemoryError" in res["detail"]
+
+
 def test_scrub(monkeypatch):
     monkeypatch.setenv("MODEL_API_KEY", "zz-tres-secret-42")
     monkeypatch.setenv("LAB_CHANGE_TOKEN", "change-rw-demo")          # défaut public : reste visible

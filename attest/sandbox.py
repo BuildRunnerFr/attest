@@ -13,15 +13,25 @@ Deux barrières :
 Tout refus → code de sortie non nul → statut "error" (le pipeline réécrit le script).
 Intégrité du verdict : l'amorçage consigne chaque requête envoyée à la cible (méthode, chemin, statut HTTP,
 SHA-256 du corps reçu) dans un journal ouvert AVANT la garde (le script ne peut pas l'écrire). Un verdict
-pass/fail sans aucune réponse de la cible ne repose sur aucune observation : statut "error".
+pass/fail sans aucune réponse 2xx de la cible ne repose sur aucune observation : statut "error" ; un "fail"
+dont la page de preuve désigne un fichier du dépôt que la cible n'a jamais servi (4xx) n'est pas une
+non-conformité constatée mais un élément introuvable : statut "error".
+Limites du processus (POSIX) : mémoire (RLIMIT_AS), temps CPU (RLIMIT_CPU), taille de fichier (RLIMIT_FSIZE).
 Le résultat renvoyé est passé par redact.scrub (aucun secret dans le détail ni dans le stderr).
 """
 import ast
 import json
 import os
+import re
 import subprocess
 import sys
 import tempfile
+from urllib.parse import parse_qs, urlsplit
+
+try:                                    # POSIX uniquement : ailleurs, pas de limites de ressources
+    import resource
+except ImportError:                     # pragma: no cover
+    resource = None
 
 from .i18n import t
 from .redact import scrub
@@ -169,7 +179,7 @@ def _boot(path, logpath):
            "os.mkfifo", "os.mknod", "os.setxattr", "os.removexattr", "os.add_dll_directory",
            "subprocess.", "ctypes.", "shutil.", "pty.", "marshal.load", "pickle.", "webbrowser.",
            "sys.settrace", "sys.setprofile", "sys.addaudithook",
-           "sys.remote_exec", "socket.bind", "socket.sendto", "socket.sendmsg", "socket.sethostname",
+           "sys.remote_exec", "resource.setrlimit", "resource.prlimit", "socket.bind", "socket.sendto", "socket.sendmsg", "socket.sethostname",
            "cpython.remote_debugger_script")
     LOCKED = {"requests", "urllib3", "http", "socket", "ssl"}
 
@@ -217,7 +227,12 @@ def _boot(path, logpath):
 
 _c, _g = _boot(sys.argv[1], sys.argv[2])
 del _boot
-exec(_c, _g)
+try:
+    exec(_c, _g)
+except MemoryError:                     # limite mémoire atteinte : jamais un verdict
+    sys.stderr.write("limite mémoire du bac à sable atteinte (MemoryError)\n")
+    sys.stderr.flush()
+    os._exit(4)
 '''
 
 
@@ -225,6 +240,25 @@ def run(code: str, lab_url: str, token: str, timeout: int = 30) -> dict:
     """Exécute le script ; il doit imprimer en dernière ligne un JSON {status, observed, expected, detail}."""
     check(code)
     return scrub(_run(code, lab_url, token, timeout))
+
+
+MEM_LIMIT = 1 << 30           # 1 Gio d'espace d'adressage (Python + requests : ~60 Mo)
+FSIZE_LIMIT = 10 << 20        # 10 Mo par fichier écrit (seul le journal des requêtes l'est)
+
+
+def _limits(timeout: int):
+    """preexec_fn : plafonne mémoire, CPU et taille de fichier du processus enfant (POSIX)."""
+    if resource is None:
+        return None
+
+    def apply():
+        for lim, val in ((resource.RLIMIT_AS, MEM_LIMIT), (resource.RLIMIT_CPU, timeout + 5),
+                         (resource.RLIMIT_FSIZE, FSIZE_LIMIT)):
+            try:
+                resource.setrlimit(lim, (val, val))
+            except (ValueError, OSError):
+                pass
+    return apply
 
 
 def _run(code: str, lab_url: str, token: str, timeout: int) -> dict:
@@ -237,15 +271,49 @@ def _run(code: str, lab_url: str, token: str, timeout: int) -> dict:
         env = {"LAB_URL": lab_url, "LAB_TOKEN": token, "PATH": os.environ.get("PATH", ""),
                "NO_PROXY": "127.0.0.1,localhost"}
         p = subprocess.run([sys.executable, "-I", runner, path, rlog], capture_output=True, text=True,
-                           timeout=timeout, cwd=d, env=env, stdin=subprocess.DEVNULL)
+                           timeout=timeout, cwd=d, env=env, stdin=subprocess.DEVNULL,
+                           preexec_fn=_limits(timeout))
         reqs = _read_log(rlog)
     res = _verdict(p)
     res["requests"] = {"count": len(reqs), "log": reqs[:MAX_LOG]}
-    if res["status"] in ("pass", "fail") and not reqs:
-        # aucune requête à la cible : le verdict ne repose sur aucune observation
-        return {"status": "error", "detail": f"{t('sb.norequest')} — {res.get('detail', '')}"[:800],
+    missing = _missing_file(res, reqs) if res["status"] == "fail" else None
+    if missing is not None:
+        # fichier de preuve jamais servi (4xx) : élément introuvable, pas une non-conformité
+        return {"status": "error", "detail": f"{t('sb.notfound').format(missing)} — {res.get('detail', '')}"[:800],
+                "requests": res["requests"]}
+    if res["status"] in ("pass", "fail") and not any(_ok(r) for r in reqs):
+        # aucune réponse 2xx de la cible : le verdict ne repose sur aucune observation
+        why = t("sb.no2xx") if reqs else t("sb.norequest")
+        return {"status": "error", "detail": f"{why} — {res.get('detail', '')}"[:800],
                 "requests": res["requests"]}
     return res
+
+
+def _ok(r) -> bool:
+    s = r.get("status") if isinstance(r, dict) else None
+    return isinstance(s, int) and 200 <= s < 300
+
+
+def _repo_path(url) -> str | None:
+    """Chemin de fichier (paramètre path=, décodé) d'une URL /api/repo/<x>/file ou /repo/<x>/view."""
+    if not isinstance(url, str):
+        return None
+    u = urlsplit(url)
+    if not re.fullmatch(r"(/api/repo/[^/]+/file|/repo/[^/]+/view)", u.path):
+        return None
+    v = parse_qs(u.query).get("path")
+    return v[0] if v else None
+
+
+def _missing_file(res: dict, reqs: list) -> str | None:
+    """Le fichier désigné par evidence_page, si chaque requête vers lui a reçu un 4xx (sinon None)."""
+    path = _repo_path(res.get("evidence_page"))
+    if not path:
+        return None
+    st = [r.get("status") for r in reqs if isinstance(r, dict) and _repo_path(r.get("path")) == path]
+    if st and all(isinstance(x, int) and 400 <= x < 500 for x in st):
+        return path
+    return None
 
 
 MAX_LOG = 50              # requêtes conservées dans le résultat (le nombre total reste exact)
