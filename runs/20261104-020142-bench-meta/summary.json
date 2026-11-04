@@ -1,0 +1,31 @@
+{
+  "id": "20261104-020142-bench-meta",
+  "utc": "20261104-020142",
+  "kind": "bench",
+  "backend": "meta",
+  "note": "cycle 3 : stabilite du banc (3e passage) sur 563f39e",
+  "commit": "563f39e",
+  "workflow_run": "41757237526",
+  "status": "success",
+  "budget_spent_usd": 1.8804,
+  "priced_usd": 0.5004,
+  "unpriced": [
+    "sam-3.1"
+  ],
+  "bench": {
+    "checks": 56,
+    "TP": 15,
+    "TN": 41,
+    "FP": 0,
+    "FN": 0,
+    "inconclusive": 0,
+    "accuracy": 1.0,
+    "pii_total": 256,
+    "pii_model": 197,
+    "pii_masked": 256,
+    "injection_cases": 1,
+    "injection_flagged": 1,
+    "cost_usd": 0.5003,
+    "seconds": 370
+  }
+}
