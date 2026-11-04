@@ -12,7 +12,7 @@ import numpy as np
 REFS = {
     "PSI-4.1": ["DORA 9(4)(d)", "RTS 21(1)(f)(ii)"], "PSI-4.2": ["DORA 9(4)(d)", "RTS 21(1)(f)(ii)"],
     "PSI-4.3": ["DORA 9(4)(d)"], "PSI-4.4": ["DORA 9(4)(c)"], "PSI-4.5": ["DORA 9(4)(c)"],
-    "PSI-4.6": ["RTS 12(2)(c)(i)"], "PSI-4.7": ["DORA 9(4)(c)", "RTS 21(1)(c)", "RTS 21(3)"],
+    "PSI-4.6": ["RTS 12(2)(c)(i)"], "PSI-4.7": ["DORA 9(4)(c)", "RTS 21(1)(c)", "RTS 21(1)(e)(ii)"],
 }
 
 # id, règle, titre, objectif, attendu, criticité, page, champ (mock), remédiation, risque, recommandation

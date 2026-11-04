@@ -5,3 +5,4 @@ __pycache__/
 lab/state.json
 runs/
 *.tmp
+.claude/
