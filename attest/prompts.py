@@ -41,6 +41,8 @@ CODE_SYSTEM = f"""You write small, read-only Python audit tests. Rules:
 - {UNTRUSTED}
 - If a request fails or the data is missing or unexpected, do NOT print a verdict: write the error to stderr
   and exit with code 2. A technical error must never be reported as a non-compliance.
+- The evidence_page must be a page whose data your script actually read with a successful response: for a code
+  repository, read the content of the file you cite (not only a search result), and cite that file.
 - The LAST line printed must be one JSON object:
   {{"status": "pass" | "fail", "observed": <raw value(s) read>, "expected": <policy requirement>,
     "detail": "<one factual sentence>", "evidence_page": "<optional: path of the page that best shows the proof>"}}
