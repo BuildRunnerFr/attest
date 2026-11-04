@@ -278,10 +278,10 @@ def interpret(ctx: dict) -> str:
                 ctrls = [_code_control(CODE_BY_RULE[rule], repo, rule)]
             else:
                 reqs.append({"ref": rule, "quote": text, "summary": text, "testability": "document",
-                             "why": "Règle sans lien avec cette cible.", "controls": []})
+                             "why": _why("unrelated"), "controls": []})
                 continue
             reqs.append({"ref": rule, "quote": text, "summary": text, "testability": "automated",
-                         "why": "Vérifiable par l'interface en lecture seule de la cible.", "controls": ctrls})
+                         "why": _why("readonly"), "controls": ctrls})
     if reqs:                                          # 1 bis. clauses du règlement couvertes par la politique
         tested = {c["rule"] for r in reqs for c in r["controls"]}
         for rx, testability, keys, source in (REG_APP if kind == "app" else REG_CODE):
@@ -292,7 +292,7 @@ def interpret(ctx: dict) -> str:
             cov = [r for r in rules if r in tested]
             reqs.append({"ref": "", "quote": _clause(line), "summary": _clause(line)[:120],
                          "testability": "automated" if cov else ("document" if testability == "automated" else testability),
-                         "why": "Couverte par les contrôles de la politique interne." if cov else "Nécessite une revue.",
+                         "why": _why("covered") if cov else _why("review"),
                          "controls": [], "covered_by": cov})
     if not reqs:                                      # 2. texte réglementaire seul : seuils proposés
         for rx, testability, keys, source in (REG_APP if kind == "app" else REG_CODE):
@@ -304,14 +304,31 @@ def interpret(ctx: dict) -> str:
                 c["rule"] = c["references"][0]
             reqs.append({"ref": "", "quote": _clause(line), "summary": _clause(line)[:120],
                          "testability": testability,
-                         "why": {"automated": "Vérifiable par l'interface de la cible.",
-                                 "document": "Nécessite la revue d'une politique ou d'une procédure.",
-                                 "interview": "Nécessite un entretien avec les équipes."}[testability],
+                         "why": _why(testability),
                          "controls": ctrls})
     reqs.append({"ref": "?", "quote": "La banque doit tout chiffrer en quantique.", "summary": "Citation inventée (test du garde-fou).",
                  "testability": "automated", "why": "", "controls": [_app_control("C1", "text")] if kind == "app"
                  else [_code_control("tls", repo, "text")]})
     return json.dumps({"requirements": reqs}, ensure_ascii=False)
+
+
+# Justifications (« why ») de l'interprétation simulée, dans la langue du rapport
+_WHY = {
+    "unrelated": ("Règle sans lien avec cette cible.", "Rule unrelated to this target."),
+    "readonly": ("Vérifiable par l'interface en lecture seule de la cible.",
+                 "Testable through the target's read-only interface."),
+    "covered": ("Couverte par les contrôles de la politique interne.", "Covered by the internal policy controls."),
+    "review": ("Nécessite une revue.", "Requires a review."),
+    "automated": ("Vérifiable par l'interface de la cible.", "Testable through the target's interface."),
+    "document": ("Nécessite la revue d'une politique ou d'une procédure.", "Requires reviewing a policy or procedure."),
+    "interview": ("Nécessite un entretien avec les équipes.", "Requires an interview with the teams."),
+}
+
+
+def _why(key: str) -> str:
+    from . import config
+    fr, en = _WHY[key]
+    return en if config.lang() == "en" else fr
 
 
 _REPO_HEAD = '''import json, os, re, requests

@@ -119,8 +119,8 @@ def run_test(e: dict, ctx: Ctx):
             except llm.BudgetExceeded:
                 raise                                       # plafond de dépense : l'audit s'arrête
             except Exception as ex:                         # panne du modèle : contrôle non concluant
-                code = f"# {t('log.nocode')} : {type(ex).__name__}: {str(ex)[:200]}\n"
-                res = {"status": "error", "detail": f"{t('log.model_error')} : {type(ex).__name__}: {str(ex)[:240]}"}
+                code = f"# {t('log.nocode')}{report.colon()}{type(ex).__name__}: {str(ex)[:200]}\n"
+                res = {"status": "error", "detail": f"{t('log.model_error')}{report.colon()}{type(ex).__name__}: {str(ex)[:240]}"}
                 log(f"  {c['id']} {res['detail']}")
                 break
             res = _safe_run(code, ctx)
@@ -427,7 +427,7 @@ def propose_fix(e: dict, ctx: Ctx) -> dict:
     except llm.BudgetExceeded:
         raise
     except Exception as ex:                             # pas de correctif automatique : plan d'action manuel
-        log(f"  {c['id']} {t('log.fix_error')} : {type(ex).__name__}: {str(ex)[:160]}")
+        log(f"  {c['id']} {t('log.fix_error')}{report.colon()}{type(ex).__name__}: {str(ex)[:160]}")
         ctx.trail.log("fix_proposal_failed", control=c["id"], error=f"{type(ex).__name__}: {str(ex)[:240]}")
         prop = {"type": "manual", "rationale": t("f.fix_fallback")}
     if c["remediation"] == "manual" or prop.get("type") == "manual" or not ctx.target["remediable"]:
@@ -496,7 +496,7 @@ def remediation(entries: list, ctx: Ctx, approve_all: bool, approver: str) -> li
     if not (approver or "").strip() or approver.strip().lower() == ctx.mission.lead_auditor.strip().lower():
         # approbateur non nommé : impossible d'établir qu'il est distinct de l'auditeur
         sys.exit(t("pre.sod"))
-    log(f"{t('log.remediation')} : {len(findings)}")
+    log(f"{t('log.remediation')}{report.colon()}{len(findings)}")
     with ThreadPoolExecutor(WORKERS) as pool:
         proposals = list(pool.map(lambda e: propose_fix(e, ctx), findings))
 
@@ -523,7 +523,7 @@ def remediation(entries: list, ctx: Ctx, approve_all: bool, approver: str) -> li
               f"  │ {f['id']} · {c['rule']} · {t('sev.' + c['severity'])} · {c['title']}\n"
               f"  │ {prop['method']} {prop['path']} {json.dumps(prop['body'], ensure_ascii=False)}\n"
               f"  │ {prop['rationale']}\n"
-              + (f"  │ {t('f.impact')} : {prop['impact']}\n" if prop.get("impact") else "")
+              + (f"  │ {t('f.impact')}{report.colon()}{prop['impact']}\n" if prop.get("impact") else "")
               + "  └─", flush=True)
         if approve_all:
             ok, mode = True, "pre-approved"
@@ -631,7 +631,7 @@ def issue(state: dict, ctx: Ctx, refresh) -> None:
         "mission": state["mission"]["id"], "run_id": state["run_id"], "issued_at": time.strftime("%Y-%m-%dT%H:%M:%S"),
         "trail_head": trail.head, "aborted": state.get("aborted"),
         "files": [{"path": ctx.rel(p), "sha256": sha256_file(p)} for p in files]}, indent=2))
-    log(f"{t('log.report')} : {html}" + (f" · {pdf.name}" if pdf.exists() else ""))
+    log(f"{t('log.report')}{report.colon()}{html}" + (f" · {pdf.name}" if pdf.exists() else ""))
 
 
 def run(mission, out_dir: Path, remediate: bool = False, approve_all: bool = False,
@@ -655,8 +655,9 @@ def run(mission, out_dir: Path, remediate: bool = False, approve_all: bool = Fal
                 return v.name
         return v
 
+    # identifiant d'exécution : argument explicite, sinon ATTEST_RUN_ID (CI), sinon nom du dossier de sortie
     state = {"mission": {k: portable(v) for k, v in asdict(mission).items()},
-             "run_id": run_id or out_dir.name, "started": time.strftime("%Y-%m-%d %H:%M"), "lang": config.lang(),
+             "run_id": run_id or os.environ.get("ATTEST_RUN_ID") or out_dir.name, "started": time.strftime("%Y-%m-%d %H:%M"), "lang": config.lang(),
              "target": mission.target, "target_label": targets.label(mission.target),
              "backend": llm.BACKEND, "models": {"reason": llm.model_for(False), "code": llm.model_for(True),
                                                  "segmentation": "sam-3.1"},
@@ -676,7 +677,7 @@ def run(mission, out_dir: Path, remediate: bool = False, approve_all: bool = Fal
     except BaseException as ex:                     # y compris BudgetExceeded, SystemExit, Ctrl+C
         state["aborted"] = f"{type(ex).__name__}: {str(ex)[:300]}"
         trail.log("engagement_aborted", error=state["aborted"])
-        log(f"{t('log.aborted')} : {state['aborted']}")
+        log(f"{t('log.aborted')}{report.colon()}{state['aborted']}")
         try:
             issue(state, ctx, refresh)
         except Exception as ex2:                    # ne masque jamais l'erreur d'origine
@@ -704,7 +705,7 @@ def _phases(state, ctx, refresh, remediate, approve_all, approver, replan, reset
     state["catalogue"] = cat_meta
     state["interpretation"] = interpretation
     state["entries"] = entries = [{"control": c} for c in controls]
-    log(f"{t('log.plan')} : {len(controls)} · {cat_meta['source']}")
+    log(f"{t('log.plan')}{report.colon()}{len(controls)} · {cat_meta['source']}")
     refresh()
 
     with ThreadPoolExecutor(WORKERS) as pool:                         # Phase 1 — constat

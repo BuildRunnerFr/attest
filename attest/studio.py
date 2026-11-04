@@ -87,7 +87,9 @@ CSS = """
 :root{--ink:#14171c;--mute:#5d6470;--line:#dfe2e7;--navy:#0f2747;--ok:#166534;--ko:#b91c1c;--warn:#8a5a00}
 *{box-sizing:border-box}body{margin:0;background:#eef0f3;color:var(--ink);font:15px/1.55 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
 header{background:var(--navy);color:#dbe3ef;padding:12px 24px;display:flex;gap:18px;align-items:center;flex-wrap:wrap}
-header b{color:#fff;font-size:17px}header .sp{flex:1}header a{color:#dbe3ef;text-decoration:none;font-size:13px}
+header b{color:#fff;font-size:17px}header .sp{flex:1}header a{color:#dbe3ef;text-decoration:none;font-size:13px;padding:2px 7px;border-radius:5px;border:1px solid transparent}
+header a.on{color:#fff;font-weight:700;border-color:#dbe3ef;background:rgba(255,255,255,.12)}
+button:disabled,button:disabled:hover{background:#9aa6b6;cursor:not-allowed}
 main{max-width:1000px;margin:0 auto;padding:26px 16px 60px}main.wide{max-width:1200px}
 h1{font:600 28px/1.2 Georgia,serif;margin:0 0 6px}p.sub{color:var(--mute);margin:0 0 20px}
 .step{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin-bottom:16px}
@@ -129,7 +131,7 @@ iframe{width:100%;height:calc(100vh - 150px);border:1px solid var(--line);border
 HEAD = """<!doctype html><html lang="{{ lang }}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Attest Studio</title><style>{{ css|safe }}</style></head><body>
 <header><b>Attest Studio</b><span>{{ s.tagline }}</span><span class="sp"></span>
-<a href="/?lang=fr">FR</a><a href="/?lang=en">EN</a></header>"""
+{% for l in ('fr', 'en') %}<a href="/?lang={{ l }}" hreflang="{{ l }}"{% if l == lang %} class="on" aria-current="true"{% endif %}>{{ l|upper }}</a>{% endfor %}</header>"""
 
 INDEX = HEAD + """<main><h1>{{ s.title }}</h1><p class="sub">{{ s.intro }}</p>
 {% if error %}<div class="alert">{{ error }}</div>{% endif %}
@@ -151,12 +153,12 @@ REVIEW = HEAD + """<main><h1>{{ s.review }}</h1><p class="sub">{{ it.texts|join(
 {% if error %}<div class="alert">{{ error }}</div>{% endif %}
 <div class="kpis">{% for k, v in kpis %}<div class="kpi"><b>{{ v }}</b><span>{{ k }}</span></div>{% endfor %}</div>
 <div class="alert">{{ s.warn }}</div>
-<form method="post" action="/run/{{ sid }}">
+<form method="post" action="/run/{{ sid }}" id="rv">
 {% for r in it.requirements %}<div class="req {{ '' if r.quote_verified else 'rejected' }}"><div class="rh">
 {% if r.ref %}<span class="ref">{{ r.ref }}</span>{% endif %}
 <span class="tb {{ r.testability if r.quote_verified else 'rejected' }}">{{ s.testability[r.testability] if r.quote_verified else s.notfound }}</span>
 <span>{{ r.summary }}</span></div>
-<blockquote>« {{ r.quote }} » {% if r.quote_verified %}<span class="q-ok">✓ {{ s.verified }}</span>{% else %}<span class="q-ko">✗ {{ s.notfound }}</span>{% endif %}</blockquote>
+<blockquote>{{ '“' if lang == 'en' else '« ' }}{{ r.quote }}{{ '”' if lang == 'en' else ' »' }} {% if r.quote_verified %}<span class="q-ok">✓ {{ s.verified }}</span>{% else %}<span class="q-ko">✗ {{ s.notfound }}</span>{% endif %}</blockquote>
 {% if r.covered_by %}<p class="hint">↳ {{ s.covered }} {{ r.covered_by|join(', ') }}</p>{% endif %}
 {% if r.why %}<p class="hint">{{ r.why }}</p>{% endif %}
 {% for c in r.controls %}<label class="ctrl"><input type="checkbox" name="ctrl" value="{{ c.id }}" checked>
@@ -167,7 +169,11 @@ REVIEW = HEAD + """<main><h1>{{ s.review }}</h1><p class="sub">{{ it.texts|join(
 <div class="sign"><label>{{ s.reviewer }} <input name="reviewer" required></label>
 {% if remediable %}<label><input type="checkbox" name="remediate"> {{ s.remediate }}</label>
 <label>{{ s.approver }} <input name="approver" value="{{ 'IAM owner (demo)' if lang == 'en' else 'Responsable IAM (démo)' }}"></label>{% endif %}
-<button>{{ s.run }}</button></div></form></main></body></html>"""
+<button id="go" {% if not it.requirements|selectattr('controls')|list %}disabled{% endif %}>{{ s.run }}</button></div></form></main>
+<script>/* bouton désactivé tant qu'aucun contrôle n'est coché */
+(()=>{const f=document.getElementById('rv'),b=document.getElementById('go');
+const sync=()=>{b.disabled=!f.querySelector('input[name=ctrl]:checked')};
+f.addEventListener('change',sync);sync()})()</script></body></html>"""
 
 AUDIT = HEAD + """<main class="wide"><div class="bar"><div class="status" id="st">{{ s.running }}</div><span class="sp"></span>
 <a id="pdf" class="btn" href="/files/{{ sid }}/audit/report.pdf" hidden>{{ s.pdf }}</a>

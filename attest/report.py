@@ -105,6 +105,21 @@ def colon() -> str:
     return " : " if config.lang() == "fr" else ": "
 
 
+def limits(state: dict) -> list:
+    """Limites propres à la cible : portée des tests selon le type de cible, et limite sur les correctifs
+    uniquement quand une remédiation a été demandée. La console IAM avec remédiation garde la liste d'origine."""
+    from . import targets
+    lim = list(t("limits"))                       # [portée, relecture IA, correctifs, démonstration]
+    kind = (targets.TARGETS.get(state.get("target") or "") or {}).get("kind", "app")
+    if kind == "code":
+        lim[0] = t("limits.scope.code")
+    elif kind != "app":
+        lim[0] = t("limits.scope.generic")
+    if not state.get("remediation_requested", True):
+        lim.pop(2)
+    return lim
+
+
 def e(x) -> str:
     return html.escape(str(x if x is not None else ""))
 
@@ -386,19 +401,23 @@ def write(state: dict, out: Path):
           f'<div class="two"><div><h3>{e(t("m.in"))}</h3><ul>' + "".join(f"<li>{e(x)}</li>" for x in m["scope_in"]) + "</ul></div>"
           f'<div><h3>{e(t("m.out"))}</h3><ul>' + "".join(f"<li>{e(x)}</li>" for x in m["scope_out"]) + "</ul></div></div>"
           f'<h3>{e(t("method.title"))}</h3><ol>' + "".join(f"<li>{e(x)}</li>" for x in t("method")) + "</ol>"
-          f'<h3>{e(t("limits.title"))}</h3><ul>' + "".join(f"<li>{e(x)}</li>" for x in t("limits")) + "</ul></section>")
+          f'<h3>{e(t("limits.title"))}</h3><ul>' + "".join(f"<li>{e(x)}</li>" for x in limits(state)) + "</ul></section>")
 
     # ---- 3. tableau des constats
+    # colonne « Après » seulement si une remédiation a été demandée (ou, rapport ancien, si un statut existe)
+    show_after = bool(state.get("remediation_requested")) or any(x.get("status_after") for x in entries)
     rows = []
     for x in sorted(entries, key=lambda x: (x.get("finding") is None, (x.get("finding") or {}).get("id", ""), x["control"]["id"])):
         c, f = x["control"], x.get("finding")
         rows.append(f'<tr><td class="mono">{e(f["id"]) if f else "—"}</td><td class="mono">{e(c["rule"])}</td>'
                     f'<td>{e(c["title"])}</td><td>{pill_sev(c["severity"])}</td><td>{pill_st(x.get("status_before"))}</td>'
-                    f'<td>{pill_st(x.get("status_after")) if x.get("status_after") else ""}</td><td>{fstatus(f)}</td>'
+                    + (f'<td>{pill_st(x.get("status_after")) if x.get("status_after") else ""}</td>' if show_after else "")
+                    + f'<td>{fstatus(f)}</td>'
                     f'<td class="mono">{e(f["due"]) if f else ""}</td></tr>')
     s3 = (f'<section id="s3"><h2>{e(t("s3"))}</h2><div class="tbl"><table><tr><th>{e(t("t.id"))}</th><th>{e(t("t.rule"))}</th>'
-          f'<th>{e(t("t.title"))}</th><th>{e(t("t.sev"))}</th><th>{e(t("t.before"))}</th><th>{e(t("t.after"))}</th>'
-          f'<th>{e(t("t.status"))}</th><th>{e(t("t.due"))}</th></tr>' + "".join(rows) + "</table></div></section>")
+          f'<th>{e(t("t.title"))}</th><th>{e(t("t.sev"))}</th><th>{e(t("t.before"))}</th>'
+          + (f'<th>{e(t("t.after"))}</th>' if show_after else "")
+          + f'<th>{e(t("t.status"))}</th><th>{e(t("t.due"))}</th></tr>' + "".join(rows) + "</table></div></section>")
 
     # ---- 4. détail
     ordered = sorted(entries, key=lambda x: (x.get("finding") is None, (x.get("finding") or {}).get("id", ""), x["control"]["id"]))
