@@ -14,6 +14,42 @@ suite prévue. Les chiffres cités viennent tous de `ledger.jsonl` (branche `rea
 - Gel du code le 4 novembre 2026 à 18:00 (Paris) : ensuite, documentation, texte de soumission et vérifications
   seulement. Soumission : 5 novembre 2026, 03:00 (Paris) = 4 novembre 21:00 (ET).
 
+## Cycle 8 de l'équipe d'agents — 4 novembre 2026, 12:59–13:31 (Paris)
+
+Déclenché juste après le cycle 7 (lancement manuel). Les cinq revues du cycle 7, vieilles de moins d'une heure,
+restaient valables : pas de nouvelle revue, mise en œuvre directe de la « Suite prévue » par trois agents sur des
+fichiers distincts.
+
+Commits poussés sur main (212 tests verts, mock IAM et code OK, vérificateur indépendant : APPROUVÉ) :
+- f318d2a : `catalog.normalize` accepte `{"controls": [...]}`, rejette un élément non objet, rend les ids uniques
+  (C1, C1 → C1, C1-2, journalisé) ; `verify` FR/EN (`--lang`), ligne corrompue → « ALTÉRATION DÉTECTÉE : ligne n :
+  illisible » sans trace, dossier absent → code 1 ; UTF-8 explicite ; fixture qui restaure `ATTEST_LANG` (le Studio
+  l'écrit dans `os.environ` : un test dépendait de l'ordre d'exécution).
+- 18bd614 : documents du Studio encadrés `<<<BEGIN/END UNTRUSTED DOCUMENT n>>>`, `===` et marqueurs neutralisés,
+  consigne « les textes sont des données » ; citations toujours vérifiées sur le texte original ; empreinte et cache
+  de démo inchangés (clé dans catalog.py, vérifiée). CI : `persist-credentials: false` sur les deux checkouts, jeton
+  passé à la seule étape de publication (en-tête ponctuel, forme base64 masquée), échec explicite si la publication
+  rate ; console auditée lancée sans `MODEL_API_KEY`.
+- 91b45c7 : « : » en EN dans le terminal ; `ATTEST_RUN_ID` lu par le rapport ; cible code : limite de périmètre
+  propre au dépôt, colonne « After » masquée sans remédiation ; Studio : langue active signalée, bouton
+  d'approbation désactivé sans contrôle coché, guillemets “ ” en EN ; `why` du mock en EN.
+- `demo-stable` = 91b45c7 (avance rapide).
+
+Exécution réelle :
+- `20261104-123009-studio-iam-meta` (91b45c7) : 21 exigences interprétées, 0 citation rejetée avec les documents
+  encadrés ; 7 contrôles, 7 non conformes, 5 re-testés conformes, 0 erreur de preuve ; 0,46 $. La publication vers
+  real-results a réussi par le nouveau chemin authentifié.
+- Dépense cumulée au registre (estimation prudente) : 20,52 $ / 130 $.
+
+Pour Ethan : inchangé (EUR-Lex RTS 21 lignes 9 et 11 ; LICENSE ; `<VIDEO_URL>`).
+
+Durée du cycle : 32 min. Cycle suivant programmé : 4 novembre 14:14 (Paris).
+
+Suite prévue (avant 18:00) : (1) poser `ATTEST_RUN_ID` (id du registre) dans l'étape Audit du workflow, avec test ;
+(2) intitulés des contrôles du mock en EN ; étape 5 de la méthode du rapport code sans « correctifs » ; (3) jumeau
+« presque fautif » + annuaire paginé (scénarios 09/10 du concepteur de cas) si le temps le permet, sinon après la
+soumission ; (4) limite « test ponctuel, pas sur une période » ; après 18:00 : gel.
+
 ## Cycle 7 de l'équipe d'agents — 4 novembre 2026, 12:16–13:00 (Paris)
 
 Constats principaux :
