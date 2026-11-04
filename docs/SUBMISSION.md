@@ -32,7 +32,7 @@ Sources: bench `20261103-232326`, `20261103-235819`, `20261104-020142`, `2026110
   requests.
 - **SAM 3.1** (Meta Model API): snaps outlines onto the rows and code lines that prove a finding, and masks personal
   data and secrets in every kept image.
-- **Muse Glimmer** (optional local backend, `ATTEST_BACKEND=local` via llama.cpp / vLLM / SGLang): supported for
+- **Muse Glimmer** (optional local backend, `ATTEST_BACKEND=local` via llama.cpp / vLLM / SGLang): implemented for
   confidential on-premise use, **not measured** — every result above comes from the Meta Model API.
 
 ### Repository link
