@@ -41,7 +41,7 @@ jobs:
     env:
       ATTEST_BACKEND: ${{ inputs.backend }}
       ATTEST_LANG: ${{ inputs.lang }}
-      ATTEST_AUDITOR: Attest CI
+      ATTEST_AUDITOR: "Attest CI (automated run, no human auditor)"
       ATTEST_WORKERS: "4"
       ATTEST_USAGE_FILE: /tmp/attest-usage.json
       KIND: ${{ inputs.kind }}

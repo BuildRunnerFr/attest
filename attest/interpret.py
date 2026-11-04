@@ -26,20 +26,43 @@ def _norm(s: str) -> str:
     return re.sub(r"\s+", " ", s).strip().lower()
 
 
+# négation (ou exception) qu'une coupure « […] » ne doit jamais faire disparaître
+_NEGATION = re.compile(r"(?<!\w)(?:not|no|never|ne|pas|sauf|except|unless|without|sans|nor|ni)(?!\w)|(?<!\w)n'|n't(?!\w)")
+_MIN_WORDS = 4
+
+
 def verify_quote(quote: str, text: str) -> bool:
-    """Vrai si la citation figure mot pour mot dans le texte (coupures « […] » autorisées, dans l'ordre)."""
-    t = _norm(text)
-    parts = [p.strip(" \"'.;:,") for p in _ELLIPSIS.split(_norm(quote))]
+    """Vrai si la citation figure mot pour mot dans UN texte (un document, sans en-tête).
+
+    Au plus une coupure « […] » (deux fragments, dans l'ordre), chaque fragment d'au moins 4 mots et aligné sur des
+    limites de mots ; le passage omis entre les deux fragments ne doit contenir aucune négation ni exception.
+    """
+    t, q = _norm(text), _norm(quote)
+    whole = q.strip(" \"'.;:,")                       # citation intégrale (le texte peut contenir « … » lui-même)
+    if len(whole) >= 15 and len(whole.split()) >= _MIN_WORDS and \
+            re.search(r"(?<!\w)" + re.escape(whole) + r"(?!\w)", t):
+        return True
+    parts = [p.strip(" \"'.;:,") for p in _ELLIPSIS.split(q)]
     parts = [p for p in parts if p]
-    if not parts or sum(len(p) for p in parts) < 15:
+    if not parts or len(parts) > 2 or sum(len(p) for p in parts) < 15:
         return False
-    pos = 0
-    for p in parts:
-        i = t.find(p, pos)
-        if i < 0:
+    if any(len(p.split()) < _MIN_WORDS for p in parts):
+        return False
+    pats = [re.compile(r"(?<!\w)" + re.escape(p) + r"(?!\w)") for p in parts]
+    for m in pats[0].finditer(t):
+        if len(pats) == 1:
+            return True
+        m2 = pats[1].search(t, m.end())               # la plus proche : le passage omis le plus court
+        if not m2:
             return False
-        pos = i + len(p)
-    return True
+        if not _NEGATION.search(t, m.end(), m2.start()):
+            return True
+    return False
+
+
+def verify_quote_in(quote: str, texts: list) -> bool:
+    """Vérification document par document : tous les fragments dans le même document, en-têtes « === » exclus."""
+    return any(verify_quote(quote, body) for _, body in texts)
 
 
 def interpret(texts: list, target_id: str) -> dict:
@@ -57,7 +80,7 @@ def interpret(texts: list, target_id: str) -> dict:
         if not isinstance(r, dict):
             continue
         quote = str(r.get("quote", "")).strip()
-        verified = verify_quote(quote, joined)
+        verified = verify_quote_in(quote, texts)
         testability = str(r.get("testability", "document")).lower()
         testability = testability if testability in TESTABILITY else "document"
         controls = []

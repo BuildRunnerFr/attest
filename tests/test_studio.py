@@ -16,6 +16,34 @@ def test_quote_verification():
     assert interpret.verify_quote("a provision on user accountability […] generic and shared user accounts", t)
     assert not interpret.verify_quote("limit generic accounts as much as possible", t)          # paraphrase refusée
     assert not interpret.verify_quote("user accounts", t)                                        # trop court
+    assert interpret.verify_quote("a provision on user accountability, by limiting [...] generic and shared user accounts;", t)
+    # plusieurs coupures : on recompose une phrase qui n'existe pas
+    assert not interpret.verify_quote("a provision on user accountability […] limiting to the extent possible […] "
+                                      "generic and shared user accounts", t)
+    # fragments trop courts (moins de 4 mots)
+    assert not interpret.verify_quote("a provision on user accountability […] user accounts", t)
+    # coupé en plein mot
+    assert not interpret.verify_quote("imiting to the extent possible the use", t)
+    assert not interpret.verify_quote("limiting to the extent possible the use of gen", t)
+
+
+def test_quote_cut_cannot_drop_a_negation():
+    t = "To that end, financial entities shall not store passwords in clear text."
+    assert not interpret.verify_quote("Financial entities shall […] store passwords in clear text", t)
+    assert not interpret.verify_quote("to that end, financial entities shall […] store passwords in clear text", t)
+    assert interpret.verify_quote("to that end, financial entities shall not store passwords in clear text", t)
+    fr = "Le mot de passe n'est en aucun cas transmis en clair sur le réseau, sauf exception documentée."
+    assert not interpret.verify_quote("le mot de passe […] en aucun cas transmis en clair sur le réseau", fr)
+    assert interpret.verify_quote("le mot de passe n'est en aucun cas […] en clair sur le réseau", fr)
+
+
+def test_quote_verified_document_by_document():
+    texts = [("A", "Article 1: the management body shall approve the ICT risk framework."),
+             ("B", "Article 2: financial entities shall test the plan at least yearly.")]
+    assert interpret.verify_quote_in("the management body shall approve […] financial entities shall test the plan", texts) is False
+    assert interpret.verify_quote_in("approve the ICT risk framework. Article 2: financial entities", texts) is False
+    assert interpret.verify_quote_in("=== B === Article 2: financial entities shall test", texts) is False   # en-tête
+    assert interpret.verify_quote_in("financial entities shall test […] plan at least yearly", texts) is True
 
 
 def test_policy_gives_thresholds_regulation_alone_gives_proposals():

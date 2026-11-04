@@ -168,16 +168,16 @@ def change_box(en):
     if not ch:
         return ""
     if ch["type"] == "manual":
-        steps = "".join(f"<li>{e(a)}</li>" for a in ch.get("actions", []))
-        return (f'<div class="chg manual"><b>{e(t("f.manual"))}</b> · {e(ch["ticket"])}<br>{e(ch.get("rationale", ""))}'
+        steps = "".join(f"<li>{e(redact(str(a)))}</li>" for a in ch.get("actions", []))
+        return (f'<div class="chg manual"><b>{e(t("f.manual"))}</b> · {e(ch["ticket"])}<br>{e(redact(ch.get("rationale", "")))}'
                 f'<ol>{steps}</ol></div>')
-    body = f'{e(ch["method"])} {e(ch["path"])} {e(json.dumps(ch["body"], ensure_ascii=False))}'
+    body = f'{e(ch["method"])} {e(redact(ch["path"]))} {e(redact(json.dumps(ch["body"], ensure_ascii=False)))}'
     lines = [f'<b>{e(t("f.change"))} {e(ch["ticket"])}</b> · <code>{body}</code>',
-             e(ch.get("rationale", ""))]
+             e(redact(ch.get("rationale", "")))]
     if ch.get("impact"):
-        lines.append(f'{e(t("f.impact"))}{colon()}{e(ch["impact"])}')
+        lines.append(f'{e(t("f.impact"))}{colon()}{e(redact(ch["impact"]))}')
     if ch.get("guard_refusal"):
-        lines.append(f'⚠ {e(ch["guard_refusal"])}')
+        lines.append(f'⚠ {e(redact(ch["guard_refusal"]))}')
     if ch.get("approved_by"):
         lines.append(f'{e(t("f.approved"))}{colon()}<b>{e(ch["approved_by"])}</b> · {e(ch.get("approved_at", ""))} · '
                      + (f'{e(t("mode." + ch["mode"]))} · ' if ch.get("mode", "interactive") != "interactive" else "")
@@ -472,7 +472,7 @@ def write(state: dict, out: Path):
     tmp.replace(out / "report.html")            # écriture atomique : la page live ne se lit jamais à moitié
 
 
-def to_pdf(html_path: Path, pdf_path: Path):
+def to_pdf(html_path: Path, pdf_path: Path, label: str = ""):
     from playwright.sync_api import sync_playwright
     with sync_playwright() as p:
         b = p.chromium.launch()
@@ -483,6 +483,6 @@ def to_pdf(html_path: Path, pdf_path: Path):
                  margin={"top": "14mm", "bottom": "16mm", "left": "12mm", "right": "12mm"},
                  display_header_footer=True, header_template="<span></span>",
                  footer_template='<div style="font-size:8px;color:#666;width:100%;padding:0 12mm;display:flex;'
-                                 'justify-content:space-between"><span>Attest</span><span>'
+                                 'justify-content:space-between"><span>' + html.escape(" · ".join(x for x in (label, "Attest") if x)) + '</span><span>'
                                  '<span class="pageNumber"></span>/<span class="totalPages"></span></span></div>')
         b.close()

@@ -93,12 +93,15 @@ model API makes that API an ICT third-party provider under DORA. See [docs/BUSIN
 
 ## Quickstart
 
+Requires Python 3.11+ (tested on 3.12 and 3.13). No API key needed to try it: the `mock` backend runs offline.
+
 ```bash
 git clone https://github.com/BuildRunnerFr/attest.git && cd attest
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt && python -m playwright install chromium
 
-cp .env.example .env                      # add MODEL_API_KEY, or ATTEST_BACKEND=mock (no key)
+cp .env.example .env                      # add MODEL_API_KEY; without a key, start.sh switches to mock
+python -m pytest -q                       # optional: pip install -r requirements-dev.txt first
 bash scripts/start.sh                     # one command: audited console + Studio, opens http://127.0.0.1:8000
 ```
 
@@ -107,6 +110,7 @@ Or step by step:
 ```bash
 python -m lab.app                         # terminal 1: the audited system (fictitious bank console)
 set -a; source .env; set +a               # terminal 2
+export ATTEST_BACKEND=mock                # only if you have no MODEL_API_KEY
 python -m attest.studio                                # web app: http://127.0.0.1:8000
 python -m attest run --reset-lab                       # or the CLI: read-only audit
 python -m attest run --reset-lab --remediate           # + change requests, approved interactively
