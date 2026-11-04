@@ -1,0 +1,73 @@
+{
+  "mission": "AUD-20261104-43E1",
+  "run_id": "20261104-001838-43e1",
+  "issued_at": "2026-11-04T00:22:35",
+  "trail_head": "7c9d7bf464a9693dd21de79f2d91821dbb08d988aabd1c583530a4aaefd8a98a",
+  "aborted": null,
+  "files": [
+    {
+      "path": "evidence/C1_before.png",
+      "sha256": "f91409396e03e898a5846d63d299cb8871943865c11b9d24f72d4fd14cdd77ca"
+    },
+    {
+      "path": "evidence/C2_before.png",
+      "sha256": "03ffbdd593d56b5c2617e7935507798b8d74d6a1c2264c4c5f0bd6bf9de88b32"
+    },
+    {
+      "path": "evidence/C3_before.png",
+      "sha256": "9b670c1eafd915cb6df201edf42dc67d9cd479c769ad7b5f49bc574e294bd891"
+    },
+    {
+      "path": "evidence/C4_before.png",
+      "sha256": "cfbb2e4159bb03c3141060aef9f46daabbc947f5fddcfe451d46811938fcb0b0"
+    },
+    {
+      "path": "evidence/C5_before.png",
+      "sha256": "94071ff0cc3ec3013b5c4620d989ef9e69def04847069f8c7a03fba625a6574f"
+    },
+    {
+      "path": "evidence/C7_before.png",
+      "sha256": "168099bdf34367c6af05eb21777c45a42a9ffe770d00194506fe75f1de923b8b"
+    },
+    {
+      "path": "report.html",
+      "sha256": "b57ac22d267749d53667c7f27fb6ec7b47e36a053e06bef6474d69d68a08dcc6"
+    },
+    {
+      "path": "report.pdf",
+      "sha256": "368a7177a0864f194390ffb6465d449fdb89d9a219a9553844997bba903030d5"
+    },
+    {
+      "path": "result.json",
+      "sha256": "a95b909dc37af0e762604dd7b6bdc4b32a7da35eb82c2d65a551f48ae3eb155a"
+    },
+    {
+      "path": "scripts/C1_PDS-2.1.py",
+      "sha256": "c709a0863cb3660135dbccd992dcf375809b5571677b7d436fe8d0f0d710f675"
+    },
+    {
+      "path": "scripts/C2_PDS-2.2.py",
+      "sha256": "1d66e6b303b82a642635de85b886be850013790687af016327a8fa940eb7da8c"
+    },
+    {
+      "path": "scripts/C3_PDS-2.3.py",
+      "sha256": "d3d09e4b3e9e1704a0fad02806c2616e75f85652eea9579008aa0adca057fddf"
+    },
+    {
+      "path": "scripts/C4_PDS-2.4.py",
+      "sha256": "fc4504947a6fcede0e135e2e251129debd983224fb5a7e8c34fbbde4ac95d0e1"
+    },
+    {
+      "path": "scripts/C5_PDS-2.5.py",
+      "sha256": "f2158d7960a2dfb872d8dd2dfd7e18a3f14c15490bbe2d2b5b44e12b0b6d50d5"
+    },
+    {
+      "path": "scripts/C6_PDS-2.6.py",
+      "sha256": "29a37bfee74b2012768c6b320027979b3c9fa2898f09c26693fcc9e79bb01fd3"
+    },
+    {
+      "path": "scripts/C7_PDS-2.7.py",
+      "sha256": "cd3b57daefee82e87295ae1f034f69d9a747a05c807b8629c359831efdbf2654"
+    }
+  ]
+}

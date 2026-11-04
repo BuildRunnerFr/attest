@@ -1,0 +1,135 @@
+{
+  "source": "studio",
+  "reviewed": true,
+  "reviewer": "Attest CI",
+  "path": "runs/studio/20261104-001838-43e1/catalogue.json",
+  "validated_at": "2026-11-04 00:18",
+  "controls": [
+    {
+      "rule": "PDS-2.1",
+      "title": "No hardcoded secrets in code",
+      "objective": "Verify no password, key or token is written in clear text in versioned code.",
+      "test_procedure": "GET tree to list files, then GET search with regex for password|passwd|secret|api[_-]?key|token|BEGIN.*PRIVATE KEY and GET file for hits to verify whether value comes from os.environ or vault client.",
+      "expected": "Zero hardcoded secret values; all secrets referenced via os.environ or vault; no private keys versioned.",
+      "threshold_source": "PDS-2.1",
+      "severity": "critique",
+      "references": [
+        "RTS 7(2)"
+      ],
+      "risk": "Hardcoded secrets allow credential theft and unauthorized transfers.",
+      "recommendation": "Remove hardcoded secrets and load them from vault or environment variables.",
+      "evidence_page": "/repo/paiement-api/view?path=app/config.py",
+      "remediation": "manual",
+      "id": "C1",
+      "quote": "Aucun secret (mot de passe, clé, jeton) n'est écrit en clair dans le code source ni dans la configuration versionnée : les secrets viennent d'un coffre ou de variables d'environnement."
+    },
+    {
+      "rule": "PDS-2.2",
+      "title": "TLS certificate verification enforced",
+      "objective": "Verify outgoing calls never disable TLS certificate verification.",
+      "test_procedure": "GET search for verify\\s*=\\s*False|ssl\\._create_unverified|CERT_NONE|check_hostname\\s*=\\s*False then GET file for each hit in app/.",
+      "expected": "Zero matches for verify=False or disabled TLS verification in app/ code.",
+      "threshold_source": "PDS-2.2",
+      "severity": "elevee",
+      "references": [
+        "DORA 9(3)(a) ; RTS 6(2)(a)"
+      ],
+      "risk": "Disabled TLS verification enables man-in-the-middle interception of SEPA data.",
+      "recommendation": "Remove verify=False and enforce default TLS certificate verification.",
+      "evidence_page": "/repo/paiement-api/view?path=app/client.py",
+      "remediation": "manual",
+      "id": "C2",
+      "quote": "Tout appel réseau sortant vérifie le certificat TLS du serveur : la vérification n'est jamais désactivée (`verify=False` interdit)."
+    },
+    {
+      "rule": "PDS-2.3",
+      "title": "Approved password hashing only",
+      "objective": "Verify passwords use argon2, bcrypt, scrypt or PBKDF2 and not MD5/SHA-1.",
+      "test_procedure": "GET search for argon2|bcrypt|scrypt|pbkdf2|hashlib\\.(md5|sha1)\\(|Crypto\\.Hash\\.(MD5|SHA1) then GET file for hits to confirm password context.",
+      "expected": "Password hashing uses only argon2/bcrypt/scrypt/PBKDF2; zero MD5/SHA-1 use for security in app/.",
+      "threshold_source": "PDS-2.3",
+      "severity": "elevee",
+      "references": [
+        "RTS 6(3) et 6(4)"
+      ],
+      "risk": "Weak hashes allow password recovery and authentication bypass.",
+      "recommendation": "Replace MD5/SHA-1 with argon2, bcrypt, scrypt or PBKDF2 for password hashing.",
+      "evidence_page": "/repo/paiement-api/view?path=app/auth.py",
+      "remediation": "manual",
+      "id": "C3",
+      "quote": "Les mots de passe sont hachés avec argon2, bcrypt, scrypt ou PBKDF2. MD5 et SHA-1 sont interdits pour tout usage de sécurité."
+    },
+    {
+      "rule": "PDS-2.4",
+      "title": "CI static security analysis present",
+      "objective": "Verify CI runs bandit, semgrep or CodeQL on every change.",
+      "test_procedure": "GET tree to list .github/workflows/ files, then GET file for each workflow and check for bandit|semgrep|CodeQL and on: [push, pull_request].",
+      "expected": "At least one workflow runs bandit or semgrep or CodeQL on push/pull_request.",
+      "threshold_source": "PDS-2.4",
+      "severity": "moyenne",
+      "references": [
+        "RTS 16(3)"
+      ],
+      "risk": "Missing static analysis leaves code vulnerabilities undetected.",
+      "recommendation": "Add bandit, semgrep or CodeQL step to CI on every change.",
+      "evidence_page": "/repo/paiement-api/view?path=.github/workflows/ci.yml",
+      "remediation": "manual",
+      "id": "C4",
+      "quote": "La chaîne d'intégration continue exécute une analyse statique de sécurité (bandit, semgrep ou CodeQL) à chaque modification."
+    },
+    {
+      "rule": "PDS-2.5",
+      "title": "Pinned dependencies with CI audit",
+      "objective": "Verify exact version pinning and CI dependency audit.",
+      "test_procedure": "GET file for requirements.txt and verify each line matches paquet==version, then GET tree and file for .github/workflows/ and search for pip-audit|safety|dependabot|osv-scanner.",
+      "expected": "All dependencies use == exact pin; CI contains pip-audit or equivalent audit step.",
+      "threshold_source": "PDS-2.5",
+      "severity": "moyenne",
+      "references": [
+        "RTS 16(4) et 16(8)"
+      ],
+      "risk": "Unpinned or unaudited dependencies allow vulnerable package deployment.",
+      "recommendation": "Pin all dependencies with == and add pip-audit step in CI.",
+      "evidence_page": "/repo/paiement-api/view?path=requirements.txt",
+      "remediation": "manual",
+      "id": "C5",
+      "quote": "Les dépendances sont épinglées à une version exacte (`paquet==version`) et auditées en intégration continue (pip-audit ou équivalent)."
+    },
+    {
+      "rule": "PDS-2.6",
+      "title": "Synthetic test data only",
+      "objective": "Verify test data is declared synthetic and no production dump is versioned.",
+      "test_procedure": "GET tree and search for synthetic and GET file for tests/fixtures to verify \"synthetic\": true, and search for production dump patterns.",
+      "expected": "Test fixtures contain \"synthetic\": true; zero versioned production exports or real IBAN datasets.",
+      "threshold_source": "PDS-2.6",
+      "severity": "elevee",
+      "references": [
+        "RTS 16(5)(a)"
+      ],
+      "risk": "Production data in test exposes confidentiality and violates anonymisation.",
+      "recommendation": "Replace test data with synthetic data flagged synthetic true and remove production exports.",
+      "evidence_page": "/repo/paiement-api/view?path=tests/fixtures.json",
+      "remediation": "manual",
+      "id": "C6",
+      "quote": "Les données de test sont synthétiques et déclarées comme telles (champ `\"synthetic\": true`) ; aucun export de production n'est versionné."
+    },
+    {
+      "rule": "PDS-2.7",
+      "title": "Authentication success and failure logging",
+      "objective": "Verify application logs both successful and failed authentications.",
+      "test_procedure": "GET search for logger|logging|log.*auth|login.*(success|fail)|401|403 in app/ then GET file for hits to confirm both success and failure paths logged.",
+      "expected": "Code contains log statements on both authentication success and failure paths.",
+      "threshold_source": "PDS-2.7",
+      "severity": "moyenne",
+      "references": [
+        "RTS 12(2)(c)(i)"
+      ],
+      "risk": "Missing auth logs prevents detection of brute-force and incident response.",
+      "recommendation": "Add logging for both authentication successes and failures.",
+      "evidence_page": "/repo/paiement-api/view?path=app/auth.py",
+      "remediation": "manual",
+      "id": "C7",
+      "quote": "Les réussites et les échecs d'authentification sont journalisés par l'application."
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+interprétation : {"interview": 0, "document": 9, "automated": 11, "requirements": 20, "rejected": 0, "controls": 7, "covered": 4}
+00:18:38 Work programme : 7 · studio
+00:20:01 Test C2 PDS-2.2 · TLS certificate verification enforced → Non-compliant · evidence sealed
+00:20:08 Test C1 PDS-2.1 · No hardcoded secrets in code → Needs review · evidence sealed
+00:20:13 Test C4 PDS-2.4 · CI static security analysis present → Non-compliant · evidence sealed
+00:21:30 Test C5 PDS-2.5 · Pinned dependencies with CI audit → Non-compliant · evidence sealed
+00:21:54 Test C3 PDS-2.3 · Approved password hashing only → Non-compliant · evidence sealed
+00:22:08   C6 preuve impossible : RuntimeError : capture impossible : http://127.0.0.1:5050/repo/paiement-api/view?path=tests/fixtures.json → HTTP 404
+00:22:08 Test C6 PDS-2.6 · Synthetic test data only → Non-compliant
+00:22:34 Test C7 PDS-2.7 · Authentication success and failure logging → Non-compliant · evidence sealed
+00:22:35 Report : out/code/studio/20261104-001838-43e1/audit/report.html · report.pdf
+audit : {'pdf': True, 'report': True, 'state': 'done'}
