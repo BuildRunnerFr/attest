@@ -1,0 +1,42 @@
+{
+  "id": "20261104-083850-iam-meta",
+  "utc": "20261104-083850",
+  "kind": "iam",
+  "backend": "meta",
+  "note": "cycle 5 : cause probable sur le plan IAM (34ec381)",
+  "commit": "34ec381",
+  "workflow_run": "41800915661",
+  "status": "success",
+  "budget_spent_usd": 0.3668,
+  "priced_usd": 0.1268,
+  "unpriced": [
+    "sam-3.1"
+  ],
+  "audits": [
+    {
+      "folder": "iam",
+      "controls": 7,
+      "status_before": [
+        "fail",
+        "fail",
+        "fail",
+        "fail",
+        "fail",
+        "pass",
+        "fail"
+      ],
+      "status_after": [
+        "pass",
+        "pass",
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "evidence_errors": 0,
+      "opinion_initial": "insuffisant",
+      "opinion_final": "insuffisant",
+      "injection_detected": false,
+      "cost_usd": 0.12679875
+    }
+  ]
+}
