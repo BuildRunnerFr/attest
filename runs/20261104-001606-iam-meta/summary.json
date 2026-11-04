@@ -1,0 +1,42 @@
+{
+  "id": "20261104-001606-iam-meta",
+  "utc": "20261104-001606",
+  "kind": "iam",
+  "backend": "meta",
+  "note": "cycle 2 : IAM EN sur HEAD (requetes obligatoires, cloture sans approbation, fondement de l opinion)",
+  "commit": "99e03dc",
+  "workflow_run": "41745297095",
+  "status": "success",
+  "budget_spent_usd": 0.3655,
+  "priced_usd": 0.1255,
+  "unpriced": [
+    "sam-3.1"
+  ],
+  "audits": [
+    {
+      "folder": "iam",
+      "controls": 7,
+      "status_before": [
+        "fail",
+        "fail",
+        "fail",
+        "fail",
+        "fail",
+        "pass",
+        "fail"
+      ],
+      "status_after": [
+        "pass",
+        "pass",
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "evidence_errors": 0,
+      "opinion_initial": "insuffisant",
+      "opinion_final": "insuffisant",
+      "injection_detected": false,
+      "cost_usd": 0.12546
+    }
+  ]
+}

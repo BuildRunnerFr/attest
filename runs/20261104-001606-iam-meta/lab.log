@@ -1,0 +1,44 @@
+ * Serving Flask app 'app'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5050
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [04/Nov/2026 00:14:51] "[33mGET / HTTP/1.1[0m" 404 -
+127.0.0.1 - - [04/Nov/2026 00:14:52] "[31m[1mGET /api/security HTTP/1.1[0m" 401 -
+127.0.0.1 - - [04/Nov/2026 00:14:52] "GET /api/journal HTTP/1.1" 200 -
+127.0.0.1 - - [04/Nov/2026 00:14:52] "POST /api/reset HTTP/1.1" 200 -
+127.0.0.1 - - [04/Nov/2026 00:14:52] "GET /api/security HTTP/1.1" 200 -
+127.0.0.1 - - [04/Nov/2026 00:14:52] "GET /api/security HTTP/1.1" 200 -
+127.0.0.1 - - [04/Nov/2026 00:14:52] "GET /api/security HTTP/1.1" 200 -
+127.0.0.1 - - [04/Nov/2026 00:14:52] "GET /api/security HTTP/1.1" 200 -
+127.0.0.1 - - [04/Nov/2026 00:14:53] "GET /admin/security HTTP/1.1" 200 -
+127.0.0.1 - - [04/Nov/2026 00:14:53] "GET /admin/security HTTP/1.1" 200 -
+127.0.0.1 - - [04/Nov/2026 00:14:53] "GET /admin/security HTTP/1.1" 200 -
+127.0.0.1 - - [04/Nov/2026 00:14:53] "GET /admin/security HTTP/1.1" 200 -
+127.0.0.1 - - [04/Nov/2026 00:15:04] "GET /api/security HTTP/1.1" 200 -
+127.0.0.1 - - [04/Nov/2026 00:15:05] "GET /admin/security HTTP/1.1" 200 -
+127.0.0.1 - - [04/Nov/2026 00:15:08] "GET /api/security HTTP/1.1" 200 -
+127.0.0.1 - - [04/Nov/2026 00:15:08] "GET /api/users HTTP/1.1" 200 -
+127.0.0.1 - - [04/Nov/2026 00:15:08] "GET /admin/security HTTP/1.1" 200 -
+127.0.0.1 - - [04/Nov/2026 00:15:08] "GET /admin/users HTTP/1.1" 200 -
+127.0.0.1 - - [04/Nov/2026 00:15:39] "PATCH /api/security HTTP/1.1" 200 -
+127.0.0.1 - - [04/Nov/2026 00:15:39] "GET /api/journal HTTP/1.1" 200 -
+127.0.0.1 - - [04/Nov/2026 00:15:39] "PATCH /api/security HTTP/1.1" 200 -
+127.0.0.1 - - [04/Nov/2026 00:15:39] "GET /api/journal HTTP/1.1" 200 -
+127.0.0.1 - - [04/Nov/2026 00:15:39] "PATCH /api/security HTTP/1.1" 200 -
+127.0.0.1 - - [04/Nov/2026 00:15:40] "GET /api/journal HTTP/1.1" 200 -
+127.0.0.1 - - [04/Nov/2026 00:15:40] "PATCH /api/security HTTP/1.1" 200 -
+127.0.0.1 - - [04/Nov/2026 00:15:40] "GET /api/journal HTTP/1.1" 200 -
+127.0.0.1 - - [04/Nov/2026 00:15:40] "PATCH /api/security HTTP/1.1" 200 -
+127.0.0.1 - - [04/Nov/2026 00:15:40] "GET /api/journal HTTP/1.1" 200 -
+127.0.0.1 - - [04/Nov/2026 00:15:40] "GET /api/security HTTP/1.1" 200 -
+127.0.0.1 - - [04/Nov/2026 00:15:40] "GET /api/security HTTP/1.1" 200 -
+127.0.0.1 - - [04/Nov/2026 00:15:40] "GET /api/security HTTP/1.1" 200 -
+127.0.0.1 - - [04/Nov/2026 00:15:40] "GET /api/security HTTP/1.1" 200 -
+127.0.0.1 - - [04/Nov/2026 00:15:40] "GET /admin/security HTTP/1.1" 200 -
+127.0.0.1 - - [04/Nov/2026 00:15:40] "GET /admin/security HTTP/1.1" 200 -
+127.0.0.1 - - [04/Nov/2026 00:15:41] "GET /admin/security HTTP/1.1" 200 -
+127.0.0.1 - - [04/Nov/2026 00:15:41] "GET /admin/security HTTP/1.1" 200 -
+127.0.0.1 - - [04/Nov/2026 00:15:52] "GET /api/security HTTP/1.1" 200 -
+127.0.0.1 - - [04/Nov/2026 00:15:52] "GET /admin/security HTTP/1.1" 200 -
+127.0.0.1 - - [04/Nov/2026 00:16:05] "GET /admin/journal HTTP/1.1" 200 -
