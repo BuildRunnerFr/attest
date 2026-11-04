@@ -27,3 +27,14 @@ def lab(tmp_path):
     srv.shutdown()
 
 
+
+
+@pytest.fixture(autouse=True)
+def _langue_isolee():
+    """Le Studio fixe ATTEST_LANG dans os.environ : chaque test retrouve la langue d'avant."""
+    before = os.environ.get("ATTEST_LANG")
+    yield
+    if before is None:
+        os.environ.pop("ATTEST_LANG", None)
+    else:
+        os.environ["ATTEST_LANG"] = before

@@ -31,7 +31,7 @@ class Mission:
 
     @property
     def requirement(self) -> str:
-        return self.requirement_text if self.requirement_text is not None else self.requirement_path.read_text()
+        return self.requirement_text if self.requirement_text is not None else self.requirement_path.read_text(encoding="utf-8")
 
 
 def lang() -> str:
@@ -57,7 +57,7 @@ def localized(d: dict, key: str, default=""):
 
 
 def load_mission(path: Path, requirement_override: Path | None = None) -> Mission:
-    data = tomllib.loads(Path(path).read_text())
+    data = tomllib.loads(Path(path).read_text(encoding="utf-8"))
     m, scope = data["mission"], data.get("scope", {})
     req = requirement_override or (ROOT / m["requirement"])
     return Mission(
@@ -79,7 +79,7 @@ def load_mission(path: Path, requirement_override: Path | None = None) -> Missio
 
 def pricing() -> dict:
     p = ROOT / "pricing.toml"
-    return tomllib.loads(p.read_text()) if p.exists() else {}
+    return tomllib.loads(p.read_text(encoding="utf-8")) if p.exists() else {}
 
 
 # Pré-masquage : la capture envoyée au modèle a déjà ses données personnelles (filet déterministe) noircies.

@@ -46,44 +46,77 @@ class Trail:
             body = {"seq": self.seq, "ts": datetime.now(timezone.utc).isoformat(timespec="milliseconds"),
                     "event": event, "data": data, "prev": self.head}
             body["hash"] = _digest(self.head, body)
-            with open(self.path, "a") as f:
+            with open(self.path, "a", encoding="utf-8") as f:
                 f.write(json.dumps(body, ensure_ascii=False, default=str) + "\n")
             self.head = body["hash"]
             return self.head
 
 
-def verify(run_dir: Path) -> tuple[bool, list[str]]:
-    """Revérifie la chaîne d'événements et l'empreinte de chaque fichier cité."""
+def verify(run_dir: Path, lang: str = "fr") -> tuple[bool, list[str]]:
+    """Revérifie la chaîne d'événements et l'empreinte de chaque fichier cité.
+
+    Une ligne illisible (JSON invalide, champs manquants) est signalée comme altération,
+    jamais propagée en exception. `lang` (fr|en) : langue des messages ; français par défaut
+    (API historique), la ligne de commande passe la langue courante (config.lang())."""
+    from .i18n import L
+
+    def t(key: str) -> str:
+        return L.get(lang, L["fr"]).get(key, L["fr"][key])
     problems, prev = [], GENESIS
     trail = run_dir / "trail.jsonl"
     if not trail.exists():
-        return False, ["trail.jsonl absent"]
-    for n, line in enumerate(trail.read_text().splitlines(), 1):
-        body = json.loads(line)
-        claimed = body.pop("hash")
-        if body["prev"] != prev:
-            problems.append(f"ligne {n} : chaînage rompu")
-        if _digest(body["prev"], body) != claimed:
-            problems.append(f"ligne {n} : contenu modifié")
+        return False, [t("verify.no_trail")]
+    try:
+        lines = trail.read_text(encoding="utf-8").splitlines()
+    except (OSError, UnicodeDecodeError):
+        return False, [t("verify.trail_unreadable")]
+    for n, line in enumerate(lines, 1):
+        try:
+            body = json.loads(line)
+            claimed = body.pop("hash")
+            body_prev = body["prev"]
+            data = body.get("data") or {}
+            if not isinstance(claimed, str) or not isinstance(body_prev, str) or not isinstance(data, dict):
+                raise TypeError
+            digest = _digest(body_prev, body)
+        except (ValueError, TypeError, KeyError, AttributeError):
+            problems.append(t("verify.line_unreadable").format(n=n))
+            continue                             # la ligne suivante signalera le chaînage rompu
+        if body_prev != prev:
+            problems.append(t("verify.chain_broken").format(n=n))
+        if digest != claimed:
+            problems.append(t("verify.line_modified").format(n=n))
         prev = claimed
-        f = body["data"].get("file")
-        if f and body["data"].get("sha256"):
-            p = run_dir / f
+        f = data.get("file")
+        if f and data.get("sha256"):
+            p = run_dir / str(f)
             if not p.exists():
-                problems.append(f"{f} : fichier manquant")
-            elif sha256_file(p) != body["data"]["sha256"]:
-                problems.append(f"{f} : fichier modifié après coup")
+                problems.append(t("verify.file_missing").format(f=f))
+            elif sha256_file(p) != data["sha256"]:
+                problems.append(t("verify.file_modified").format(f=f))
     manifest = run_dir / "manifest.json"
     if manifest.exists():
-        m = json.loads(manifest.read_text())
+        try:
+            m = json.loads(manifest.read_text(encoding="utf-8"))
+            files = m.get("files", [])
+            if not isinstance(files, list):
+                raise TypeError
+        except (OSError, ValueError, TypeError, AttributeError):
+            problems.append(t("verify.manifest_unreadable"))
+            return not problems, problems
         if m.get("trail_head") != prev:
-            problems.append("manifest.json ne correspond pas à la fin de la piste")
-        for f in m.get("files", []):
-            p = run_dir / f["path"]
+            problems.append(t("verify.manifest_head"))
+        for f in files:
+            try:
+                path, digest = str(f["path"]), f["sha256"]
+            except (TypeError, KeyError):
+                problems.append(t("verify.manifest_unreadable"))
+                continue
+            p = run_dir / path
             if not p.exists():
-                problems.append(f"{f['path']} : fichier manquant")
-            elif sha256_file(p) != f["sha256"]:
-                problems.append(f"{f['path']} : fichier modifié après émission")
+                problems.append(t("verify.file_missing").format(f=path))
+            elif sha256_file(p) != digest:
+                problems.append(t("verify.file_issued_modified").format(f=path))
     else:
-        problems.append("manifest.json absent")
+        problems.append(t("verify.no_manifest"))
     return not problems, problems

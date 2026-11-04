@@ -42,18 +42,24 @@ def main():
 
     v = sub.add_parser("verify", help="vérifier l'intégrité d'un dossier d'audit")
     v.add_argument("run_dir", type=Path)
+    v.add_argument("--lang", choices=["fr", "en"], help="langue des messages (sinon ATTEST_LANG)")
     a = ap.parse_args(argv)
 
+    if a.lang:
+        os.environ["ATTEST_LANG"] = a.lang
+
     if a.cmd == "verify":
+        from .i18n import t
         from .trail import verify
-        ok, problems = verify(a.run_dir)
-        print("Intégrité vérifiée : piste chaînée, preuves et rapport intacts." if ok else "ALTÉRATION DÉTECTÉE :")
+        if not a.run_dir.is_dir():
+            ok, problems = False, [t("verify.no_dir").format(d=a.run_dir)]
+        else:
+            ok, problems = verify(a.run_dir, lang=config.lang())
+        print(t("verify.ok") if ok else t("verify.tampered"))
         for p in problems:
             print("  -", p)
         sys.exit(0 if ok else 1)
 
-    if a.lang:
-        os.environ["ATTEST_LANG"] = a.lang
     from . import llm, pipeline                  # après le choix de la langue
     llm.check_backend()                          # échec immédiat : backend inconnu ou clé absente
 
