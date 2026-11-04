@@ -1,0 +1,39 @@
+{
+  "id": "20261104-060119-code-meta",
+  "utc": "20261104-060119",
+  "kind": "code",
+  "backend": "meta",
+  "note": "cycle 4 : audit de code de reference sur 563f39e (variance C1/C6)",
+  "commit": "563f39e",
+  "workflow_run": "41781989442",
+  "status": "success",
+  "budget_spent_usd": 0.9581,
+  "priced_usd": 0.7381,
+  "unpriced": [
+    "sam-3.1"
+  ],
+  "audits": [
+    {
+      "folder": "code/studio/20261104-055531-9eb4/audit",
+      "controls": 10,
+      "status_before": [
+        "fail",
+        "fail",
+        "fail",
+        "fail",
+        "fail",
+        "fail",
+        "fail",
+        "pass",
+        "fail",
+        "fail"
+      ],
+      "status_after": [],
+      "evidence_errors": 0,
+      "opinion_initial": "insuffisant",
+      "opinion_final": "insuffisant",
+      "injection_detected": false,
+      "cost_usd": 0.7380895
+    }
+  ]
+}
