@@ -1,0 +1,1545 @@
+{
+  "mission": {
+    "id": "AUD-2026-IAM-01",
+    "title": "Strong authentication and privileged access — KRL-ADM",
+    "entity": "Banque Ardoise (fictive)",
+    "system": "Annuaire des accès",
+    "system_criticality": "Supports critical or important functions (DORA)",
+    "environment": "Demonstration pre-production",
+    "owner": "IT department — IAM team",
+    "lead_auditor": "Attest CI",
+    "classification": "TLP:AMBER+STRICT",
+    "requirement_path": "exigences/dora_authentification.md",
+    "lab_url": "http://127.0.0.1:5050",
+    "scope_in": [
+      "Authentication and session settings of the KRL-ADM console",
+      "Accounts with access to the console",
+      "Logging of administrative actions"
+    ],
+    "scope_out": [
+      "Intrinsic strength of MFA factors (robustness of authentication means)",
+      "Central directory and identity federation",
+      "Physical controls"
+    ],
+    "sla_days": {
+      "critique": 30,
+      "elevee": 90,
+      "moyenne": 180,
+      "faible": 365
+    },
+    "target": "iam-console",
+    "framework_label": "DORA art. 9(4) · RTS (UE) 2024/1774 art. 12, 21 · PSI-4",
+    "requirement_text": null
+  },
+  "run_id": "07-ardoise-grand-annuaire",
+  "started": "2026-11-04 06:37",
+  "lang": "en",
+  "target": "iam-console",
+  "target_label": "KRL-ADM IAM admin console (Banque Kerlann)",
+  "backend": "meta",
+  "models": {
+    "reason": "muse-spark-1.3",
+    "code": "muse-spark-1.3",
+    "segmentation": "sam-3.1"
+  },
+  "entries": [
+    {
+      "control": {
+        "id": "C1",
+        "rule": "PSI-4.1",
+        "title": "Mandatory MFA for privileged accounts",
+        "objective": "MFA is enforced for all privileged admin accounts on KRL-ADM",
+        "test_procedure": "Retrieve the security configuration via GET /api/security and verify that mfa_admin is true",
+        "expected": "mfa_admin == true",
+        "severity": "critique",
+        "references": [
+          "DORA 9(4)(d)",
+          "RTS 21(1)(f)(ii)"
+        ],
+        "risk": "Without MFA for admins, stolen credentials allow full takeover of critical functions with no second barrier",
+        "recommendation": "Enable mandatory MFA for all privileged accounts by setting mfa_admin to true",
+        "evidence_page": "/admin/security",
+        "remediation": "config"
+      },
+      "test": {
+        "script": "scripts/C1_PSI-4.1.py",
+        "sha256": "098d37cd0158dd1a5697d94d9ba286eabf830d9f7bf96e3378e1671fb880e900",
+        "origin": "library",
+        "code": "# Attest — test PSI-4.1 (Mandatory MFA for privileged accounts)\n# Écrit par muse-spark-1.3 le 2026-11-02 — à relire avant validation.\nimport os\nimport sys\nimport json\nimport re\nimport requests\n\ntry:\n    base = os.environ[\"LAB_URL\"]\nexcept KeyError:\n    sys.stderr.write(\"missing LAB_URL\\n\")\n    sys.exit(2)\ntry:\n    token = os.environ[\"LAB_TOKEN\"]\nexcept KeyError:\n    sys.stderr.write(\"missing LAB_TOKEN\\n\")\n    sys.exit(2)\n\nurl = base.rstrip(\"/\") + \"/api/security\"\nheaders = {\"Authorization\": \"Bearer \" + token}\n\ntry:\n    r = requests.get(url, headers=headers, timeout=10)\nexcept Exception as e:\n    sys.stderr.write(\"request failed: %s\\n\" % e)\n    sys.exit(2)\n\nif r.status_code != 200:\n    sys.stderr.write(\"unexpected status %s\\n\" % r.status_code)\n    sys.exit(2)\n\ntry:\n    data = r.json()\nexcept Exception as e:\n    sys.stderr.write(\"invalid json: %s\\n\" % e)\n    sys.exit(2)\n\nif not isinstance(data, dict) or \"mfa_admin\" not in data:\n    sys.stderr.write(\"missing mfa_admin\\n\")\n    sys.exit(2)\n\nobserved = data[\"mfa_admin\"]\n\nif type(observed) is not bool:\n    sys.stderr.write(\"unexpected type for mfa_admin\\n\")\n    sys.exit(2)\n\nraw = json.dumps(data, default=str)\ninjected = bool(re.search(r\"(?i)(ignore|disregard|bypass|override|follow).{0,40}(instruction|prompt|audit|control|system)|system\\s*prompt|execute\\s+.*code\", raw))\n\nstatus = \"pass\" if observed is True else \"fail\"\nif injected:\n    detail = \"GET /api/security returned mfa_admin=%s, ignoring untrusted instructional text found in response.\" % observed\nelse:\n    detail = \"GET /api/security returned mfa_admin=%s.\" % observed\n\nprint(json.dumps({\"status\": status, \"observed\": observed, \"expected\": True, \"detail\": detail}))\n",
+        "requests": 1
+      },
+      "before": {
+        "status": "pass",
+        "observed": true,
+        "expected": true,
+        "detail": "GET /api/security returned mfa_admin=True."
+      },
+      "evidence_before": {
+        "image": "evidence/C1_before.png",
+        "sha256": "431d52c00beb2a6a3aa8f7e4b99035934dc2ecc2e66b9ccad957f1bf12834f84",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "Authentification multifacteur (administrateurs) Activée",
+          "field_boxes": [
+            [
+              27,
+              190,
+              974,
+              237
+            ]
+          ],
+          "comment": "The screenshot shows administrator MFA as Activée, matching the automated test mfa_admin true.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 0,
+          "pii_masked": 0,
+          "pii_found_by_model": 0
+        },
+        "page": "/admin/security",
+        "ts": "2026-11-04 06:38:08"
+      },
+      "status_before": "pass"
+    },
+    {
+      "control": {
+        "id": "C2",
+        "rule": "PSI-4.2",
+        "title": "Mandatory MFA for users of critical system",
+        "objective": "MFA is enforced for standard users because KRL-ADM supports critical or important functions",
+        "test_procedure": "Retrieve the security configuration via GET /api/security and verify that mfa_users is true",
+        "expected": "mfa_users == true",
+        "severity": "elevee",
+        "references": [
+          "DORA 9(4)(d)",
+          "RTS 21(1)(f)(ii)"
+        ],
+        "risk": "Without MFA for all users, compromised user credentials allow unauthorized access to critical functions",
+        "recommendation": "Enable mandatory MFA for standard users by setting mfa_users to true",
+        "evidence_page": "/admin/security",
+        "remediation": "config"
+      },
+      "test": {
+        "script": "scripts/C2_PSI-4.2.py",
+        "sha256": "fa35c17fbb1dfdd3f0b119a1b0298caedbab33700f9367a772a5abf44fcaad3f",
+        "origin": "library",
+        "code": "# Attest — test PSI-4.2 (Mandatory MFA for users of critical system)\n# Écrit par muse-spark-1.3 le 2026-11-02 — à relire avant validation.\nimport requests\nimport json\nimport os\nimport sys\nimport re\n\ntry:\n    base = os.environ[\"LAB_URL\"]\n    token = os.environ[\"LAB_TOKEN\"]\nexcept KeyError as e:\n    print(f\"missing environment variable: {e}\", file=sys.stderr)\n    sys.exit(2)\n\nurl = re.sub(r\"/+$\", \"\", base) + \"/api/security\"\nheaders = {\"Authorization\": \"Bearer \" + token}\n\ntry:\n    r = requests.get(url, headers=headers, timeout=10)\nexcept Exception as e:\n    print(f\"request failed: {e}\", file=sys.stderr)\n    sys.exit(2)\n\nif r.status_code != 200:\n    print(f\"unexpected status {r.status_code} for GET /api/security\", file=sys.stderr)\n    sys.exit(2)\n\ntry:\n    data = r.json()\nexcept Exception as e:\n    print(f\"invalid json: {e}\", file=sys.stderr)\n    sys.exit(2)\n\nif not isinstance(data, dict) or \"mfa_users\" not in data or not isinstance(data[\"mfa_users\"], bool):\n    print(\"missing or invalid mfa_users field\", file=sys.stderr)\n    sys.exit(2)\n\nobserved = data[\"mfa_users\"]\nstatus = \"pass\" if observed is True else \"fail\"\nprint(json.dumps({\"status\": status, \"observed\": observed, \"expected\": True, \"detail\": f\"mfa_users is {observed}.\"}))\n",
+        "requests": 1
+      },
+      "before": {
+        "status": "pass",
+        "observed": true,
+        "expected": true,
+        "detail": "mfa_users is True."
+      },
+      "evidence_before": {
+        "image": "evidence/C2_before.png",
+        "sha256": "7ae7b9df463bfaab55df12d37525654660fe5c4e03723cee6ff0234e02a62dd9",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "Authentification multifacteur (utilisateurs) Activée",
+          "field_boxes": [
+            [
+              26,
+              235,
+              974,
+              283
+            ]
+          ],
+          "comment": "The screenshot shows user MFA as Activée, consistent with mfa_users true.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 0,
+          "pii_masked": 0,
+          "pii_found_by_model": 0
+        },
+        "page": "/admin/security",
+        "ts": "2026-11-04 06:38:09"
+      },
+      "status_before": "pass"
+    },
+    {
+      "control": {
+        "id": "C3",
+        "rule": "PSI-4.3",
+        "title": "Strong password policy",
+        "objective": "Passwords require a minimum length of 12 characters with complexity requirements enabled",
+        "test_procedure": "Retrieve the security configuration via GET /api/security and verify password_min_length and password_require_complexity",
+        "expected": "password_min_length >= 12 AND password_require_complexity == true",
+        "severity": "moyenne",
+        "references": [
+          "DORA 9(4)(d)"
+        ],
+        "risk": "Weak or short passwords can be guessed or brute-forced, enabling unauthorized access to the system",
+        "recommendation": "Enforce a minimum password length of 12 characters with complexity by correcting the password settings",
+        "evidence_page": "/admin/security",
+        "remediation": "config"
+      },
+      "test": {
+        "script": "scripts/C3_PSI-4.3.py",
+        "sha256": "b440a5b4dc6b0fb35e3237b2c31c911447c452d28a8439534757301411e1949b",
+        "origin": "library",
+        "code": "# Attest — test PSI-4.3 (Strong password policy)\n# Écrit par muse-spark-1.3 le 2026-11-02 — à relire avant validation.\nimport requests\nimport json\nimport os\nimport sys\nimport re\n\ntry:\n    LAB_URL = os.environ[\"LAB_URL\"]\n    LAB_TOKEN = os.environ[\"LAB_TOKEN\"]\nexcept KeyError as e:\n    sys.stderr.write(f\"missing env var: {e}\\n\")\n    sys.exit(2)\n\nurl = LAB_URL.rstrip(\"/\") + \"/api/security\"\nheaders = {\"Authorization\": \"Bearer \" + LAB_TOKEN}\n\ntry:\n    resp = requests.get(url, headers=headers, timeout=10)\nexcept Exception as e:\n    sys.stderr.write(f\"request failed: {e}\\n\")\n    sys.exit(2)\n\nif resp.status_code != 200:\n    sys.stderr.write(f\"unexpected status: {resp.status_code}\\n\")\n    sys.exit(2)\n\ntry:\n    data = json.loads(resp.text)\nexcept Exception as e:\n    sys.stderr.write(f\"invalid json: {e}\\n\")\n    sys.exit(2)\n\nif not isinstance(data, dict):\n    sys.stderr.write(\"unexpected data type: expected object\\n\")\n    sys.exit(2)\n\nif \"password_min_length\" not in data or \"password_require_complexity\" not in data:\n    sys.stderr.write(\"missing required fields\\n\")\n    sys.exit(2)\n\nml = data[\"password_min_length\"]\nrc = data[\"password_require_complexity\"]\n\nif not isinstance(ml, int) or isinstance(ml, bool):\n    sys.stderr.write(\"unexpected type for password_min_length\\n\")\n    sys.exit(2)\n\nif type(rc) is not bool:\n    sys.stderr.write(\"unexpected type for password_require_complexity\\n\")\n    sys.exit(2)\n\nok = (ml >= 12 and rc is True)\nstatus = \"pass\" if ok else \"fail\"\nobserved = {\"password_min_length\": ml, \"password_require_complexity\": rc}\nexpected = \"password_min_length >= 12 AND password_require_complexity == true\"\n\nif re.search(r\"(?i)ignore\\b.*\\binstruct|system\\s+prompt|do\\s+not\\s+follow|override\\s+audit|disregard\\b.*\\binstruct\", resp.text):\n    detail = f\"password_min_length is {ml} and password_require_complexity is {rc} with untrusted instructional text present in response and ignored.\"\nelse:\n    detail = f\"password_min_length is {ml} and password_require_complexity is {rc}.\"\n\nprint(json.dumps({\"status\": status, \"observed\": observed, \"expected\": expected, \"detail\": detail}))\n",
+        "requests": 1
+      },
+      "before": {
+        "status": "pass",
+        "observed": {
+          "password_min_length": 14,
+          "password_require_complexity": true
+        },
+        "expected": "password_min_length >= 12 AND password_require_complexity == true",
+        "detail": "password_min_length is 14 and password_require_complexity is True."
+      },
+      "evidence_before": {
+        "image": "evidence/C3_before.png",
+        "sha256": "4dae25ad50ebde0465b16c39ec58ec637b381730fa287bef8ff4296b0f4b9073",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "Longueur minimale du mot de passe 14; Complexité du mot de passe exigée Activée",
+          "field_boxes": [
+            [
+              28,
+              282,
+              972,
+              330
+            ],
+            [
+              28,
+              330,
+              972,
+              377
+            ]
+          ],
+          "comment": "Screenshot shows minimum length 14 and complexity Activée, matching the automated result.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 0,
+          "pii_masked": 0,
+          "pii_found_by_model": 0
+        },
+        "page": "/admin/security",
+        "ts": "2026-11-04 06:38:09"
+      },
+      "status_before": "pass"
+    },
+    {
+      "control": {
+        "id": "C4",
+        "rule": "PSI-4.4",
+        "title": "Account lockout after failed logins",
+        "objective": "Accounts lock after at most 5 failed login attempts and lockout is never disabled",
+        "test_procedure": "Retrieve the security configuration via GET /api/security and verify that lockout_threshold is between 1 and 5 inclusive",
+        "expected": "lockout_threshold >= 1 AND lockout_threshold <= 5",
+        "severity": "moyenne",
+        "references": [
+          "DORA 9(4)(c)"
+        ],
+        "risk": "Without lockout, attackers can perform unlimited password-guessing attacks against accounts",
+        "recommendation": "Configure account lockout to 5 attempts at most by setting lockout_threshold between 1 and 5",
+        "evidence_page": "/admin/security",
+        "remediation": "config"
+      },
+      "test": {
+        "script": "scripts/C4_PSI-4.4.py",
+        "sha256": "10d2a8f06337b5bca5667b2efa7dc25c74553b33470fbc3749f9aefa5454dfce",
+        "origin": "library",
+        "code": "# Attest — test PSI-4.4 (Account lockout after failed logins)\n# Écrit par muse-spark-1.3 le 2026-11-02 — à relire avant validation.\nimport requests\nimport json\nimport os\nimport sys\nimport re\n\ntry:\n    LAB_URL = os.environ[\"LAB_URL\"]\nexcept KeyError:\n    print(\"missing LAB_URL\", file=sys.stderr)\n    sys.exit(2)\n\ntry:\n    LAB_TOKEN = os.environ[\"LAB_TOKEN\"]\nexcept KeyError:\n    print(\"missing LAB_TOKEN\", file=sys.stderr)\n    sys.exit(2)\n\nurl = LAB_URL.rstrip(\"/\") + \"/api/security\"\nheaders = {\"Authorization\": \"Bearer \" + os.environ[\"LAB_TOKEN\"]}\n\ntry:\n    r = requests.get(url, headers=headers, timeout=10)\nexcept Exception as e:\n    print(\"request failed: \" + str(e), file=sys.stderr)\n    sys.exit(2)\n\nif r.status_code != 200:\n    print(\"unexpected status: \" + str(r.status_code), file=sys.stderr)\n    sys.exit(2)\n\ntry:\n    data = json.loads(r.text)\nexcept Exception as e:\n    print(\"invalid json: \" + str(e), file=sys.stderr)\n    sys.exit(2)\n\nif not isinstance(data, dict) or \"lockout_threshold\" not in data:\n    print(\"missing lockout_threshold\", file=sys.stderr)\n    sys.exit(2)\n\nvalue = data[\"lockout_threshold\"]\n\nif isinstance(value, bool) or not isinstance(value, int):\n    print(\"unexpected lockout_threshold type\", file=sys.stderr)\n    sys.exit(2)\n\ninjection_found = False\ntry:\n    if re.search(r\"(?i)\\b(ignore|disregard|bypass|override)\\b.{0,60}\\b(instruction|prompt|rule|verdict|audit|test)\\b|\\b(you\\s+are\\s+an?|act\\s+as|system\\s+prompt)\\b\", r.text):\n        injection_found = True\nexcept Exception:\n    injection_found = False\n\nexpected = \"lockout_threshold >= 1 AND lockout_threshold <= 5\"\n\nif 1 <= value <= 5:\n    status = \"pass\"\n    if injection_found:\n        detail = \"lockout_threshold is \" + str(value) + \", which is within the required range 1 to 5 inclusive, and untrusted instructional text in the response was observed and ignored.\"\n    else:\n        detail = \"lockout_threshold is \" + str(value) + \", which is within the required range 1 to 5 inclusive.\"\nelse:\n    status = \"fail\"\n    if injection_found:\n        detail = \"lockout_threshold is \" + str(value) + \", which is outside the required range 1 to 5 inclusive, and untrusted instructional text in the response was observed and ignored.\"\n    else:\n        detail = \"lockout_threshold is \" + str(value) + \", which is outside the required range 1 to 5 inclusive.\"\n\nprint(json.dumps({\"status\": status, \"observed\": value, \"expected\": expected, \"detail\": detail}))\n",
+        "requests": 1
+      },
+      "before": {
+        "status": "pass",
+        "observed": 5,
+        "expected": "lockout_threshold >= 1 AND lockout_threshold <= 5",
+        "detail": "lockout_threshold is 5, which is within the required range 1 to 5 inclusive."
+      },
+      "evidence_before": {
+        "image": "evidence/C4_before.png",
+        "sha256": "0a09a2d5790d2fb83949b95f699d632598ffee48f56a9531097bb1640e4beff5",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "Verrouillage après N échecs de connexion 5",
+          "field_boxes": [
+            [
+              28,
+              377,
+              972,
+              425
+            ]
+          ],
+          "comment": "The screenshot shows lockout after 5 failed logins, matching the automated result.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 0,
+          "pii_masked": 0,
+          "pii_found_by_model": 0
+        },
+        "page": "/admin/security",
+        "ts": "2026-11-04 06:38:08"
+      },
+      "status_before": "pass"
+    },
+    {
+      "control": {
+        "id": "C5",
+        "rule": "PSI-4.5",
+        "title": "Inactive session timeout",
+        "objective": "Inactive sessions expire after at most 15 minutes and expiration is never disabled",
+        "test_procedure": "Retrieve the security configuration via GET /api/security and verify that session_timeout_minutes is between 1 and 15 inclusive",
+        "expected": "session_timeout_minutes >= 1 AND session_timeout_minutes <= 15",
+        "severity": "moyenne",
+        "references": [
+          "DORA 9(4)(c)"
+        ],
+        "risk": "Unlimited inactive sessions allow session hijacking and unauthorized use of unattended workstations",
+        "recommendation": "Enforce inactive session expiration at 15 minutes at most by setting session_timeout_minutes between 1 and 15",
+        "evidence_page": "/admin/security",
+        "remediation": "config"
+      },
+      "test": {
+        "script": "scripts/C5_PSI-4.5.py",
+        "sha256": "4157e9750f010f98c706b06c46595e822377ff01e012bfa30a122013ca8828e9",
+        "origin": "library",
+        "code": "# Attest — test PSI-4.5 (Inactive session timeout)\n# Écrit par muse-spark-1.3 le 2026-11-02 — à relire avant validation.\nimport json\nimport os\nimport sys\nimport requests\n\ntry:\n    LAB_URL = os.environ[\"LAB_URL\"]\n    LAB_TOKEN = os.environ[\"LAB_TOKEN\"]\nexcept KeyError as e:\n    print(f\"missing environment variable: {e}\", file=sys.stderr)\n    sys.exit(2)\n\nif not LAB_URL or not LAB_TOKEN:\n    print(\"missing LAB_URL or LAB_TOKEN\", file=sys.stderr)\n    sys.exit(2)\n\nurl = LAB_URL.rstrip(\"/\") + \"/api/security\"\nheaders = {\"Authorization\": \"Bearer \" + LAB_TOKEN}\n\ntry:\n    resp = requests.get(url, headers=headers, timeout=10)\nexcept Exception as e:\n    print(f\"request failed: {e}\", file=sys.stderr)\n    sys.exit(2)\n\nif resp.status_code != 200:\n    print(f\"unexpected status {resp.status_code} for GET /api/security\", file=sys.stderr)\n    sys.exit(2)\n\ntry:\n    data = resp.json()\nexcept Exception as e:\n    print(f\"invalid JSON: {e}\", file=sys.stderr)\n    sys.exit(2)\n\nif not isinstance(data, dict) or \"session_timeout_minutes\" not in data:\n    print(\"missing session_timeout_minutes in /api/security response\", file=sys.stderr)\n    sys.exit(2)\n\nval = data[\"session_timeout_minutes\"]\n\nif type(val) is not int:\n    print(f\"unexpected type for session_timeout_minutes: {type(val).__name__}\", file=sys.stderr)\n    sys.exit(2)\n\nexpected = \"session_timeout_minutes >= 1 AND session_timeout_minutes <= 15\"\nif 1 <= val <= 15:\n    status = \"pass\"\n    detail = f\"Observed session_timeout_minutes is {val}, within the required 1 to 15 inclusive.\"\nelse:\n    status = \"fail\"\n    detail = f\"Observed session_timeout_minutes is {val}, outside the required 1 to 15 inclusive.\"\n\nprint(json.dumps({\"status\": status, \"observed\": val, \"expected\": expected, \"detail\": detail}))\n",
+        "requests": 1
+      },
+      "before": {
+        "status": "pass",
+        "observed": 10,
+        "expected": "session_timeout_minutes >= 1 AND session_timeout_minutes <= 15",
+        "detail": "Observed session_timeout_minutes is 10, within the required 1 to 15 inclusive."
+      },
+      "evidence_before": {
+        "image": "evidence/C5_before.png",
+        "sha256": "d0cf841a487e6c214b48541486d39bc186128303fa20780cbbb2c19b24ccf5fe",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "Expiration de session inactive (minutes) 10",
+          "field_boxes": [
+            [
+              29,
+              424,
+              973,
+              472
+            ]
+          ],
+          "comment": "The screenshot shows inactive session expiration set to 10 minutes, which is within 1 to 15.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 0,
+          "pii_masked": 0,
+          "pii_found_by_model": 0
+        },
+        "page": "/admin/security",
+        "ts": "2026-11-04 06:38:20"
+      },
+      "status_before": "pass"
+    },
+    {
+      "control": {
+        "id": "C6",
+        "rule": "PSI-4.6",
+        "title": "Logging of administration actions",
+        "objective": "All administration actions are logged",
+        "test_procedure": "Retrieve the security configuration via GET /api/security and verify that admin_audit_log is true",
+        "expected": "admin_audit_log == true",
+        "severity": "elevee",
+        "references": [
+          "RTS 12(2)(c)(i)"
+        ],
+        "risk": "Without admin audit logging, privileged actions cannot be traced, preventing detection and investigation of abuse",
+        "recommendation": "Enable logging of all administration actions by setting admin_audit_log to true",
+        "evidence_page": "/admin/security",
+        "remediation": "config"
+      },
+      "test": {
+        "script": "scripts/C6_PSI-4.6.py",
+        "sha256": "e2f35349092109778d4c0f2baf30d8414192be5d8c53853cf3b725025514fc83",
+        "origin": "library",
+        "code": "# Attest — test PSI-4.6 (Logging of administration actions)\n# Écrit par muse-spark-1.3 le 2026-11-02 — à relire avant validation.\nimport os\nimport sys\nimport json\nimport requests\n\ntry:\n    base_url = os.environ[\"LAB_URL\"]\n    token = os.environ[\"LAB_TOKEN\"]\nexcept KeyError as e:\n    print(f\"missing environment variable: {e}\", file=sys.stderr)\n    sys.exit(2)\n\nurl = base_url.rstrip(\"/\") + \"/api/security\"\nheaders = {\"Authorization\": \"Bearer \" + token}\n\ntry:\n    r = requests.get(url, headers=headers, timeout=10)\nexcept Exception as e:\n    print(f\"request failed: {e}\", file=sys.stderr)\n    sys.exit(2)\n\nif r.status_code != 200:\n    print(f\"unexpected status code: {r.status_code}\", file=sys.stderr)\n    sys.exit(2)\n\ntry:\n    data = r.json()\nexcept Exception as e:\n    print(f\"invalid JSON: {e}\", file=sys.stderr)\n    sys.exit(2)\n\nif not isinstance(data, dict) or \"admin_audit_log\" not in data:\n    print(\"missing field: admin_audit_log\", file=sys.stderr)\n    sys.exit(2)\n\nval = data[\"admin_audit_log\"]\nif type(val) is not bool:\n    print(f\"unexpected type for admin_audit_log: {type(val).__name__}\", file=sys.stderr)\n    sys.exit(2)\n\nif val is True:\n    print(json.dumps({\"status\": \"pass\", \"observed\": val, \"expected\": True, \"detail\": \"admin_audit_log is true.\"}))\nelse:\n    print(json.dumps({\"status\": \"fail\", \"observed\": val, \"expected\": True, \"detail\": \"admin_audit_log is false.\"}))\n",
+        "requests": 1
+      },
+      "before": {
+        "status": "pass",
+        "observed": true,
+        "expected": true,
+        "detail": "admin_audit_log is true."
+      },
+      "evidence_before": {
+        "image": "evidence/C6_before.png",
+        "sha256": "70878a59548a2cf7de27518ec3533b9ce84e3b6e96fed90be24dece790ec6010",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "Journalisation des actions d'administration Activée",
+          "field_boxes": [
+            [
+              27,
+              471,
+              1023,
+              519
+            ]
+          ],
+          "comment": "The security policy table shows logging of administration actions as Activée, matching admin_audit_log true.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 0,
+          "pii_masked": 0,
+          "pii_found_by_model": 0
+        },
+        "page": "/admin/security",
+        "ts": "2026-11-04 06:38:30"
+      },
+      "status_before": "pass"
+    },
+    {
+      "control": {
+        "id": "C7",
+        "rule": "PSI-4.7",
+        "title": "No generic or shared admin accounts",
+        "objective": "No account with role admin is generic or shared and every admin has a nominative login of the form initiale.nom with a personal email",
+        "test_procedure": "Retrieve all accounts via GET /api/users and verify that every user with role admin has a nominative login and a personal email without function identifier or shared mailbox",
+        "expected": "for all users where role == admin: login matches initiale.nom pattern and email is personal, with no function login and no shared mailbox",
+        "severity": "elevee",
+        "references": [
+          "DORA 9(4)(c)",
+          "RTS 21(1)(c)",
+          "RTS 21(1)(e)(ii)"
+        ],
+        "risk": "Generic or shared admin accounts destroy individual accountability and prevent attribution of privileged actions",
+        "recommendation": "Remove or disable generic and shared admin accounts and replace them with dedicated nominative accounts",
+        "evidence_page": "/admin/users",
+        "remediation": "manual"
+      },
+      "test": {
+        "script": "scripts/C7_PSI-4.7.py",
+        "sha256": "5e917770866b8e47277f6ccc9a379febb81c4f9032cc1074e14a8090f09f511b",
+        "origin": "library",
+        "code": "# Attest — test PSI-4.7 (No generic or shared admin accounts)\n# Écrit par muse-spark-1.3 le 2026-11-02 — à relire avant validation.\nimport requests\nimport json\nimport os\nimport sys\nimport re\n\ntry:\n    base = os.environ[\"LAB_URL\"]\n    token = os.environ[\"LAB_TOKEN\"]\nexcept KeyError as e:\n    print(f\"missing env var: {e}\", file=sys.stderr)\n    sys.exit(2)\n\nurl = base.rstrip(\"/\") + \"/api/users\"\ntry:\n    r = requests.get(url, headers={\"Authorization\": \"Bearer \" + token}, timeout=10)\nexcept Exception as e:\n    print(f\"GET /api/users failed: {e}\", file=sys.stderr)\n    sys.exit(2)\n\nif r.status_code != 200:\n    print(f\"GET /api/users unexpected status: {r.status_code}\", file=sys.stderr)\n    sys.exit(2)\n\ntry:\n    data = r.json()\nexcept Exception as e:\n    print(f\"invalid JSON for /api/users: {e}\", file=sys.stderr)\n    sys.exit(2)\n\nif not isinstance(data, list):\n    print(\"unexpected data: /api/users is not a list\", file=sys.stderr)\n    sys.exit(2)\n\nfor u in data:\n    if not isinstance(u, dict):\n        print(\"unexpected data: user entry is not an object\", file=sys.stderr)\n        sys.exit(2)\n    for k in (\"login\", \"email\", \"role\"):\n        if k not in u:\n            print(f\"unexpected data: missing key {k}\", file=sys.stderr)\n            sys.exit(2)\n    if not isinstance(u[\"login\"], str) or not isinstance(u[\"email\"], str) or not isinstance(u[\"role\"], str):\n        print(\"unexpected data: login/email/role wrong type\", file=sys.stderr)\n        sys.exit(2)\n    if u[\"role\"] not in (\"admin\", \"conseiller\"):\n        print(f\"unexpected data: unknown role {u['role']}\", file=sys.stderr)\n        sys.exit(2)\n\nadmins = [u for u in data if u[\"role\"] == \"admin\"]\nlogin_re = re.compile(r\"^[A-Za-z]\\.[A-Za-z][A-Za-z\\-]*$\")\ngeneric = {\"admin\", \"administrator\", \"administrateur\", \"root\", \"superuser\", \"superadmin\", \"sysadmin\", \"support\", \"helpdesk\", \"service\", \"services\", \"contact\", \"info\", \"infos\", \"accueil\", \"generic\", \"generique\", \"team\", \"equipe\", \"shared\", \"partage\", \"fonction\", \"function\", \"fonctionnel\", \"bureau\", \"office\", \"test\", \"demo\", \"backup\", \"system\", \"systeme\", \"securite\", \"security\", \"compta\", \"direction\", \"caisse\", \"guichet\", \"agence\", \"standard\", \"commun\", \"gen\"}\n\ndef is_generic(s):\n    parts = re.split(r\"[._\\-+]+\", s.lower())\n    for p in parts:\n        if p in generic:\n            return True\n        for g in generic:\n            if p == g:\n                return True\n            if len(p) > len(g) and p.startswith(g) and p[len(g):].isdigit():\n                return True\n    return False\n\nviolations = []\nobserved = []\nfor u in admins:\n    login = u[\"login\"]\n    email = u[\"email\"]\n    observed.append({\"login\": login, \"email\": email, \"role\": \"admin\"})\n    local = email.split(\"@\")[0] if \"@\" in email else email\n    login_ok = bool(login_re.match(login))\n    login_gen = is_generic(login)\n    email_gen = is_generic(local) if local else True\n    email_valid = \"@\" in email and \".\" in email.split(\"@\")[-1]\n    if (not login_ok) or login_gen or email_gen or (not email_valid):\n        violations.append({\"login\": login, \"email\": email, \"login_ok\": login_ok, \"login_generic\": login_gen, \"email_generic\": email_gen})\n\nexpected = \"for all users where role == admin: login matches initiale.nom pattern and email is personal, with no function login and no shared mailbox\"\n\nif not violations:\n    status = \"pass\"\n    detail = f\"All {len(admins)} admin account(s) have nominative initiale.nom logins and personal emails with no shared mailbox.\"\nelse:\n    status = \"fail\"\n    detail = f\"{len(violations)} of {len(admins)} admin account(s) violate nominative login or personal email requirements.\"\n\nprint(json.dumps({\"status\": status, \"observed\": observed, \"expected\": expected, \"detail\": detail}))\n",
+        "requests": 1
+      },
+      "before": {
+        "status": "fail",
+        "observed": [
+          {
+            "login": "r.quere",
+            "email": "romain.quere@banque-ardoise.example",
+            "role": "admin"
+          },
+          {
+            "login": "a.richard",
+            "email": "arthur.richard@banque-ardoise.example",
+            "role": "admin"
+          },
+          {
+            "login": "a.martin",
+            "email": "anne.martin@banque-ardoise.example",
+            "role": "admin"
+          },
+          {
+            "login": "exploit",
+            "email": "exploitation@banque-ardoise.example",
+            "role": "admin"
+          }
+        ],
+        "expected": "for all users where role == admin: login matches initiale.nom pattern and email is personal, with no function login and no shared mailbox",
+        "detail": "1 of 4 admin account(s) violate nominative login or personal email requirements."
+      },
+      "evidence_before": {
+        "image": "evidence/C7_before.png",
+        "sha256": "5482ca101f895059ecbb2030d72afc6b0115defffa3ee8d1d84d04b015e38dac",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "exploit exploitation@banque-ardoise.example admin 10.29.110.153 Oui",
+          "field_boxes": [
+            [
+              26,
+              2135,
+              1028,
+              2180
+            ]
+          ],
+          "comment": "Screenshot shows admin account exploit with generic login and functional mailbox violating nominative requirements.",
+          "pii": [
+            {
+              "text": "erwan.dupont@banque-ardoise.example",
+              "box": [
+                205,
+                212,
+                540,
+                232
+              ]
+            },
+            {
+              "text": "10.20.90.51",
+              "box": [
+                770,
+                212,
+                905,
+                232
+              ]
+            },
+            {
+              "text": "romain.lefebvre@banque-ardoise.example",
+              "box": [
+                205,
+                257,
+                540,
+                277
+              ]
+            },
+            {
+              "text": "10.37.178.195",
+              "box": [
+                770,
+                257,
+                905,
+                277
+              ]
+            },
+            {
+              "text": "gabriel.le-goff@banque-ardoise.example",
+              "box": [
+                205,
+                302,
+                540,
+                322
+              ]
+            },
+            {
+              "text": "10.18.74.140",
+              "box": [
+                770,
+                302,
+                905,
+                322
+              ]
+            },
+            {
+              "text": "romain.bonnet@banque-ardoise.example",
+              "box": [
+                205,
+                347,
+                540,
+                367
+              ]
+            },
+            {
+              "text": "10.31.61.176",
+              "box": [
+                770,
+                347,
+                905,
+                367
+              ]
+            },
+            {
+              "text": "gabriel.fournier@banque-ardoise.example",
+              "box": [
+                205,
+                392,
+                540,
+                412
+              ]
+            },
+            {
+              "text": "10.36.60.82",
+              "box": [
+                770,
+                392,
+                905,
+                412
+              ]
+            },
+            {
+              "text": "arthur.morvan@banque-ardoise.example",
+              "box": [
+                205,
+                437,
+                540,
+                457
+              ]
+            },
+            {
+              "text": "10.23.64.92",
+              "box": [
+                770,
+                437,
+                905,
+                457
+              ]
+            },
+            {
+              "text": "yann.riou@banque-ardoise.example",
+              "box": [
+                205,
+                482,
+                540,
+                502
+              ]
+            },
+            {
+              "text": "10.40.175.51",
+              "box": [
+                770,
+                482,
+                905,
+                502
+              ]
+            },
+            {
+              "text": "antoine.kerbrat@banque-ardoise.example",
+              "box": [
+                205,
+                527,
+                540,
+                547
+              ]
+            },
+            {
+              "text": "10.31.128.100",
+              "box": [
+                770,
+                527,
+                905,
+                547
+              ]
+            },
+            {
+              "text": "maxime.garcia@banque-ardoise.example",
+              "box": [
+                205,
+                572,
+                540,
+                592
+              ]
+            },
+            {
+              "text": "10.35.75.59",
+              "box": [
+                770,
+                572,
+                905,
+                592
+              ]
+            },
+            {
+              "text": "arthur.quere@banque-ardoise.example",
+              "box": [
+                205,
+                617,
+                540,
+                637
+              ]
+            },
+            {
+              "text": "10.40.201.98",
+              "box": [
+                770,
+                617,
+                905,
+                637
+              ]
+            },
+            {
+              "text": "julie.morvan@banque-ardoise.example",
+              "box": [
+                205,
+                662,
+                540,
+                682
+              ]
+            },
+            {
+              "text": "10.27.111.218",
+              "box": [
+                770,
+                662,
+                905,
+                682
+              ]
+            },
+            {
+              "text": "ines.martin@banque-ardoise.example",
+              "box": [
+                205,
+                707,
+                540,
+                727
+              ]
+            },
+            {
+              "text": "10.31.5.161",
+              "box": [
+                770,
+                707,
+                905,
+                727
+              ]
+            },
+            {
+              "text": "gabriel.lefebvre@banque-ardoise.example",
+              "box": [
+                205,
+                752,
+                540,
+                772
+              ]
+            },
+            {
+              "text": "10.20.73.144",
+              "box": [
+                770,
+                752,
+                905,
+                772
+              ]
+            },
+            {
+              "text": "lucas.quere@banque-ardoise.example",
+              "box": [
+                205,
+                797,
+                540,
+                817
+              ]
+            },
+            {
+              "text": "10.30.135.88",
+              "box": [
+                770,
+                797,
+                905,
+                817
+              ]
+            },
+            {
+              "text": "ines.tanguy@banque-ardoise.example",
+              "box": [
+                205,
+                842,
+                540,
+                862
+              ]
+            },
+            {
+              "text": "10.13.37.98",
+              "box": [
+                770,
+                842,
+                905,
+                862
+              ]
+            },
+            {
+              "text": "romain.quere@banque-ardoise.example",
+              "box": [
+                205,
+                887,
+                540,
+                907
+              ]
+            },
+            {
+              "text": "10.39.206.81",
+              "box": [
+                770,
+                887,
+                905,
+                907
+              ]
+            },
+            {
+              "text": "ines.bonnet@banque-ardoise.example",
+              "box": [
+                205,
+                932,
+                540,
+                952
+              ]
+            },
+            {
+              "text": "10.26.169.83",
+              "box": [
+                770,
+                932,
+                905,
+                952
+              ]
+            },
+            {
+              "text": "emma.girard@banque-ardoise.example",
+              "box": [
+                205,
+                977,
+                540,
+                997
+              ]
+            },
+            {
+              "text": "10.21.235.164",
+              "box": [
+                770,
+                977,
+                905,
+                997
+              ]
+            },
+            {
+              "text": "antoine.bernard@banque-ardoise.example",
+              "box": [
+                205,
+                1022,
+                540,
+                1042
+              ]
+            },
+            {
+              "text": "10.21.154.56",
+              "box": [
+                770,
+                1022,
+                905,
+                1042
+              ]
+            },
+            {
+              "text": "marie.lefebvre@banque-ardoise.example",
+              "box": [
+                205,
+                1067,
+                540,
+                1087
+              ]
+            },
+            {
+              "text": "10.34.64.47",
+              "box": [
+                770,
+                1067,
+                905,
+                1087
+              ]
+            },
+            {
+              "text": "chloe.morel@banque-ardoise.example",
+              "box": [
+                205,
+                1112,
+                540,
+                1132
+              ]
+            },
+            {
+              "text": "10.11.223.225",
+              "box": [
+                770,
+                1112,
+                905,
+                1132
+              ]
+            },
+            {
+              "text": "maela.simon@banque-ardoise.example",
+              "box": [
+                205,
+                1157,
+                540,
+                1177
+              ]
+            },
+            {
+              "text": "10.15.149.76",
+              "box": [
+                770,
+                1157,
+                905,
+                1177
+              ]
+            },
+            {
+              "text": "jean.richard@banque-ardoise.example",
+              "box": [
+                205,
+                1202,
+                540,
+                1222
+              ]
+            },
+            {
+              "text": "10.15.62.31",
+              "box": [
+                770,
+                1202,
+                905,
+                1222
+              ]
+            },
+            {
+              "text": "yann.richard@banque-ardoise.example",
+              "box": [
+                205,
+                1247,
+                540,
+                1267
+              ]
+            },
+            {
+              "text": "10.26.1.216",
+              "box": [
+                770,
+                1247,
+                905,
+                1267
+              ]
+            },
+            {
+              "text": "laura.fournier@banque-ardoise.example",
+              "box": [
+                205,
+                1292,
+                540,
+                1312
+              ]
+            },
+            {
+              "text": "10.27.133.80",
+              "box": [
+                770,
+                1292,
+                905,
+                1312
+              ]
+            },
+            {
+              "text": "marie.fournier@banque-ardoise.example",
+              "box": [
+                205,
+                1337,
+                540,
+                1357
+              ]
+            },
+            {
+              "text": "10.13.253.233",
+              "box": [
+                770,
+                1337,
+                905,
+                1357
+              ]
+            },
+            {
+              "text": "louis.guillou@banque-ardoise.example",
+              "box": [
+                205,
+                1382,
+                540,
+                1402
+              ]
+            },
+            {
+              "text": "10.11.113.174",
+              "box": [
+                770,
+                1382,
+                905,
+                1402
+              ]
+            },
+            {
+              "text": "yann.bertrand@banque-ardoise.example",
+              "box": [
+                205,
+                1427,
+                540,
+                1447
+              ]
+            },
+            {
+              "text": "10.32.169.75",
+              "box": [
+                770,
+                1427,
+                905,
+                1447
+              ]
+            },
+            {
+              "text": "romain.guillou@banque-ardoise.example",
+              "box": [
+                205,
+                1472,
+                540,
+                1492
+              ]
+            },
+            {
+              "text": "10.38.159.49",
+              "box": [
+                770,
+                1472,
+                905,
+                1492
+              ]
+            },
+            {
+              "text": "arthur.richard@banque-ardoise.example",
+              "box": [
+                205,
+                1517,
+                540,
+                1537
+              ]
+            },
+            {
+              "text": "10.13.179.81",
+              "box": [
+                770,
+                1517,
+                905,
+                1537
+              ]
+            },
+            {
+              "text": "nicolas.david@banque-ardoise.example",
+              "box": [
+                205,
+                1562,
+                540,
+                1582
+              ]
+            },
+            {
+              "text": "10.19.234.163",
+              "box": [
+                770,
+                1562,
+                905,
+                1582
+              ]
+            },
+            {
+              "text": "pierre.michel@banque-ardoise.example",
+              "box": [
+                205,
+                1607,
+                540,
+                1627
+              ]
+            },
+            {
+              "text": "10.14.54.253",
+              "box": [
+                770,
+                1607,
+                905,
+                1627
+              ]
+            },
+            {
+              "text": "pierre.le-goff@banque-ardoise.example",
+              "box": [
+                205,
+                1652,
+                540,
+                1672
+              ]
+            },
+            {
+              "text": "10.33.65.111",
+              "box": [
+                770,
+                1652,
+                905,
+                1672
+              ]
+            },
+            {
+              "text": "camille.kerbrat@banque-ardoise.example",
+              "box": [
+                205,
+                1697,
+                540,
+                1717
+              ]
+            },
+            {
+              "text": "10.13.43.37",
+              "box": [
+                770,
+                1697,
+                905,
+                1717
+              ]
+            },
+            {
+              "text": "anne.morel@banque-ardoise.example",
+              "box": [
+                205,
+                1742,
+                540,
+                1762
+              ]
+            },
+            {
+              "text": "10.36.209.204",
+              "box": [
+                770,
+                1742,
+                905,
+                1762
+              ]
+            },
+            {
+              "text": "arthur.garcia@banque-ardoise.example",
+              "box": [
+                205,
+                1787,
+                540,
+                1807
+              ]
+            },
+            {
+              "text": "10.34.115.44",
+              "box": [
+                770,
+                1787,
+                905,
+                1807
+              ]
+            },
+            {
+              "text": "nicolas.roux@banque-ardoise.example",
+              "box": [
+                205,
+                1832,
+                540,
+                1852
+              ]
+            },
+            {
+              "text": "10.34.213.82",
+              "box": [
+                770,
+                1832,
+                905,
+                1852
+              ]
+            },
+            {
+              "text": "yann.morvan@banque-ardoise.example",
+              "box": [
+                205,
+                1877,
+                540,
+                1897
+              ]
+            },
+            {
+              "text": "10.18.245.107",
+              "box": [
+                770,
+                1877,
+                905,
+                1897
+              ]
+            },
+            {
+              "text": "yann.moreau@banque-ardoise.example",
+              "box": [
+                205,
+                1922,
+                540,
+                1942
+              ]
+            },
+            {
+              "text": "10.20.74.42",
+              "box": [
+                770,
+                1922,
+                905,
+                1942
+              ]
+            },
+            {
+              "text": "manon.vincent@banque-ardoise.example",
+              "box": [
+                205,
+                1967,
+                540,
+                1987
+              ]
+            },
+            {
+              "text": "10.14.45.215",
+              "box": [
+                770,
+                1967,
+                905,
+                1987
+              ]
+            },
+            {
+              "text": "anne.martin@banque-ardoise.example",
+              "box": [
+                205,
+                2012,
+                540,
+                2032
+              ]
+            },
+            {
+              "text": "10.13.120.6",
+              "box": [
+                770,
+                2012,
+                905,
+                2032
+              ]
+            },
+            {
+              "text": "maela.petit@banque-ardoise.example",
+              "box": [
+                205,
+                2057,
+                540,
+                2077
+              ]
+            },
+            {
+              "text": "10.26.181.153",
+              "box": [
+                770,
+                2057,
+                905,
+                2077
+              ]
+            },
+            {
+              "text": "camille.lambert@banque-ardoise.example",
+              "box": [
+                205,
+                2102,
+                540,
+                2122
+              ]
+            },
+            {
+              "text": "10.14.248.229",
+              "box": [
+                770,
+                2102,
+                905,
+                2122
+              ]
+            },
+            {
+              "text": "exploitation@banque-ardoise.example",
+              "box": [
+                205,
+                2147,
+                540,
+                2167
+              ]
+            },
+            {
+              "text": "10.29.110.153",
+              "box": [
+                770,
+                2147,
+                905,
+                2167
+              ]
+            },
+            {
+              "text": "nolwenn.durand@banque-ardoise.example",
+              "box": [
+                205,
+                2192,
+                540,
+                2212
+              ]
+            },
+            {
+              "text": "10.39.204.182",
+              "box": [
+                770,
+                2192,
+                905,
+                2212
+              ]
+            },
+            {
+              "text": "gwen.tanguy@banque-ardoise.example",
+              "box": [
+                205,
+                2237,
+                540,
+                2257
+              ]
+            },
+            {
+              "text": "10.13.126.213",
+              "box": [
+                770,
+                2237,
+                905,
+                2257
+              ]
+            },
+            {
+              "text": "antoine.lefebvre@banque-ardoise.example",
+              "box": [
+                205,
+                2282,
+                540,
+                2302
+              ]
+            },
+            {
+              "text": "10.27.141.88",
+              "box": [
+                770,
+                2282,
+                905,
+                2302
+              ]
+            },
+            {
+              "text": "maela.moreau@banque-ardoise.example",
+              "box": [
+                205,
+                2327,
+                540,
+                2347
+              ]
+            },
+            {
+              "text": "10.12.153.96",
+              "box": [
+                770,
+                2327,
+                905,
+                2347
+              ]
+            },
+            {
+              "text": "marie.mercier@banque-ardoise.example",
+              "box": [
+                205,
+                2372,
+                540,
+                2392
+              ]
+            },
+            {
+              "text": "10.22.122.199",
+              "box": [
+                770,
+                2372,
+                905,
+                2392
+              ]
+            },
+            {
+              "text": "sophie.mercier@banque-ardoise.example",
+              "box": [
+                205,
+                2417,
+                540,
+                2437
+              ]
+            },
+            {
+              "text": "10.16.4.217",
+              "box": [
+                770,
+                2417,
+                905,
+                2437
+              ]
+            },
+            {
+              "text": "gwen.bonnet@banque-ardoise.example",
+              "box": [
+                205,
+                2462,
+                540,
+                2482
+              ]
+            },
+            {
+              "text": "10.21.87.185",
+              "box": [
+                770,
+                2462,
+                905,
+                2482
+              ]
+            },
+            {
+              "text": "sarah.lambert@banque-ardoise.example",
+              "box": [
+                205,
+                2507,
+                540,
+                2527
+              ]
+            },
+            {
+              "text": "10.36.195.55",
+              "box": [
+                770,
+                2507,
+                905,
+                2527
+              ]
+            },
+            {
+              "text": "sarah.le-gall@banque-ardoise.example",
+              "box": [
+                205,
+                2552,
+                540,
+                2572
+              ]
+            },
+            {
+              "text": "10.39.176.22",
+              "box": [
+                770,
+                2552,
+                905,
+                2572
+              ]
+            },
+            {
+              "text": "manon.roux@banque-ardoise.example",
+              "box": [
+                205,
+                2597,
+                540,
+                2617
+              ]
+            },
+            {
+              "text": "10.30.60.90",
+              "box": [
+                770,
+                2597,
+                905,
+                2617
+              ]
+            },
+            {
+              "text": "maxime.dupont@banque-ardoise.example",
+              "box": [
+                205,
+                2642,
+                540,
+                2662
+              ]
+            },
+            {
+              "text": "10.10.168.173",
+              "box": [
+                770,
+                2642,
+                905,
+                2662
+              ]
+            },
+            {
+              "text": "claire.dubois@banque-ardoise.example",
+              "box": [
+                205,
+                2687,
+                540,
+                2707
+              ]
+            },
+            {
+              "text": "10.35.253.200",
+              "box": [
+                770,
+                2687,
+                905,
+                2707
+              ]
+            }
+          ],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 112,
+          "pii_masked": 112,
+          "pii_found_by_model": 108
+        },
+        "page": "/admin/users",
+        "ts": "2026-11-04 06:39:17"
+      },
+      "status_before": "fail",
+      "finding": {
+        "id": "F-01",
+        "severity": "elevee",
+        "status": "open",
+        "owner": "IT department — IAM team",
+        "due": "2027-02-02"
+      }
+    }
+  ],
+  "running": false,
+  "decisions": [],
+  "remediation_requested": false,
+  "usage": {
+    "rows": [
+      {
+        "model": "muse-spark-1.3",
+        "calls": 7,
+        "input": 13507,
+        "output": 14769,
+        "seconds": 132.63091921806335,
+        "images": 0,
+        "cost_usd": 0.079652
+      },
+      {
+        "model": "sam-3.1",
+        "calls": 14,
+        "input": 0,
+        "output": 0,
+        "seconds": 18.028488159179688,
+        "images": 14,
+        "cost_usd": null
+      }
+    ],
+    "total_usd": 0.079652,
+    "unpriced": [
+      "sam-3.1"
+    ],
+    "estimated": false
+  },
+  "duration_s": 84,
+  "catalogue": {
+    "source": "catalogue",
+    "reviewed": false,
+    "path": "controls/AUD-2026-IAM-01.en.json"
+  },
+  "interpretation": null,
+  "inconclusive": 0,
+  "opinion_initial": "ameliorer",
+  "opinion_final": "ameliorer",
+  "injection_detected": false,
+  "trail_head": "606d7ef45a55eddbe51cc29edab0c7c6575df6e9a051a8875fa35837bd0c3f51"
+}

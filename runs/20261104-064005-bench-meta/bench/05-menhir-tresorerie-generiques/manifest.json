@@ -1,0 +1,77 @@
+{
+  "mission": "AUD-2026-IAM-01",
+  "run_id": "05-menhir-tresorerie-generiques",
+  "issued_at": "2026-11-04T06:37:06",
+  "trail_head": "d2364d6374f7c5bd0bed99580a898dd07a16432aa62363212792aa18b70ea272",
+  "aborted": null,
+  "files": [
+    {
+      "path": "evidence/C1_before.png",
+      "sha256": "dd63b158e4c3b9ad4a30c8a3bb476704987cfe09df79f1d0156329d596087354"
+    },
+    {
+      "path": "evidence/C2_before.png",
+      "sha256": "4cca173f105f2bf44e8872e50383b28bf185d46596aecc2131917e7e3d56d79b"
+    },
+    {
+      "path": "evidence/C3_before.png",
+      "sha256": "89d13afdac7830c32ce5903e0b5eb8120eeb1122097cb8507f3b06bbce04a152"
+    },
+    {
+      "path": "evidence/C4_before.png",
+      "sha256": "540d72c98bdd2ed996ead5f03b8925d73b99f82aafcbff9d61ebfa617dedb60d"
+    },
+    {
+      "path": "evidence/C5_before.png",
+      "sha256": "874fecea0b3664c40a4b8d5d9492fe16974f4be418cf98e49e57340e4a92731f"
+    },
+    {
+      "path": "evidence/C6_before.png",
+      "sha256": "40cf6fbacabcaca4344f7bba15c4af346d906fe3c3241a0d5ade6b98aa4b553e"
+    },
+    {
+      "path": "evidence/C7_before.png",
+      "sha256": "beea5ee1b27af65263131178958fd05238b797d15283e22bef3a0c36bdebe3ff"
+    },
+    {
+      "path": "report.html",
+      "sha256": "5150f9614816f2cbbd63fe00eeac6d216e256b364c34ca60e726b3939d7b3341"
+    },
+    {
+      "path": "report.pdf",
+      "sha256": "b1b20923f9998da2b2bd7a69ac0ceb68241036acfb89de9fe204607c29618433"
+    },
+    {
+      "path": "result.json",
+      "sha256": "08e77ebbb4a4d0e6a3474ea52cd810c5e7653f85cbc254a6eb1ae3730e3afe56"
+    },
+    {
+      "path": "scripts/C1_PSI-4.1.py",
+      "sha256": "098d37cd0158dd1a5697d94d9ba286eabf830d9f7bf96e3378e1671fb880e900"
+    },
+    {
+      "path": "scripts/C2_PSI-4.2.py",
+      "sha256": "fa35c17fbb1dfdd3f0b119a1b0298caedbab33700f9367a772a5abf44fcaad3f"
+    },
+    {
+      "path": "scripts/C3_PSI-4.3.py",
+      "sha256": "b440a5b4dc6b0fb35e3237b2c31c911447c452d28a8439534757301411e1949b"
+    },
+    {
+      "path": "scripts/C4_PSI-4.4.py",
+      "sha256": "10d2a8f06337b5bca5667b2efa7dc25c74553b33470fbc3749f9aefa5454dfce"
+    },
+    {
+      "path": "scripts/C5_PSI-4.5.py",
+      "sha256": "4157e9750f010f98c706b06c46595e822377ff01e012bfa30a122013ca8828e9"
+    },
+    {
+      "path": "scripts/C6_PSI-4.6.py",
+      "sha256": "e2f35349092109778d4c0f2baf30d8414192be5d8c53853cf3b725025514fc83"
+    },
+    {
+      "path": "scripts/C7_PSI-4.7.py",
+      "sha256": "5e917770866b8e47277f6ccc9a379febb81c4f9032cc1074e14a8090f09f511b"
+    }
+  ]
+}

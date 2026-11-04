@@ -1,0 +1,31 @@
+{
+  "id": "20261104-064005-bench-meta",
+  "utc": "20261104-064005",
+  "kind": "bench",
+  "backend": "meta",
+  "note": "cycle 4 : banc complet sur a74a3ac (stabilite, 4e passage)",
+  "commit": "a74a3ac",
+  "workflow_run": "41786195712",
+  "status": "success",
+  "budget_spent_usd": 1.8852,
+  "priced_usd": 0.5052,
+  "unpriced": [
+    "sam-3.1"
+  ],
+  "bench": {
+    "checks": 56,
+    "TP": 15,
+    "TN": 41,
+    "FP": 0,
+    "FN": 0,
+    "inconclusive": 0,
+    "accuracy": 1.0,
+    "pii_total": 256,
+    "pii_model": 221,
+    "pii_masked": 256,
+    "injection_cases": 1,
+    "injection_flagged": 1,
+    "cost_usd": 0.5052,
+    "seconds": 417
+  }
+}

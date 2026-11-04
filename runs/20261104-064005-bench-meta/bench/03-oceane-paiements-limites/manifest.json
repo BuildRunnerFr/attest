@@ -1,0 +1,77 @@
+{
+  "mission": "AUD-2026-IAM-01",
+  "run_id": "03-oceane-paiements-limites",
+  "issued_at": "2026-11-04T06:35:22",
+  "trail_head": "57da9fe91b8e82ee314c59d4bd0b28f8481d5a4bdc5780e8b21b50e88f30166b",
+  "aborted": null,
+  "files": [
+    {
+      "path": "evidence/C1_before.png",
+      "sha256": "764870efd0d8a46a589301d8c7a65b8beea8cb0993ce30f98d7646107bf337f2"
+    },
+    {
+      "path": "evidence/C2_before.png",
+      "sha256": "665e26e0784d2addc0c1e79bd361a2cc733b911eeba3653ace6eb5ffedddfcbb"
+    },
+    {
+      "path": "evidence/C3_before.png",
+      "sha256": "a716e5f70338feae6446a617f34309ab27b7a1dc16abee46f4d9c718cdbb3214"
+    },
+    {
+      "path": "evidence/C4_before.png",
+      "sha256": "15ca3d8688dba5194b86c55ee6557bb73837b96d773eef40f0adb22f56bc5f85"
+    },
+    {
+      "path": "evidence/C5_before.png",
+      "sha256": "a37539be2795cfd0748006c86332c96c935ee6c10a429efc7f422b8c2591f665"
+    },
+    {
+      "path": "evidence/C6_before.png",
+      "sha256": "602b69e0576f066a8648f9254c5585fcf656dd39295d225b9a4ca5fee4cc900c"
+    },
+    {
+      "path": "evidence/C7_before.png",
+      "sha256": "8363e8cedd15ae7c0b3bf80c0360d7f52f447d73ae29c7f9bcdedef6a85f669c"
+    },
+    {
+      "path": "report.html",
+      "sha256": "8a27941fae44800b3c67813cac3001f665f596137312d39257e18cdbfcde9537"
+    },
+    {
+      "path": "report.pdf",
+      "sha256": "eee08a111df7af4cafb5a551b3eb1da21abe1d7cf5d4cfdd53faaf2cab2cb843"
+    },
+    {
+      "path": "result.json",
+      "sha256": "fd307df5b9a7ef4dcab2bf85301e4d21f2e01743ef5b48a196d1f0d9a0e9994c"
+    },
+    {
+      "path": "scripts/C1_PSI-4.1.py",
+      "sha256": "098d37cd0158dd1a5697d94d9ba286eabf830d9f7bf96e3378e1671fb880e900"
+    },
+    {
+      "path": "scripts/C2_PSI-4.2.py",
+      "sha256": "fa35c17fbb1dfdd3f0b119a1b0298caedbab33700f9367a772a5abf44fcaad3f"
+    },
+    {
+      "path": "scripts/C3_PSI-4.3.py",
+      "sha256": "b440a5b4dc6b0fb35e3237b2c31c911447c452d28a8439534757301411e1949b"
+    },
+    {
+      "path": "scripts/C4_PSI-4.4.py",
+      "sha256": "10d2a8f06337b5bca5667b2efa7dc25c74553b33470fbc3749f9aefa5454dfce"
+    },
+    {
+      "path": "scripts/C5_PSI-4.5.py",
+      "sha256": "4157e9750f010f98c706b06c46595e822377ff01e012bfa30a122013ca8828e9"
+    },
+    {
+      "path": "scripts/C6_PSI-4.6.py",
+      "sha256": "e2f35349092109778d4c0f2baf30d8414192be5d8c53853cf3b725025514fc83"
+    },
+    {
+      "path": "scripts/C7_PSI-4.7.py",
+      "sha256": "5e917770866b8e47277f6ccc9a379febb81c4f9032cc1074e14a8090f09f511b"
+    }
+  ]
+}
