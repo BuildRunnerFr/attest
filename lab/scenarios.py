@@ -1,4 +1,4 @@
-"""Jeu d'évaluation synthétique : 8 systèmes bancaires FICTIFS + oracle de référence de la politique PSI-4.
+"""Jeu d'évaluation synthétique : 10 systèmes bancaires FICTIFS + oracle de référence de la politique PSI-4.
 
 Aucune donnée réelle : banques, systèmes, personnes, adresses (domaines .example) et IP privées sont générés.
 Chaque scénario contient la vérité terrain (« expected ») calculée par l'oracle ci-dessous, une implémentation
@@ -154,7 +154,82 @@ def build() -> list:
     add("08-kerlann-apres-correctifs", "KRL-ADM après correctifs, compte partagé restant", "Banque Kerlann · KRL-ADM",
         "Banque Kerlann (fictive)", "KRL-ADM — console d'administration IAM", dict(SECURE), k["users"],
         tests="Non-régression : seul le compte « ops » reste non conforme.")
+
+    # 09-10 : générateur propre à chaque scénario (graine fixe), APRÈS les autres : la suite aléatoire de 01-08
+    # n'est pas modifiée.
+    d = "kerlann-banque.example"
+    rng9 = random.Random(2609)
+    first = [_account("a.abgrall", "adele.abgrall", d, "admin", rng9),      # administrateurs dès la page 1
+             _account("b.cariou", "bastien.cariou", d, "admin", rng9),
+             _account("support-n2", "support-n2", d, "admin", rng9)]        # le compte générique planté
+    users = _big_directory(rng9, d, 721 - len(first), admins=9, reserved={u["login"] for u in first}) + first
+    users.sort(key=lambda u: u["login"])               # annuaire trié par identifiant, comme en production
+    add("09-kerlann-annuaire-pagine", "Annuaire paginé : 721 comptes, un générique en page tardive",
+        "Banque Kerlann · ANNUAIRE", "Banque Kerlann (fictive)", "Annuaire central des accès", dict(SECURE), users,
+        tests="Annuaire de 721 comptes servi par pages de 100 : le seul compte générique (support-n2) n'est pas "
+              "en page 1. Un test qui ne lit que la première page conclut à tort « conforme ».")
+    out[-1].update(pagination={"page_size": PAGE_SIZE}, stress=True)   # hors banc par défaut
+
+    d = "credit-oceane.example"
+    rng10 = random.Random(2610)
+    traps = [_account(lg, loc, d, "admin", rng10) for lg, loc in NEAR_GENERIC_ADMINS] + \
+        [_account(lg, loc, d, "conseiller", rng10) for lg, loc in FUNCTION_NON_ADMINS]
+    users = _big_directory(rng10, d, 720 - len(traps), admins=6,
+                           reserved={u["login"] for u in traps}) + traps
+    users.sort(key=lambda u: u["login"])
+    add("10-oceane-annuaire-presque", "Annuaire paginé presque fautif, entièrement conforme",
+        "Crédit Océane · ANNUAIRE", "Crédit Océane (fictif)", "Annuaire central des accès",
+        dict(SECURE, password_min_length=12, lockout_threshold=5, session_timeout_minutes=15), users,
+        tests="Jumeau du 09, aucun constat attendu : noms d'administrateurs contenant un mot de fonction en "
+              "sous-chaîne (opsomer, teamson, rootsaert, kit), e-mail ≠ identifiant, comptes de fonction sans "
+              "droits d'administration, valeurs aux seuils (12, 5, 15), sur 720 comptes en 8 pages.")
+    out[-1].update(pagination={"page_size": PAGE_SIZE}, stress=True)   # hors banc par défaut
     return out
+
+
+# ---------- grands annuaires paginés (09, 10) ----------
+
+PAGE_SIZE = 100
+# Prénoms et noms supplémentaires, génériques et sans mot de fonction, pour atteindre plusieurs centaines de
+# comptes sans doublon d'administrateur ; les homonymes de conseillers reçoivent un suffixe (j.martin2).
+FIRST_XL = FIRST + ["adele", "bastien", "celine", "damien", "elodie", "fabien", "gaelle", "herve", "isabelle",
+                    "jerome", "katell", "loic", "morgane", "nathalie", "olivier", "patrick", "quentin", "rozenn",
+                    "sylvain", "tifenn", "ulysse", "valerie", "xavier", "yannick", "zoe", "bleuenn", "corentin",
+                    "denez", "enora", "goulven", "ivona", "jakez", "klervi", "lena", "mael", "oriane"]
+LAST_XL = LAST + ["abgrall", "bihan", "cariou", "derrien", "floch", "gourmelen", "hamon", "jegou", "kervella",
+                  "lagadec", "madec", "nedelec", "olier", "pennec", "quillien", "raoul", "salaun", "thepaut",
+                  "uguen", "vigouroux", "yvinec", "allain", "briand", "cloarec", "daniel", "even", "gourvennec",
+                  "henaff", "jacq", "kerjean", "le-bihan", "le-roux", "le-meur", "le-corre", "prigent", "toullec"]
+# Administrateurs nominatifs qui ressemblent à des comptes de fonction (sous-chaînes, e-mail ≠ identifiant) :
+# l'oracle les juge conformes (mots entiers, voir functional_local).
+NEAR_GENERIC_ADMINS = [("j.opsomer", "jean.opsomer"), ("t.teamson", "tom.teamson"),
+                       ("r.rootsaert", "rose.rootsaert"), ("k.morvan", "kit.morvan"), ("c.itier", "claire.itier"),
+                       ("l.servien", "louis.servien"), ("a.kerbrat", "anne-sophie.kerbrat"),
+                       ("m.le-bihan-riou", "maela.le-bihan-riou")]
+# Comptes de fonction SANS droits d'administration : hors du champ de PSI-4.7, donc conformes.
+FUNCTION_NON_ADMINS = [("support-agence", "support-agence"), ("svc-batch", "svc-batch"),
+                       ("helpdesk", "helpdesk")]
+
+
+def _big_directory(rng, domain, n, admins, reserved=()):
+    """n comptes nominatifs (dont `admins` administrateurs) ; identifiants d'administrateurs sans chiffre."""
+    used, out = set(reserved), []
+    while len(out) < n:
+        role = "admin" if len(out) < admins else "conseiller"
+        f, last = rng.choice(FIRST_XL), rng.choice(LAST_XL)
+        login, local, k = f"{f[0]}.{last}", f"{f}.{last}", 2
+        if login in used and role == "admin":
+            continue
+        while login in used:
+            login, local, k = f"{f[0]}.{last}{k}", f"{f}.{last}{k}", k + 1
+        used.add(login)
+        out.append(_account(login, local, domain, role, rng))
+    return out
+
+
+def page_of(users: list, login: str, size: int = PAGE_SIZE) -> int:
+    """Numéro de page (à partir de 1) où l'annuaire paginé sert ce compte."""
+    return next(i for i, u in enumerate(users) if u["login"] == login) // size + 1
 
 
 if __name__ == "__main__":
