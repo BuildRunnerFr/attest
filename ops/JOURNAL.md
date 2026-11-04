@@ -34,6 +34,10 @@ Commits poussés sur main (212 tests verts, mock IAM et code OK, vérificateur i
   propre au dépôt, colonne « After » masquée sans remédiation ; Studio : langue active signalée, bouton
   d'approbation désactivé sans contrôle coché, guillemets “ ” en EN ; `why` du mock en EN.
 - `demo-stable` = 91b45c7 (avance rapide).
+- Incident signalé par Ethan : workflow « tests » rouge sur 91b45c7 et 3c0241e (`ModuleNotFoundError: yaml`, tests/test_hardening.py ;
+  pyyaml présent en local, absent de requirements-dev.txt). Corrigé par e57f2a6 (`pyyaml==6.0.3`), vérifié par une
+  installation neuve (212 tests collectés) et par la CI (exécution 41831371976 verte). Leçon : vérifier aussi les
+  tests dans un venv neuf avant de pousser.
 
 Exécution réelle :
 - `20261104-123009-studio-iam-meta` (91b45c7) : 21 exigences interprétées, 0 citation rejetée avec les documents
