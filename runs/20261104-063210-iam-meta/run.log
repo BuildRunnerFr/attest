@@ -1,0 +1,56 @@
+06:30:42 Work programme : 7 · catalogue
+06:30:58 Test C2 PSI-4.2 · Mandatory MFA for users of critical system → Non-compliant · evidence sealed
+06:30:58 Test C1 PSI-4.1 · Mandatory MFA for privileged accounts → Non-compliant · evidence sealed
+06:30:58 Test C3 PSI-4.3 · Strong password policy → Non-compliant · evidence sealed
+06:30:59 Test C4 PSI-4.4 · Account lockout after failed logins → Non-compliant · evidence sealed
+06:31:12 Test C6 PSI-4.6 · Logging of administration actions → Compliant · evidence sealed
+06:31:14 Test C5 PSI-4.5 · Inactive session timeout → Non-compliant · evidence sealed
+06:31:19 Test C7 PSI-4.7 · No generic or shared admin accounts → Non-compliant · evidence sealed
+06:31:19 Remediation : 6
+
+  ┌─ Change request CHG-AUD-2026-IAM-01-01
+  │ F-01 · PSI-4.1 · Critical · Mandatory MFA for privileged accounts
+  │ PATCH /api/security {"mfa_admin": true}
+  │ Privileged admin accounts currently lack mandatory MFA, allowing full takeover with stolen credentials alone.
+  │ Expected impact : Admins will be required to use MFA at login, requiring one-time enrollment for those not yet enrolled.
+  └─
+06:31:36   CHG-AUD-2026-IAM-01-01 → applied and logged
+
+  ┌─ Change request CHG-AUD-2026-IAM-01-02
+  │ F-02 · PSI-4.2 · High · Mandatory MFA for users of critical system
+  │ PATCH /api/security {"mfa_users": true}
+  │ MFA must be enforced for standard users because KRL-ADM supports critical functions per PSI-4.2.
+  │ Expected impact : Standard users will be required to use MFA at next authentication.
+  └─
+06:31:36   CHG-AUD-2026-IAM-01-02 → applied and logged
+06:31:36   F-03 PSI-4.7 → Action plan
+
+  ┌─ Change request CHG-AUD-2026-IAM-01-04
+  │ F-04 · PSI-4.3 · Medium · Strong password policy
+  │ PATCH /api/security {"password_min_length": 12, "password_require_complexity": true}
+  │ Increase minimum password length to 12 and enable complexity to satisfy PSI-4.3.
+  │ Expected impact : Users will need to set passwords of at least 12 characters meeting complexity requirements.
+  └─
+06:31:36   CHG-AUD-2026-IAM-01-04 → applied and logged
+
+  ┌─ Change request CHG-AUD-2026-IAM-01-05
+  │ F-05 · PSI-4.4 · Medium · Account lockout after failed logins
+  │ PATCH /api/security {"lockout_threshold": 5}
+  │ Lockout is currently disabled with value 0 and setting it to 5 restores compliance with the required 1 to 5 range.
+  │ Expected impact : Users will be locked out after 5 consecutive failed login attempts.
+  └─
+06:31:36   CHG-AUD-2026-IAM-01-05 → applied and logged
+
+  ┌─ Change request CHG-AUD-2026-IAM-01-06
+  │ F-06 · PSI-4.5 · Medium · Inactive session timeout
+  │ PATCH /api/security {"session_timeout_minutes": 15}
+  │ Observed value 0 disables session expiration, so it must be set within the required 1 to 15 minute range.
+  │ Expected impact : Inactive users will be logged out after 15 minutes and will need to authenticate again.
+  └─
+06:31:36   CHG-AUD-2026-IAM-01-06 → applied and logged
+06:31:51 Re-test C4 → Compliant
+06:31:52 Re-test C2 → Compliant
+06:31:53 Re-test C3 → Compliant
+06:31:54 Re-test C1 → Compliant
+06:32:08 Re-test C5 → Compliant
+06:32:10 Report : out/iam/report.html · report.pdf

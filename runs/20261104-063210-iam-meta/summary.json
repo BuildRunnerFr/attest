@@ -1,0 +1,42 @@
+{
+  "id": "20261104-063210-iam-meta",
+  "utc": "20261104-063210",
+  "kind": "iam",
+  "backend": "meta",
+  "note": "cycle 4 : IAM EN sur a74a3ac (pre-masquage, opinion qualifiee)",
+  "commit": "a74a3ac",
+  "workflow_run": "41785926572",
+  "status": "success",
+  "budget_spent_usd": 0.3666,
+  "priced_usd": 0.1266,
+  "unpriced": [
+    "sam-3.1"
+  ],
+  "audits": [
+    {
+      "folder": "iam",
+      "controls": 7,
+      "status_before": [
+        "fail",
+        "fail",
+        "fail",
+        "fail",
+        "fail",
+        "pass",
+        "fail"
+      ],
+      "status_after": [
+        "pass",
+        "pass",
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "evidence_errors": 0,
+      "opinion_initial": "insuffisant",
+      "opinion_final": "insuffisant",
+      "injection_detected": false,
+      "cost_usd": 0.12657775
+    }
+  ]
+}
