@@ -1,0 +1,93 @@
+{
+  "mission": "AUD-20261104-59C3",
+  "run_id": "20261104-083104-59c3",
+  "issued_at": "2026-11-04T08:36:48",
+  "trail_head": "a07fdcdb36ad301dacfcf124add41fdbd856e2b4a4efc6079995214a893dbcdb",
+  "aborted": null,
+  "files": [
+    {
+      "path": "evidence/C1_before.png",
+      "sha256": "f1d137d27ca60583cb9ab6fdeeb5f95fd1610ca96053b4af1fa078191f433317"
+    },
+    {
+      "path": "evidence/C2_before.png",
+      "sha256": "03ffbdd593d56b5c2617e7935507798b8d74d6a1c2264c4c5f0bd6bf9de88b32"
+    },
+    {
+      "path": "evidence/C3_before.png",
+      "sha256": "9b670c1eafd915cb6df201edf42dc67d9cd479c769ad7b5f49bc574e294bd891"
+    },
+    {
+      "path": "evidence/C4_before.png",
+      "sha256": "9b670c1eafd915cb6df201edf42dc67d9cd479c769ad7b5f49bc574e294bd891"
+    },
+    {
+      "path": "evidence/C5_before.png",
+      "sha256": "cfbb2e4159bb03c3141060aef9f46daabbc947f5fddcfe451d46811938fcb0b0"
+    },
+    {
+      "path": "evidence/C6_before.png",
+      "sha256": "94071ff0cc3ec3013b5c4620d989ef9e69def04847069f8c7a03fba625a6574f"
+    },
+    {
+      "path": "evidence/C7_before.png",
+      "sha256": "33d3be279bb99b2bcb2b1d28b179d7bc33bf40aaaa085a8d53a7242c21d9f780"
+    },
+    {
+      "path": "evidence/C8_before.png",
+      "sha256": "d603feab519b9c2747e18ddb985fe13abae028ac459dbb8cdb26de0b430c35b0"
+    },
+    {
+      "path": "evidence/C9_before.png",
+      "sha256": "5b3695ed7ed9f7b6a350dee93a53b6e39a0c10c7fab13e31e1b5531030e26129"
+    },
+    {
+      "path": "report.html",
+      "sha256": "3ac6f83c48ff37c492dfe9f4b808596ea28b4b0c5c04f89f5d4cce05954a0a10"
+    },
+    {
+      "path": "report.pdf",
+      "sha256": "06ae56dfeccdbb5b7d3906108f757ffd08222a98772d0fea53483ecf0448adc4"
+    },
+    {
+      "path": "result.json",
+      "sha256": "5b413c6b166c8deab2576267398317c51a6f28f8a589cf4432f7bc53f375d99a"
+    },
+    {
+      "path": "scripts/C1_PDS-2.1.py",
+      "sha256": "7f0048a28697ac6e09082c4265500886d80a82bcd03fd732410888d16bb1eb46"
+    },
+    {
+      "path": "scripts/C2_PDS-2.2.py",
+      "sha256": "b27c16657a8d2b96c5885f24c188e5fe167d03ce2f794f0995fd7b559feec65c"
+    },
+    {
+      "path": "scripts/C3_PDS-2.3.py",
+      "sha256": "8d6eef47e675ce93aeea76341b64014efcdbdf3302fd3fd10f4915b188c883e8"
+    },
+    {
+      "path": "scripts/C4_PDS-2.3.py",
+      "sha256": "1f258df4cb2cae367c6b7aeaf968df0f5bcda65b0314ef5f4b0576155fcd3c8c"
+    },
+    {
+      "path": "scripts/C5_PDS-2.4.py",
+      "sha256": "718b3effe3b21709b881fe5f32be3af1770d76ac1dd393327b79b079b767f0d8"
+    },
+    {
+      "path": "scripts/C6_PDS-2.5.py",
+      "sha256": "ca118dc93e49d9dff82c723f007dc1ab86093eaa43a9d6bd25ffa4e43b82a162"
+    },
+    {
+      "path": "scripts/C7_PDS-2.5.py",
+      "sha256": "354f7a51f59c9db0f30ad9b4b25d5345c8207e0e0d0152c8ba84fe67d34760d5"
+    },
+    {
+      "path": "scripts/C8_PDS-2.6.py",
+      "sha256": "d08d71cc1d94b3c3f1ab9aa61022001c9082318dc117f271d3fb9cf155fac08a"
+    },
+    {
+      "path": "scripts/C9_PDS-2.7.py",
+      "sha256": "0dc92f4efae98256b8405321141d7e380c9cecbe8727b2f6988b7e1e1e88e28f"
+    }
+  ]
+}

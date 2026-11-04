@@ -1,0 +1,13 @@
+interprétation : {"interview": 0, "document": 8, "automated": 12, "requirements": 20, "rejected": 0, "controls": 9, "covered": 5}
+08:31:04 Work programme : 9 · studio
+08:32:13 Test C2 PDS-2.2 · TLS certificate verification never disabled → Non-compliant · evidence sealed
+08:32:37 Test C3 PDS-2.3 · Password hashing uses approved algorithm → Non-compliant · evidence sealed
+08:33:10 Test C1 PDS-2.1 · No hardcoded secrets in code or versioned configuration → Non-compliant · evidence sealed
+08:33:56 Test C4 PDS-2.3 · MD5 and SHA-1 forbidden for security use → Non-compliant · evidence sealed
+08:34:07 Test C6 PDS-2.5 · Dependencies pinned to exact version → Non-compliant · evidence sealed
+08:34:51 Test C5 PDS-2.4 · CI runs static security analysis on every change → Non-compliant · evidence sealed
+08:35:16 Test C8 PDS-2.6 · Test data declared synthetic with no production export → Non-compliant · evidence sealed
+08:35:31 Test C7 PDS-2.5 · Dependencies audited in CI → Non-compliant · evidence sealed
+08:36:47 Test C9 PDS-2.7 · Authentication successes and failures are logged → Non-compliant · evidence sealed
+08:36:48 Report : out/code/studio/20261104-083104-59c3/audit/report.html · report.pdf
+audit : {'pdf': True, 'report': True, 'state': 'done'}
