@@ -17,6 +17,10 @@ pass/fail sans aucune réponse 2xx de la cible ne repose sur aucune observation 
 dont la page de preuve désigne un fichier du dépôt que la cible n'a jamais servi (4xx) n'est pas une
 non-conformité constatée mais un élément introuvable : statut "error".
 Limites du processus (POSIX) : mémoire (RLIMIT_AS), temps CPU (RLIMIT_CPU), taille de fichier (RLIMIT_FSIZE).
+Jeton substitut : le script ne voit dans LAB_TOKEN qu'une valeur factice (TOKEN_PLACEHOLDER) ; le vrai jeton
+passe par SB_TOKEN, que l'amorçage retire de l'environnement avant le script, et n'est substitué que dans les
+en-têtes de la requête réellement envoyée (requests.Session.send) : le script ne peut pas l'imprimer, même
+transformé (inversé, espacé, base64…), ce que redact.scrub ne saurait pas reconnaître.
 Le résultat renvoyé est passé par redact.scrub (aucun secret dans le détail ni dans le stderr).
 """
 import ast
@@ -133,6 +137,9 @@ except ImportError:
     pass
 
 
+PLACEHOLDER = os.environ.get("LAB_TOKEN", "")
+
+
 def _boot(path, logpath):
     import hashlib, json, re, socket, http.client, requests, requests.sessions
     from urllib.parse import urlsplit
@@ -169,9 +176,83 @@ def _boot(path, logpath):
         return put(self, method, *a, **k)
     # journal des requêtes : ouvert avant la garde d'exécution, hors de portée du script
     rlog = open(logpath, "a", buffering=1)
+
+    # jeton substitut : le script ne voit que PLACEHOLDER ; le vrai jeton (retiré de l'environnement avant
+    # l'exécution du script) n'est posé que dans les en-têtes de la copie de requête réellement envoyée,
+    # et retiré de tout ce qui revient au script (requête attachée à la réponse, historique, exceptions,
+    # en-têtes et corps de réponse).
+    real = os.environ.pop("SB_TOKEN", "")
+    os.environb.pop(b"SB_TOKEN", None)
+    swap = bool(real) and real != PLACEHOLDER
+    real_b, ph_b = real.encode("utf-8", "replace"), PLACEHOLDER.encode()
+
+    def mask(v):
+        if isinstance(v, str):
+            return v.replace(real, PLACEHOLDER)
+        if isinstance(v, (bytes, bytearray)):
+            return bytes(v).replace(real_b, ph_b)
+        return v
+
+    def with_headers(preq, f):
+        c = preq.copy()
+        for name, v in list(c.headers.items()):
+            if isinstance(v, (str, bytes)):
+                c.headers[name] = f(v)
+        return c
+
+    def arm(v):
+        if isinstance(v, str):
+            return v.replace(PLACEHOLDER, real)
+        if isinstance(v, bytes):
+            return v.replace(ph_b, real_b)
+        return v
+
+    def clean_response(r):
+        for x in [*(getattr(r, "history", None) or []), r]:
+            try:
+                if x.request is not None:
+                    x.request = with_headers(x.request, mask)
+                for name, v in list(x.headers.items()):
+                    x.headers[name] = mask(v)
+                if isinstance(getattr(x, "_content", None), bytes):
+                    x._content = mask(x._content)
+            except Exception:
+                pass
+
+    def clean_error(e):
+        req = getattr(e, "request", None)
+        if req is not None and hasattr(req, "headers"):
+            try:
+                e.request = with_headers(req, mask)
+            except Exception:
+                e.request = None
+        if getattr(e, "response", None) is not None:
+            clean_response(e.response)
+        def arg(a):
+            if isinstance(a, (str, bytes)):
+                return mask(a)
+            try:
+                return mask(str(a)) if real in str(a) else a
+            except Exception:
+                return "?"
+        try:
+            e.args = tuple(arg(a) for a in e.args)
+        except Exception:
+            pass
+        e.__cause__ = e.__context__ = None                 # la chaîne (urllib3…) ne remonte pas au script
+        e.__suppress_context__ = True
+        return e
+
     def session_send(self, request, **k):
         ro(request.method)
-        r = send(self, request, **k)
+        out = with_headers(request, arm) if swap else request
+        err = None
+        try:
+            r = send(self, out, **k)
+        except Exception as e:
+            err = clean_error(e) if swap else e
+        if err is not None:
+            raise err.with_traceback(None)
         try:
             body = r.content or b""
         except Exception:
@@ -179,6 +260,8 @@ def _boot(path, logpath):
         p = urlsplit(request.url or "")
         rlog.write(json.dumps({"method": str(request.method), "path": p.path + ("?" + p.query if p.query else ""),
                                "status": r.status_code, "sha256": hashlib.sha256(body).hexdigest()}) + "\n")
+        if swap:
+            clean_response(r)
         return r
     http.client.HTTPConnection.putrequest = putrequest
     requests.Session.send = session_send
@@ -254,6 +337,7 @@ def run(code: str, lab_url: str, token: str, timeout: int = 30) -> dict:
     return scrub(_run(code, lab_url, token, timeout))
 
 
+TOKEN_PLACEHOLDER = "@@AUDIT_TOKEN@@"   # seule valeur de LAB_TOKEN visible par le script
 MEM_LIMIT = 1 << 30           # 1 Gio d'espace d'adressage (Python + requests : ~60 Mo)
 FSIZE_LIMIT = 10 << 20        # 10 Mo par fichier écrit (seul le journal des requêtes l'est)
 
@@ -271,7 +355,9 @@ def _run(code: str, lab_url: str, token: str, timeout: int) -> dict:
             f.write(code)
         with open(runner, "w") as f:
             f.write(RUNNER)
-        env = {"LAB_URL": lab_url, "LAB_TOKEN": token, "PATH": os.environ.get("PATH", ""),
+        # le script ne reçoit qu'un jeton substitut ; l'amorçage le remplace par le vrai à l'envoi HTTP
+        env = {"LAB_URL": lab_url, "LAB_TOKEN": TOKEN_PLACEHOLDER if token else "", "SB_TOKEN": token or "",
+               "PATH": os.environ.get("PATH", ""),
                "NO_PROXY": "127.0.0.1,localhost", "SB_LIMITS": _limits(timeout)}
         so, se = os.path.join(d, "stdout.txt"), os.path.join(d, "stderr.txt")
         with open(so, "wb") as fo, open(se, "wb") as fe:     # fichiers : RLIMIT_FSIZE borne la sortie
