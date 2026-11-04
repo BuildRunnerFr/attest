@@ -10,6 +10,10 @@ vers son rapport complet.
 - Données personnelles : 178/256 repérées par le modèle seul, 256/256 masquées grâce au filet déterministe.
 - Coût : 0,65 $ pour les 8 systèmes ; 240 s.
 
+> **Erratum (4 Nov 2026).** These sealed reports predate commit 00725c4 and cite "RTS 21(3)", which does not exist in
+> the verified library: read **RTS 2024/1774 art. 21(1)(e)(ii)**. The files are left unchanged so that `attest verify`
+> still passes on them; later benchmark runs (ledger `20261104-020142-bench-meta`) use the corrected reference.
+
 Relecture du programme de travail et des scripts écrits pendant cette évaluation (`controls/AUD-2026-IAM-01.en.json`,
 `library/PSI-4.*`) :
 - Programme fidèle à la politique : 7 règles, criticités, références et type de remédiation corrects.

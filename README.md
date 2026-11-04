@@ -9,9 +9,9 @@ Measured on real runs with the Meta Model API (ids from our run ledger; Muse Spa
 
 | Run | Result | Cost |
 |---|---|---|
-| Benchmark, 8 fictitious banks (`20261103-232326-bench-meta`) | **56/56 checks correct, 0 false finding, 0 missed, prompt injection flagged**, 256/256 personal-data items masked | $0.53, 300 s |
+| Benchmark, 8 fictitious banks, 3 runs (`20261103-232326`, `20261103-235819`, `20261104-020142` `-bench-meta`) | **56/56 checks correct on every run, 0 false finding, 0 missed, prompt injection flagged 3/3**, 256/256 personal-data items masked each time | $0.50–0.53, 300–370 s per run |
 | IAM console audit with remediation (`20261103-234915-iam-meta`) | **6 non-compliances; 5 fixes applied after (demo) pre-approval and re-tested compliant**, 1 action plan | $0.12, 77 s |
-| Code repository audit (`20261103-234658-code-meta`) | **7/7 planted flaws found**, each with its evidence | $0.48 |
+| Code repository audit, 4 runs (`20261103-230340`, `20261103-234658`, `20261104-002236`, `20261104-060119` `-code-meta`) | **7/7 planted flaws found on 3 of 4 runs**, each with its evidence; on `20261104-002236`, 6 found, 1 sent to human review because the screenshot did not back the script, 1 evidence error (fixed since: a missing file is now a technical error, never a finding) | $0.33–0.74 |
 
 Caveat: the test set is small, fictitious and built by us. Encouraging, not a proof of general accuracy.
 
@@ -57,7 +57,7 @@ Quote verification, testability triage and mandatory approval are there because 
 |---|---|---|
 | 1. Work programme | Reads the framework (DORA art. 9(4), RTS 2024/1774 art. 12 and 21, internal policy) and writes a catalogue of testable controls with severity, risk and recommendation. Cached for auditor review. | **Muse Spark 1.3** |
 | 2. Test | Writes one read-only Python test per control, statically checked, executed with a read-only service account. The **verdict comes from the script, never from the model**. Scripts are kept in a reviewable library and replayed on later runs. | **Muse Spark 1.3** |
-| 3. Evidence | Captures the admin page, asks the model whether it corroborates the test (disagreement → *needs review*), and spots personal data and prompt-injection attempts. | **Muse Spark 1.3** (vision) |
+| 3. Evidence | Captures the admin page, asks the model whether it corroborates the test (disagreement → *needs review*), and spots prompt-injection attempts. The model only receives the screenshot after the deterministic net has blacked out the personal data found in the page (the benchmark alone sends synthetic data unmasked, to measure the model's own recall). | **Muse Spark 1.3** (vision) |
 | 4. Annotate | Snaps the model's boxes onto what is really on screen: proving rows are outlined, e-mails and IPs are masked before the evidence leaves the system. Masking coverage is measured against the page DOM. | **SAM 3.1** |
 | 5. Remediate (optional) | Drafts a minimal change request per finding. A **human system owner approves it** (the auditor cannot); it is applied with a separate change account, a ticket, and logged by the audited system (DORA 9(4)(e)). Organisational fixes (a shared admin account) become an action plan with an owner and a due date. | **Muse Spark 1.3** |
 | 6. Re-test and report | Replays the same script, seals new evidence, issues an HTML + PDF report with an executive opinion, findings in Criteria / Condition / Risk / Recommendation form, a traceability matrix, an evidence register, measured AI cost and a hash-chained audit trail. | — |
@@ -120,15 +120,18 @@ We do not fine-tune anything: the model is not the judge, and a bank cannot hand
 edge cases, generic accounts, prompt injection, a 56-account directory) and reports accuracy, false findings, missed
 non-compliances, privacy masking and cost. See [docs/EVALUATION.md](docs/EVALUATION.md).
 
-Two real runs of the same benchmark (Muse Spark 1.3 + SAM 3.1):
+Four real runs of the same benchmark (Muse Spark 1.3 + SAM 3.1):
 
 | Run | Checks correct | False findings / missed | Injection | Personal data spotted by the model / masked | Cost, time |
 |---|---|---|---|---|---|
 | First run, 2 Nov 2026 ([scorecard](examples/evaluation-en/scorecard.md)) | 56/56 | 0 / 0 | flagged | 178/256 (70 %) / 256/256 | $0.65, 240 s |
 | Replay in GitHub Actions, ledger `20261103-232326-bench-meta` | 56/56 | 0 / 0 | flagged | 87/256 (34 %) / 256/256 | $0.53, 300 s |
+| Stability run, ledger `20261103-235819-bench-meta` | 56/56 | 0 / 0 | flagged | 183/256 (71 %) / 256/256 | $0.50, 334 s |
+| Stability run, ledger `20261104-020142-bench-meta` | 56/56 | 0 / 0 | flagged | 197/256 (77 %) / 256/256 | $0.50, 370 s |
 
-Verdicts were stable; the model's recall of personal data was not, which is why masking never depends on it (the
-deterministic safety net masked the rest both times). A small, self-built test set: encouraging, not a proof of
+Verdicts were identical on all four runs (56/56, 0 false finding, 0 missed). The model's own recall of personal data
+ranged from 34 % to 77 %, which is why masking never depends on it: the deterministic safety net masked 256/256 every
+time. A small, self-built test set: encouraging, not a proof of
 general accuracy.
 
 ## Repository

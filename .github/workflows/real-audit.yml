@@ -44,7 +44,6 @@ jobs:
       ATTEST_AUDITOR: Attest CI
       ATTEST_WORKERS: "4"
       ATTEST_USAGE_FILE: /tmp/attest-usage.json
-      MODEL_API_KEY: ${{ secrets.MODEL_API_KEY }}
       KIND: ${{ inputs.kind }}
       BACKEND: ${{ inputs.backend }}
       NOTE: ${{ inputs.note }}
@@ -71,6 +70,8 @@ jobs:
 
       - name: Clé de l'API
         if: inputs.backend == 'meta'
+        env:
+          MODEL_API_KEY: ${{ secrets.MODEL_API_KEY }}
         run: |
           if [ -z "$MODEL_API_KEY" ]; then
             echo "::error::Secret MODEL_API_KEY absent : Settings > Secrets and variables > Actions"; exit 1
@@ -82,6 +83,7 @@ jobs:
         continue-on-error: true
         env:
           ATTEST_BUDGET_USD: ${{ inputs.backend == 'meta' && steps.budget.outputs.remaining || '' }}
+          MODEL_API_KEY: ${{ secrets.MODEL_API_KEY }}   # seule l'étape d'audit reçoit la clé
         run: bash ops/real_run.sh "$KIND" out
 
       - name: Publication (branche real-results)

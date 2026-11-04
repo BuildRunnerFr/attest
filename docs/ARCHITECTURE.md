@@ -94,4 +94,4 @@ proves its result (e.g. the faulty file); SAM 3.1 then outlines the faulty lines
 | DORA 9(4)(e) — changes recorded, tested, assessed, approved, implemented, verified | Change request → human approval → change account + ticket → system journal → re-test |
 | RTS 2024/1774 art. 12(2)(d) — protect logs against tampering | Hash-chained trail and manifest |
 | RTS 2024/1774 art. 21(1)(a) — least privilege | Read-only test account; change account only after approval |
-| DORA art. 28 — ICT third-party risk | Local backend avoids an external model provider for confidential evidence |
+| ICT third-party risk (external model provider) | Local backend avoids an external model provider for confidential evidence |

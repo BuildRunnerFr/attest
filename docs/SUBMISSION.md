@@ -15,11 +15,13 @@ Do not add a number that is not sourced there.
 > a deterministic safety net. Fixes become change requests that the system owner approves; Attest applies them with a
 > separate account, logs them and re-tests. Everything is sealed in a hash-chained audit trail.
 >
-> Measured on real runs: 56/56 checks correct on 8 fictitious banks, 0 false finding, 0 missed, prompt injection
-> flagged ($0.53); an IAM audit with 6 non-compliances, 5 fixes re-tested compliant ($0.12); 7/7 planted flaws found in
-> a code repository ($0.48). The test set is small and self-built: encouraging, not proof of general accuracy.
+> Measured on real runs: 56/56 checks correct on 8 fictitious banks in each of 3 runs, 0 false finding, 0 missed,
+> prompt injection flagged every time ($0.50–0.53 per run); an IAM audit with 6 non-compliances, 5 fixes re-tested compliant ($0.12); 7/7 planted flaws found in
+> a code repository on 3 of 4 runs ($0.48 on the run shown). The test set is small and self-built: encouraging, not proof of general accuracy.
 
-Sources: `20261103-232326-bench-meta`, `20261103-234915-iam-meta`, `20261103-234658-code-meta`.
+Sources: `20261103-232326-bench-meta`, `20261103-235819-bench-meta`, `20261104-020142-bench-meta`,
+`20261103-234915-iam-meta`, `20261103-234658-code-meta` (code runs: `20261103-230340`, `20261103-234658`,
+`20261104-002236`, `20261104-060119` `-code-meta`).
 
 ## Final video script (3:00, English)
 
@@ -29,17 +31,17 @@ fallbacks are in DEMO.md. On-screen captions in *italics*.
 | Time | Screen | Voice-over |
 |---|---|---|
 | 0:00–0:12 | Close-up of an evidence screenshot: SAM 3.1 outlines appear on the failing rows, then the e-mails and IPs are blacked out | "This is audit evidence. A red box on the row that fails the control — and every e-mail and IP masked before it leaves the system. That is SAM 3.1, inside a compliance auditor." |
-| 0:12–0:25 | Report filling live; caption *Attest — audits that test, not read* | "Banks prove DORA compliance with screenshots and spreadsheets. Attest tests the system itself, read-only, and writes the report a CISO signs." |
+| 0:12–0:25 | Report filling live; caption *Attest — audits that test, not read* | "Since January 2025, DORA requires EU banks to prove their ICT controls work. Today that proof is screenshots in spreadsheets. Attest tests the system itself — read-only — and writes the report a CISO signs." |
 | 0:25–0:55 | Attest Studio: tick DORA 9(4), RTS 21 and the internal policy, pick the IAM console, *Draft the work programme*; review page with verified quotes and "document review / interview" badges; type a name, approve | "Pick the regulation, pick the system. Muse Spark drafts the audit programme, and every requirement must quote the text word for word — checked by code. Thresholds say where they come from; what cannot be tested is listed as not covered. Nothing runs until an auditor approves." |
 | 0:55–1:30 | Live report: tests running, screenshots, SAM outlines, masked data | "Each control becomes a read-only test script. The verdict comes from the script, never from the model. Muse Spark reads the screenshot to corroborate it; SAM 3.1 makes the evidence precise and private, with a deterministic safety net — privacy cannot depend on a model's recall." |
 | 1:30–1:55 | CLI remediation: change request, owner types `y`; re-test green; shared admin account → action plan; caption *6 non-compliances · 5 fixes re-tested compliant · run 20261103-234915-iam-meta* | "Fixing is not the auditor's job. Attest drafts the change, the system owner approves it, it is applied with a separate account, logged and re-tested. A shared admin account is an ownership decision, so it becomes an action plan." |
-| 1:55–2:20 | Studio: RTS 16 + secure-development policy, target = code repository; findings with outlined lines and masked secrets; caption *7/7 planted flaws · run 20261103-234658-code-meta* | "Same agent, another target: a payment microservice. Hard-coded secrets, TLS checks off, MD5 passwords, a production export in the test data — all seven planted flaws found, each pointing at the exact lines, secrets masked." |
-| 2:20–2:40 | Evaluation scorecard; caption *56/56 · 0 false finding · 0 missed · injection flagged · run 20261103-232326-bench-meta*; then `attest verify` failing on an edited screenshot | "We don't train the model, we measure the agent: 56 checks on eight fictitious banks with known answers, all correct, and the prompt-injection attempt flagged. It's our own small test set — a start, not a proof. And every piece of evidence is hash-chained: edit one pixel and verification fails." |
-| 2:40–3:00 | README table of Meta models, `ATTEST_BACKEND=local`, report annex C cost; caption *$0.12 of Muse Spark calls for the IAM audit* | "Muse Spark plans, codes and reviews the evidence; SAM 3.1 makes it precise and private; and the agent is designed to run on open-weights Muse Glimmer inside the bank. Twelve cents of model calls for a full audit. Attest: audits that test, not read." |
+| 1:55–2:20 | Studio: RTS 16 + secure-development policy, target = code repository; findings with outlined lines and masked secrets; caption *7/7 planted flaws · run 20261103-234658-code-meta* | "Same agent, another target: a payment microservice. Hard-coded secrets, TLS checks off, MD5 passwords, a production export in the test data — each finding points at the exact lines, secrets masked. Seven of seven on three of our four runs; on the other, one screenshot didn't back the script, so Attest sent it to a human instead of guessing." |
+| 2:20–2:40 | Evaluation scorecard; caption *56/56 on 3 of 3 runs · 0 false finding · 0 missed · injection flagged*; then `attest verify` failing on an edited screenshot | "We don't train the model, we measure the agent: 56 checks on eight fictitious banks with known answers, all correct on three separate runs, and the injection flagged every time. It's our own small test set — a start, not a proof. And every piece of evidence is hash-chained: edit one pixel and verification fails." |
+| 2:40–3:00 | README table of Meta models, `ATTEST_BACKEND=local`, report annex C cost; caption *$0.12 of Muse Spark calls for the IAM audit* | "Muse Spark plans, codes and reviews the evidence; SAM 3.1 makes it precise and private; and the agent is designed to run on open-weights Muse Glimmer inside the bank. Twelve cents of model calls for a full audit, and the same tests replay every month. Attest: audits that test, not read." |
 
 Spoken numbers and their sources: 6 / 5 / $0.12 → `20261103-234915-iam-meta` (Muse Spark `priced_usd` 0.1209; SAM 3.1
-has no public price and is excluded); 7/7 → `20261103-234658-code-meta`; 56/56, 0 FP, 0 FN, injection 1/1 →
-`20261103-232326-bench-meta`. Do not say "closed" for the fixes: they ran under demo pre-approvals, so they are
+has no public price and is excluded); 7/7 → `20261103-234658-code-meta` (3 of 4 code runs, see above); 56/56, 0 FP, 0 FN, injection flagged, on each of
+`20261103-232326`, `20261103-235819`, `20261104-020142` `-bench-meta`. Do not say "closed" for the fixes: they ran under demo pre-approvals, so they are
 "re-tested compliant", closure pending the owner's approval.
 
 ## Bonus prizes targeted
@@ -51,6 +53,10 @@ has no public price and is excluded); 7/7 → `20261103-234658-code-meta`; 56/56
 - **Open Weights** — only as *designed for*: Attest has a local backend for Muse Glimmer (`ATTEST_BACKEND=local`,
   llama.cpp / vLLM / SGLang) because DORA third-party risk makes on-premise models the realistic target for banks.
   It has **not yet been benchmarked on real hardware**; say so in the submission if this prize is entered.
+
+- **Creative** — segmentation used as an audit instrument: SAM 3.1 snaps the model's boxes onto the exact rows that
+  prove a finding and masks personal data; masking is measured against the page DOM (256/256 on every benchmark run:
+  `20261103-232326`, `20261103-235819`, `20261104-020142` `-bench-meta`).
 
 ## Before submitting (for the author)
 
