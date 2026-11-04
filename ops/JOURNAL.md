@@ -14,6 +14,48 @@ suite prévue. Les chiffres cités viennent tous de `ledger.jsonl` (branche `rea
 - Gel du code le 4 novembre 2026 à 18:00 (Paris) : ensuite, documentation, texte de soumission et vérifications
   seulement. Soumission : 5 novembre 2026, 03:00 (Paris) = 4 novembre 21:00 (ET).
 
+## Cycle 4 de l'équipe d'agents — 4 novembre 2026, 06:50–07:50
+
+(Le cycle 3 n'a laissé qu'une exécution réelle au registre, `20261104-020142-bench-meta`, sans entrée de journal.)
+
+Constats principaux :
+- Directeur d'audit / QA : un 404 sur le fichier cherché (C6) concluait « non conforme » ; la page de preuve venait du
+  script même si elle n'avait jamais été lue ; les contrôles « à revoir » n'étaient pas comptés dans l'opinion ; le
+  programme du modèle invente des chemins de fichiers (2 sur 7 dans `20261104-002236-code-meta`).
+- RSSI : la capture brute partait au modèle de vision avant tout masquage (contradiction avec le README) ; pas de
+  limite mémoire du script ; clé d'API exposée à tout le job CI.
+- Designer : tableau de bord EN entièrement en français ; titres de bibliothèque en français dans le Studio et le
+  rapport EN ; typographie d'impression inversée, identifiants coupés (« F-/01 ») ; ponctuation française en EN.
+- Coach : un seul banc cité sur trois ; audit de code présenté 7/7 sans la variance ; deux scripts vidéo ; impact absent
+  des premières secondes ; prix Creative non visé.
+
+Commits poussés sur main (146 tests verts, mock IAM et code OK, vérificateur indépendant : APPROUVÉ) :
+- 48f292f : bac à sable — fichier de preuve en 4xx → erreur technique ; aucune réponse 2xx → erreur ; limites mémoire
+  (1 Gio), CPU et taille de fichier.
+- 893aabc : page de preuve réellement lue (2xx) ou premier fichier observé lu ; « à revoir » compté comme non concluant
+  et opinion qualifiée ; pré-masquage déterministe avant l'envoi au modèle de vision (désactivé dans le banc seul, qui
+  mesure le rappel du modèle sur données synthétiques ; SAM 3.1 reçoit encore la capture brute).
+- b2c81cd : tableau de bord bilingue régénéré hors ligne, titres EN de la bibliothèque, « (EU) », typographie d'impression,
+  ponctuation et alerte d'erreur du Studio.
+- 2fc0539 : prompt — citer un fichier réellement lu. efdb78b, a74a3ac et suivant : docs (bancs et audits de code sourcés,
+  script vidéo unique, erratum « RTS 21(3) » des exemples scellés, `ATTEST_LANG=en` par défaut, clé limitée aux étapes
+  qui en ont besoin) ; limites posées par le lanceur (sans preexec_fn) ; pré-masquage actif si la variable est vide.
+
+Exécutions réelles (toutes réussies) :
+- `20261104-060119-code-meta` (563f39e, référence) : 10 contrôles, 9 non conformes, 1 conforme, 0 erreur de preuve, 0,74 $.
+- `20261104-062938-code-meta` (a74a3ac) : 9 contrôles, 9 non conformes, toutes les preuves corroborées, C1 prouvé sur
+  app/config.py, export de production trouvé, 0 erreur de preuve, pré-masquage actif, 0,65 $.
+- `20261104-063210-iam-meta` (a74a3ac, EN) : 6 non-conformités, 5 re-testées conformes, 0 erreur de preuve, 0,13 $.
+- `20261104-064005-bench-meta` (a74a3ac) : 56/56, 0 FP, 0 FN, injection 1/1, 256/256 masquées dont 221 par le modèle,
+  0,51 $, 417 s. Stabilité sur 4 bancs du registre : 56/56 à chaque fois ; rappel du modèle 87 à 221/256.
+- Dépense cumulée au registre (estimation prudente) : 11,75 $ / 130 $.
+
+Pour Ethan : LICENSE ; vérification EUR-Lex de l'article 21 du RTS (inchangé) ; Muse Glimmer « Apache 2.0 ».
+
+Suite prévue : (1) donner au planificateur la liste des fichiers du dépôt et marquer les pages de preuve non vérifiées ;
+(2) dépendances épinglées (requirements.txt) ; (3) cause probable dans les constats ; (4) images du README en anglais
+depuis `20261104-063210-iam-meta` ; (5) après 18:00 : gel, docs et contrôles seulement.
+
 ## Cycle 2 de l'équipe d'agents — 4 novembre 2026, 00:50–01:45
 
 Constats principaux :

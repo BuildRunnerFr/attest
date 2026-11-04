@@ -9,9 +9,9 @@ Measured on real runs with the Meta Model API (ids from our run ledger; Muse Spa
 
 | Run | Result | Cost |
 |---|---|---|
-| Benchmark, 8 fictitious banks, 3 runs (`20261103-232326`, `20261103-235819`, `20261104-020142` `-bench-meta`) | **56/56 checks correct on every run, 0 false finding, 0 missed, prompt injection flagged 3/3**, 256/256 personal-data items masked each time | $0.50–0.53, 300–370 s per run |
+| Benchmark, 8 fictitious banks, 4 runs (`20261103-232326`, `20261103-235819`, `20261104-020142`, `20261104-064005` `-bench-meta`) | **56/56 checks correct on every run, 0 false finding, 0 missed, prompt injection flagged 4/4**, 256/256 personal-data items masked each time | $0.50–0.53, 300–417 s per run |
 | IAM console audit with remediation (`20261103-234915-iam-meta`) | **6 non-compliances; 5 fixes applied after (demo) pre-approval and re-tested compliant**, 1 action plan | $0.12, 77 s |
-| Code repository audit, 4 runs (`20261103-230340`, `20261103-234658`, `20261104-002236`, `20261104-060119` `-code-meta`) | **7/7 planted flaws found on 3 of 4 runs**, each with its evidence; on `20261104-002236`, 6 found, 1 sent to human review because the screenshot did not back the script, 1 evidence error (fixed since: a missing file is now a technical error, never a finding) | $0.33–0.74 |
+| Code repository audit, 5 runs (`20261103-230340`, `20261103-234658`, `20261104-002236`, `20261104-060119`, `20261104-062938` `-code-meta`) | **7/7 planted flaws found on 4 of 5 runs**, each with its evidence; on `20261104-002236`, 6 found, 1 sent to human review because the screenshot did not back the script, 1 evidence error (fixed since: a missing file is now a technical error, never a finding) | $0.33–0.74 |
 
 Caveat: the test set is small, fictitious and built by us. Encouraging, not a proof of general accuracy.
 
@@ -120,7 +120,7 @@ We do not fine-tune anything: the model is not the judge, and a bank cannot hand
 edge cases, generic accounts, prompt injection, a 56-account directory) and reports accuracy, false findings, missed
 non-compliances, privacy masking and cost. See [docs/EVALUATION.md](docs/EVALUATION.md).
 
-Four real runs of the same benchmark (Muse Spark 1.3 + SAM 3.1; the first from `examples/`, the other three from the run ledger):
+Five real runs of the same benchmark (Muse Spark 1.3 + SAM 3.1; the first from `examples/`, the other four from the run ledger):
 
 | Run | Checks correct | False findings / missed | Injection | Personal data spotted by the model / masked | Cost, time |
 |---|---|---|---|---|---|
@@ -128,9 +128,10 @@ Four real runs of the same benchmark (Muse Spark 1.3 + SAM 3.1; the first from `
 | Replay in GitHub Actions, ledger `20261103-232326-bench-meta` | 56/56 | 0 / 0 | flagged | 87/256 (34 %) / 256/256 | $0.53, 300 s |
 | Stability run, ledger `20261103-235819-bench-meta` | 56/56 | 0 / 0 | flagged | 183/256 (71 %) / 256/256 | $0.50, 334 s |
 | Stability run, ledger `20261104-020142-bench-meta` | 56/56 | 0 / 0 | flagged | 197/256 (77 %) / 256/256 | $0.50, 370 s |
+| Stability run, ledger `20261104-064005-bench-meta` | 56/56 | 0 / 0 | flagged | 221/256 (86 %) / 256/256 | $0.51, 417 s |
 
-Verdicts were identical on all four runs (56/56, 0 false finding, 0 missed). The model's own recall of personal data
-ranged from 34 % to 77 %, which is why masking never depends on it: the deterministic safety net masked 256/256 every
+Verdicts were identical on all five runs (56/56, 0 false finding, 0 missed). The model's own recall of personal data
+ranged from 34 % to 86 %, which is why masking never depends on it: the deterministic safety net masked 256/256 every
 time. A small, self-built test set: encouraging, not a proof of
 general accuracy.
 
