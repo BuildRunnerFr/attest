@@ -14,6 +14,56 @@ suite prévue. Les chiffres cités viennent tous de `ledger.jsonl` (branche `rea
 - Gel du code le 4 novembre 2026 à 18:00 (Paris) : ensuite, documentation, texte de soumission et vérifications
   seulement. Soumission : 5 novembre 2026, 03:00 (Paris) = 4 novembre 21:00 (ET).
 
+## Cycle 7 de l'équipe d'agents — 4 novembre 2026, 12:16–13:00 (Paris)
+
+Constats principaux :
+- Directeur d'audit : pas d'opinion « impossibilité de conclure » (7 contrôles en erreur → « réserve ») ; extrait
+  RTS 21 (`exigences/library/rts-21-controle-acces.md:9` et `:11`) peut-être raccourci sans « […] » (« generic
+  administrator accounts », exception des systèmes critiques à 6 mois) — à vérifier sur EUR-Lex, non modifié ;
+  PSI-4.6 testé en conception seulement (champ `test_nature` proposé) ; population/échantillon non affichés ;
+  limite « test ponctuel, pas sur une période » absente.
+- RSSI : jeton d'audit lisible par le script (sortie inversée/espacée contourne `scrub`, démontré) ; `observed`/`detail`
+  du système audité non encadrés dans les prompts de vérification visuelle et de correctif ; documents Studio non
+  encadrés ; `persist-credentials` absent sur le premier checkout de real-audit.yml ; résidence des données à expliciter ;
+  `os.stat` sans événement d'audit (oracle d'existence de fichiers).
+- Concepteur de cas : P/R par règle non mesurés ; oracle PSI-4.7 par sous-chaînes (sans effet sur les 1 155 noms
+  générés, vérifié) ; manquent pagination/volume, MFA par compte, RH ↔ IAM, code dans le banc.
+- QA : `opinion([])` = « satisfaisant » ; `{"controls": [...]}` du modèle fait planter `catalog.normalize` ;
+  `verify` en FR en EN et trace sur ligne corrompue ; `read_text()` sans encodage (26 endroits) ; mock FR en EN.
+- Coach/designer : décomptes du registre en retard (102217 IAM, 102820 code) ; « Run: iam » au lieu de l'id du
+  registre ; « : » à la française dans le terminal EN ; limite IAM dans le rapport code ; Studio (langue active,
+  bouton actif sans contrôle, guillemets « » en EN).
+
+Commits poussés sur main (176 tests verts, mock IAM et code OK, vérificateur indépendant : REFUSÉ puis APPROUVÉ
+après correction de la référence « IIA 2410 » → « ISA 705, ISACA ITAF 1401 ») :
+- a41dc87 : bac à sable — jeton substitut `@@AUDIT_TOKEN@@` ; le vrai jeton n'est posé qu'à l'envoi HTTP et retiré
+  des réponses, redirections et exceptions (5 tests).
+- ff10470 : banc — précision et rappel strict par règle PSI-4.x (non concluants et manquants = non détectés ;
+  `recall_concluded` garde l'ancien sens), score PSI-4.7 par compte, doublons/conflits, oracle à mots entiers
+  (vérité terrain 01–08 inchangée), `python -m attest.bench rescore` (7 tests).
+- 9642f95 : opinion « impossibilité de conclure » (aucun contrôle exécuté ou concluant, ou plus de la moitié non
+  concluants sans constat élevé/critique), FR/EN, fondement de l'opinion ; résultats de test encadrés
+  `<<<BEGIN/END UNTRUSTED DATA>>>` dans les prompts `inspect` et `fix` ; docs : 5 IAM, 7 code, 6 bancs.
+- `demo-stable` = 9642f95 (avance rapide).
+
+Exécution réelle :
+- `20261104-115711-bench-meta` (9642f95) : 56/56, 0 FP, 0 FN, 0 non concluant ; par règle PSI-4.1 à 4.7 : précision
+  100 %, rappel strict 100 % (15 positifs) ; PSI-4.7 par compte : 23 admins, 6 TP, 17 TN, 0 FP, 0 FN ; injection 1/1 ;
+  256/256 masquées dont 176 par le modèle ; 0,52 $, 384 s. Les scripts du modèle passent avec le jeton substitut.
+- Dépense cumulée au registre (estimation prudente) : 19,82 $ / 130 $.
+
+Pour Ethan : vérifier sur EUR-Lex l'extrait RTS 21 (lignes 9 et 11 de rts-21-controle-acces.md) ; LICENSE ; lien vidéo
+(`<VIDEO_URL>`) ; dire à l'oral que « Unsatisfactory → Unsatisfactory » vient des correctifs pré-approuvés (non
+valables comme approbation), les 5 re-tests étant conformes.
+
+Durée du cycle : 44 min. Cycle suivant programmé : 4 novembre 13:31 (Paris).
+
+Suite prévue (avant 18:00) : (1) `catalog.normalize` accepte `{"controls": [...]}` et ids uniques ; `verify` bilingue
+et robuste à une ligne corrompue ; `encoding="utf-8"` partout ; (2) documents Studio encadrés comme non fiables ;
+`persist-credentials: false` + `env -u MODEL_API_KEY` pour la console en CI ; (3) id du registre dans le champ « Run »,
+« : » EN dans le terminal, limite générique du rapport code ; (4) Studio : langue active, bouton désactivé sans
+contrôle ; après 18:00 : gel (docs, modèle de menace, vérifications).
+
 ## Cycle 6 de l'équipe d'agents — 4 novembre 2026, 10:50–11:45
 
 Constats principaux :
