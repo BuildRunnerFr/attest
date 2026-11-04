@@ -50,7 +50,9 @@ td{border-bottom:1px solid var(--line);padding:8px;vertical-align:top}
 .sev-critique{background:var(--crit)}.sev-elevee{background:var(--high)}.sev-moyenne{background:var(--med)}.sev-faible{background:var(--low)}
 .st-pass{background:var(--ok)}.st-fail{background:var(--ko)}.st-review,.st-error{background:var(--rev)}.st-wait{background:#9ca3af}
 .fs{font-size:12px;font-weight:600;white-space:nowrap}.fs-closed{color:var(--ok)}.fs-open,.fs-rejected{color:var(--ko)}
-.fs-action_plan,.fs-pending{color:var(--med)}
+.fs-action_plan,.fs-pending,.fs-retested_unapproved{color:var(--med)}.fs-retested_unapproved{white-space:normal}
+.basis{font-size:13px;color:var(--ink);background:#f6f7f9;border-left:3px solid var(--navy);border-radius:0 8px 8px 0;
+ padding:10px 14px;margin:0 0 18px}.basis h3{margin:0 0 4px;font-size:13px}.basis p{margin:4px 0 0}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:6px 28px}
 dl.kv{display:grid;grid-template-columns:170px 1fr;gap:6px 14px;margin:0;font-size:13.5px}
 dl.kv dt{color:var(--mute)}dl.kv dd{margin:0}
@@ -253,6 +255,24 @@ def key_messages(lang, total, n, sev, closed, still_open, review) -> list:
     return out
 
 
+FRAMEWORK_DEFAULT = "DORA art. 9(4) · RTS (UE) 2024/1774 art. 12, 21 · PSI-4"
+
+
+def basis(state: dict) -> str:
+    """Fondement de l'opinion, tiré des données de la mission (aucune phrase générée par le modèle),
+    avec la limitation de périmètre tant que le programme ou les scripts n'ont pas été relus."""
+    m, entries = state["mission"], state.get("entries", [])
+    conclusive = sum(1 for x in entries if x.get("status_before") in ("pass", "fail"))
+    txt = t("basis.text").format(n=len(entries), k=conclusive, fw=m.get("framework_label") or FRAMEWORK_DEFAULT,
+                                 date=state.get("started", ""), env=m.get("environment") or "—")
+    # aucun script n'a de statut « relu » : ceux de la bibliothèque comme ceux écrits pour la mission sont des brouillons
+    scripts_unreviewed = any(x.get("test") for x in entries)
+    scope = ("basis.scope_all" if not state.get("catalogue", {}).get("reviewed")
+             else "basis.scope_scripts" if scripts_unreviewed else None)
+    return (f'<div class="basis"><h3>{e(t("basis.title"))}</h3><p>{e(txt)}</p>'
+            + (f'<p><b>{e(t("basis.scope"))}{colon()}</b>{e(t(scope))}</p>' if scope else "") + "</div>")
+
+
 def coverage(state: dict) -> str:
     """Annexe : ce que l'interprétation du référentiel a retenu, et surtout ce qu'Attest N'A PAS testé."""
     it = state.get("interpretation")
@@ -277,7 +297,9 @@ def write(state: dict, out: Path):
     entries = state.get("entries", [])
     findings = [x for x in entries if x.get("finding")]
     closed = [x for x in findings if x["finding"]["status"] == "closed"]
-    still_open = [x for x in findings if x["finding"]["status"] != "closed"]
+    # re-testés conformes sans approbation humaine valable : ni clos, ni ouverts ; comptés dans l'opinion
+    retested = [x for x in findings if x["finding"]["status"] == "retested_unapproved"]
+    still_open = [x for x in findings if x["finding"]["status"] not in ("closed", "retested_unapproved")]
     review = [x for x in entries if x.get("status_before") == "review"]
     errors = [x for x in entries if x.get("status_before") == "error"]     # non concluants : jamais conformes
     sev_count = {s: sum(1 for x in findings if x["finding"]["severity"] == s)
@@ -297,7 +319,8 @@ def write(state: dict, out: Path):
     approvals = sum(1 for d in state.get("decisions", []) if d["approved"] and d.get("mode") == "interactive")
     pre = sum(1 for d in state.get("decisions", []) if d["approved"] and d.get("mode") == "pre-approved")
     pre_txt = f' · {pre} {t("k.preapproved")}' if pre else ""
-    kpis = "".join(f'<div class="kpi"><b>{v}</b><span>{e(t(k))}{e(pre_txt) if k == "k.approvals" else ""}</span></div>' for k, v in [
+    extra = {"k.approvals": pre_txt, "k.closed": f' · {len(retested)} {t("k.retested")}' if retested else ""}
+    kpis = "".join(f'<div class="kpi"><b>{v}</b><span>{e(t(k))}{e(extra.get(k, ""))}</span></div>' for k, v in [
         ("k.controls", len(entries)), ("k.findings", len(findings)), ("k.closed", len(closed)),
         ("k.open", len(still_open)), ("k.approvals", approvals), ("k.pii", pii),
         ("k.duration", f"{dur // 60} min {dur % 60:02d} s"), ("k.cost", e(cost))])
@@ -307,6 +330,8 @@ def write(state: dict, out: Path):
     legend = "".join(f'<span><i style="background:{colors[s]}"></i>{e(t("sev." + s))}{colon()}{n}</span>' for s, n in sev_count.items())
     msgs = key_messages(state.get("lang", "fr"), len(entries), len(findings), sev_count, len(closed),
                         len(still_open), len(review)) if entries and not running and not state.get("aborted") else []
+    if retested and msgs:
+        msgs.insert(2 if closed else 1, t("msg.retested").format(n=len(retested)))
     if errors and not running:
         msgs.append(t("msg.error").format(n=len(errors)))
     no_ev = sum(1 for x in entries if x.get("evidence_error"))
@@ -315,7 +340,8 @@ def write(state: dict, out: Path):
     inj = f'<div class="alert">⚠ {e(t("msg.injection"))}</div>' if state.get("injection_detected") else ""
     if state.get("aborted"):                      # échec visible : le rapport partiel ne vaut pas opinion
         inj = f'<div class="alert abort">⛔ {e(t("aborted"))}<br><span class="mono">{e(redact(state["aborted"]))}</span></div>' + inj
-    s1 = (f'<section id="s1"><h2>{e(t("s1"))}</h2><div class="ops">{ops}</div><div class="kpis">{kpis}</div>'
+    bas = basis(state) if state.get("opinion_initial") and not running and not state.get("aborted") else ""
+    s1 = (f'<section id="s1"><h2>{e(t("s1"))}</h2><div class="ops">{ops}</div>{bas}<div class="kpis">{kpis}</div>'
           + (f'<div class="dist">{dist}</div><div class="legend">{legend}</div>' if findings else "")
           + inj + (f'<h3>{e(t("msg.title"))}</h3><ul class="msgs">' + "".join(f"<li>{e(x)}</li>" for x in msgs) + "</ul>" if msgs else "")
           + "</section>")
@@ -328,7 +354,7 @@ def write(state: dict, out: Path):
     kv = [("m.mission", m["id"]), ("m.entity", m["entity"]), ("m.system", m["system"]),
           ("m.crit", m["system_criticality"]), ("m.env", m["environment"]), ("m.owner", m["owner"]),
           ("m.auditor", m["lead_auditor"]), ("m.date", state["started"]),
-          ("m.framework", m.get("framework_label") or "DORA art. 9(4) · RTS (UE) 2024/1774 art. 12, 21 · PSI-4"),
+          ("m.framework", m.get("framework_label") or FRAMEWORK_DEFAULT),
           ("m.target", state.get("target_label", "")), ("m.catalogue", cat_txt)]
     s2 = (f'<section id="s2"><h2>{e(t("s2"))}</h2><dl class="kv">'
           + "".join(f"<dt>{e(t(k))}</dt><dd>{e(v)}</dd>" for k, v in kv) + "</dl>"
@@ -402,6 +428,9 @@ def write(state: dict, out: Path):
                f'<h3>{e(t("a.integrity"))}</h3><p class="small">{e(t("a.integrity_text"))}</p>'
                f'<p class="hash">{e(state.get("trail_head", "…"))}</p>{journal}{coverage(state)}</section>')
 
+    # l'outil prépare, il ne signe pas : aucun visa d'auditeur n'est encore recueilli sur le rapport
+    signoff = t("signoff.pending") + (f' ({t("signoff.programme").format(r=cat["reviewer"])})'
+                                      if cat.get("reviewed") and cat.get("reviewer") else "")
     live = f'<span class="live"></span>{e(t("running"))} · ' if running else ""
     refresh = '<meta http-equiv="refresh" content="3">' if running else ""
     page = f"""<!doctype html><html lang="{e(state.get('lang', 'fr'))}"><head><meta charset="utf-8">
@@ -410,7 +439,7 @@ def write(state: dict, out: Path):
 <div class="band"><span><b>{e(t("classification"))}{colon().rstrip()}</b> {e(m["classification"])}</span><span>{live}{e(m["id"])} · Attest</span></div>
 <div class="cover"><p class="eyebrow">{e(t("report"))} · {e(m["id"])}</p><h1>{e(m["title"])}</h1>
 <p class="sys">{e(m["entity"])} · {e(m["system"])}</p>
-<div class="meta"><span>{e(t("m.auditor"))}{colon()}<b>{e(m["lead_auditor"])}</b></span><span>{e(t("m.owner"))}{colon()}<b>{e(m["owner"])}</b></span>
+<div class="meta"><span>{e(t("signoff.prepared"))}{colon()}<b>{e(t("signoff.tool"))}</b></span><span>{e(t("signoff.label"))}{colon()}<b>{e(signoff)}</b></span><span>{e(t("m.owner"))}{colon()}<b>{e(m["owner"])}</b></span>
 <span>{e(t("m.date"))}{colon()}<b>{e(state["started"])}</b></span><span>{e(t("run"))}{colon()}<b>{e(state["run_id"])}</b></span></div></div>
 {s1}{s2}{s3}{s4}{annexes}
 <footer><span>{e(m["classification"])}</span><span>Attest · {e(state["backend"])} · {e(state["models"]["reason"])} + {e(state["models"]["segmentation"])}</span></footer>

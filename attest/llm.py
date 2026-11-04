@@ -109,9 +109,23 @@ def data_url(path: Path) -> str:
     return f"data:{mime};base64," + base64.b64encode(Path(path).read_bytes()).decode()
 
 
+BACKENDS = ("meta", "local", "mock")
+
+
+def check_backend():
+    """Échec immédiat (avant toute piste d'audit) : backend inconnu, ou backend meta sans clé.
+    La clé n'est jamais affichée : seule sa présence est vérifiée."""
+    from .i18n import t
+    if BACKEND not in BACKENDS:
+        raise SystemExit(t("pre.backend").format(b=BACKEND, ok=", ".join(BACKENDS)))
+    if BACKEND == "meta" and not os.getenv("MODEL_API_KEY", "").strip():
+        raise SystemExit(t("pre.nokey"))
+
+
 def meta_client():
     from openai import OpenAI
-    return OpenAI(base_url=META_BASE_URL, api_key=os.environ["MODEL_API_KEY"], max_retries=5, timeout=180)
+    check_backend()
+    return OpenAI(base_url=META_BASE_URL, api_key=os.environ["MODEL_API_KEY"].strip(), max_retries=5, timeout=180)
 
 
 def _local_client():

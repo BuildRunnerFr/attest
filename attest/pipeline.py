@@ -53,6 +53,11 @@ class Ctx:
 
 # ---------- tests ----------
 
+def _requests(res: dict) -> dict:
+    """Retire du résultat le journal des requêtes à la cible (il va dans la piste, pas au modèle)."""
+    return res.pop("requests", None) or {"count": 0, "log": []}
+
+
 def _safe_run(code: str, ctx) -> dict:
     try:
         return sandbox.run(code, ctx.mission.lab_url, config.AUDIT_TOKEN)
@@ -100,10 +105,12 @@ def run_test(e: dict, ctx: Ctx):
     path = ctx.out / "scripts" / f"{c['id']}_{catalog._safe(c['rule'])}.py"
     path.write_text(code)
     sha = sha256_file(path)
-    e["test"] = {"script": ctx.rel(path), "sha256": sha, "origin": origin, "code": code}
+    reqs = _requests(res)
+    e["test"] = {"script": ctx.rel(path), "sha256": sha, "origin": origin, "code": code,
+                 "requests": reqs["count"]}
     e["before"] = res
     ctx.trail.log("test_executed", control=c["id"], rule=c["rule"], origin=origin,
-                  file=ctx.rel(path), sha256=sha, result=res)
+                  file=ctx.rel(path), sha256=sha, result=res, requests=reqs)
 
 
 # ---------- preuves ----------
@@ -368,7 +375,9 @@ def apply_change(prop: dict, ticket: str, approver: str, ctx: Ctx) -> dict:
 
 
 def preflight(mission) -> None:
-    """Avant toute mission : le système répond, refuse l'accès anonyme, et le compte d'audit fonctionne."""
+    """Avant toute mission : le backend est configuré, le système répond, refuse l'accès anonyme,
+    et le compte d'audit fonctionne. Appelé avant l'ouverture de la piste : rien n'est écrit en cas d'échec."""
+    llm.check_backend()
     url = mission.lab_url
     try:
         anon = requests.get(url + "/api/security", timeout=5)
@@ -441,6 +450,7 @@ def remediation(entries: list, ctx: Ctx, approve_all: bool, approver: str) -> li
 
 def verify_fix(e: dict, ctx: Ctx, refresh):
     res = _safe_run(e["test"]["code"], ctx)           # le même script, rejoué tel quel
+    reqs = _requests(res)
     ev = None
     try:
         ev = collect_evidence(e, res, "after", ctx) if res["status"] != "error" else None
@@ -451,8 +461,12 @@ def verify_fix(e: dict, ctx: Ctx, refresh):
     e["after"], e["evidence_after"] = res, ev
     e["status_after"] = classify(res, ev)
     if e["status_after"] == "pass":
-        e["finding"]["status"] = "closed"
-    ctx.trail.log("retest", control=e["control"]["id"], result=res, status=e["status_after"])
+        # clôture seulement sur approbation humaine réelle : le correctif est rédigé par l'outil d'audit
+        # (risque d'autorévision) ; une pré-approbation de démo laisse le constat en attente d'approbation
+        human = e.get("change", {}).get("mode") == "interactive"
+        e["finding"]["status"] = "closed" if human else "retested_unapproved"
+    ctx.trail.log("retest", control=e["control"]["id"], result=res, status=e["status_after"],
+                  finding_status=e["finding"]["status"], requests=reqs)
     log(f"{t('log.verify')} {e['control']['id']} → {t('st.' + e['status_after'])}")
     refresh()
 
@@ -598,6 +612,8 @@ def _phases(state, ctx, refresh, remediate, approve_all, approver, replan, reset
             trail.log("evidence_sealed", control="journal", phase="after", file=ctx.rel(shot),
                       sha256=state["journal_evidence"]["sha256"], page="/admin/journal")
 
+    # seuls les constats clos (re-test conforme ET approbation humaine) sortent de l'opinion finale ;
+    # « retested_unapproved » y reste
     state["opinion_final"] = opinion([e["finding"]["severity"] for e in entries
                                       if e.get("finding") and e["finding"]["status"] != "closed"], inconclusive)
     state["injection_detected"] = any(

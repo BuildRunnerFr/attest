@@ -54,7 +54,8 @@ def main():
 
     if a.lang:
         os.environ["ATTEST_LANG"] = a.lang
-    from . import pipeline                       # après le choix de la langue
+    from . import llm, pipeline                  # après le choix de la langue
+    llm.check_backend()                          # échec immédiat : backend inconnu ou clé absente
 
     if a.cmd == "bench":
         from .bench import run_bench

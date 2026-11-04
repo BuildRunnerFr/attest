@@ -19,9 +19,11 @@ def test_full_engagement(lab, tmp_path):
     assert len(entries) == 7
     assert entries["PSI-4.6"]["status_before"] == "pass"                 # journalisation déjà conforme
     assert entries["PSI-4.1"]["finding"]["severity"] == "critique"
-    assert entries["PSI-4.1"]["finding"]["status"] == "closed"           # corrigé puis revérifié
+    # corrigé et re-testé conforme, mais pré-approuvé : la clôture attend l'approbation du responsable
+    assert entries["PSI-4.1"]["status_after"] == "pass"
+    assert entries["PSI-4.1"]["finding"]["status"] == "retested_unapproved"
     assert entries["PSI-4.7"]["finding"]["status"] == "action_plan"      # compte partagé : remédiation manuelle
-    assert state["opinion_initial"] == "insuffisant" and state["opinion_final"] == "ameliorer"
+    assert state["opinion_initial"] == "insuffisant" and state["opinion_final"] == "insuffisant"
     assert entries["PSI-4.1"]["change"]["journal"]["approved_by"] == "Responsable IAM"
     assert (out / "report.pdf").exists() and (out / "manifest.json").exists()
     assert verify(out)[0]

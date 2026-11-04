@@ -11,6 +11,9 @@ Deux barrières :
    (donc /proc, le dépôt, $HOME…), processus (exec, spawn, fork, system, Popen), ctypes, suppression ou
    renommage de fichiers, connexion ou résolution DNS vers tout autre hôte:port que LAB_URL.
 Tout refus → code de sortie non nul → statut "error" (le pipeline réécrit le script).
+Intégrité du verdict : l'amorçage consigne chaque requête envoyée à la cible (méthode, chemin, statut HTTP,
+SHA-256 du corps reçu) dans un journal ouvert AVANT la garde (le script ne peut pas l'écrire). Un verdict
+pass/fail sans aucune réponse de la cible ne repose sur aucune observation : statut "error".
 Le résultat renvoyé est passé par redact.scrub (aucun secret dans le détail ni dans le stderr).
 """
 import ast
@@ -20,6 +23,7 @@ import subprocess
 import sys
 import tempfile
 
+from .i18n import t
 from .redact import scrub
 
 ALLOWED_IMPORTS = {"requests", "json", "os", "sys", "re"}
@@ -107,8 +111,8 @@ RUNNER = r'''
 import sys, os
 
 
-def _boot(path):
-    import json, re, socket, http.client, requests, requests.sessions
+def _boot(path, logpath):
+    import hashlib, json, re, socket, http.client, requests, requests.sessions
     from urllib.parse import urlsplit
 
     def deny(what):                     # non rattrapable : le script ne peut pas ignorer un refus
@@ -141,9 +145,19 @@ def _boot(path):
     def putrequest(self, method, *a, **k):
         ro(method)
         return put(self, method, *a, **k)
+    # journal des requêtes : ouvert avant la garde d'exécution, hors de portée du script
+    rlog = open(logpath, "a", buffering=1)
     def session_send(self, request, **k):
         ro(request.method)
-        return send(self, request, **k)
+        r = send(self, request, **k)
+        try:
+            body = r.content or b""
+        except Exception:
+            body = b""
+        p = urlsplit(request.url or "")
+        rlog.write(json.dumps({"method": str(request.method), "path": p.path + ("?" + p.query if p.query else ""),
+                               "status": r.status_code, "sha256": hashlib.sha256(body).hexdigest()}) + "\n")
+        return r
     http.client.HTTPConnection.putrequest = putrequest
     requests.Session.send = session_send
     requests.sessions.get_netrc_auth = lambda *a, **k: None       # pas de lecture de ~/.netrc
@@ -201,7 +215,7 @@ def _boot(path):
     return code, g
 
 
-_c, _g = _boot(sys.argv[1])
+_c, _g = _boot(sys.argv[1], sys.argv[2])
 del _boot
 exec(_c, _g)
 '''
@@ -215,15 +229,43 @@ def run(code: str, lab_url: str, token: str, timeout: int = 30) -> dict:
 
 def _run(code: str, lab_url: str, token: str, timeout: int) -> dict:
     with tempfile.TemporaryDirectory() as d:
-        path, runner = os.path.join(d, "check.py"), os.path.join(d, "runner.py")
+        path, runner, rlog = (os.path.join(d, n) for n in ("check.py", "runner.py", "requests.jsonl"))
         with open(path, "w") as f:
             f.write(code)
         with open(runner, "w") as f:
             f.write(RUNNER)
         env = {"LAB_URL": lab_url, "LAB_TOKEN": token, "PATH": os.environ.get("PATH", ""),
                "NO_PROXY": "127.0.0.1,localhost"}
-        p = subprocess.run([sys.executable, "-I", runner, path], capture_output=True, text=True,
+        p = subprocess.run([sys.executable, "-I", runner, path, rlog], capture_output=True, text=True,
                            timeout=timeout, cwd=d, env=env, stdin=subprocess.DEVNULL)
+        reqs = _read_log(rlog)
+    res = _verdict(p)
+    res["requests"] = {"count": len(reqs), "log": reqs[:MAX_LOG]}
+    if res["status"] in ("pass", "fail") and not reqs:
+        # aucune requête à la cible : le verdict ne repose sur aucune observation
+        return {"status": "error", "detail": f"{t('sb.norequest')} — {res.get('detail', '')}"[:800],
+                "requests": res["requests"]}
+    return res
+
+
+MAX_LOG = 50              # requêtes conservées dans le résultat (le nombre total reste exact)
+
+
+def _read_log(path: str) -> list:
+    out = []
+    try:
+        with open(path) as f:
+            for line in f:
+                try:
+                    out.append(json.loads(line))
+                except json.JSONDecodeError:
+                    pass
+    except OSError:
+        pass
+    return out
+
+
+def _verdict(p) -> dict:
     lines = [l for l in p.stdout.strip().splitlines() if l.strip()]
     if p.returncode != 0 or not lines:
         return {"status": "error", "detail": (p.stderr or p.stdout)[-800:]}
