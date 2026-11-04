@@ -14,6 +14,48 @@ suite prévue. Les chiffres cités viennent tous de `ledger.jsonl` (branche `rea
 - Gel du code le 4 novembre 2026 à 18:00 (Paris) : ensuite, documentation, texte de soumission et vérifications
   seulement. Soumission : 5 novembre 2026, 03:00 (Paris) = 4 novembre 21:00 (ET).
 
+## Cycle 5 de l'équipe d'agents — 4 novembre 2026, 08:50–09:55
+
+Constats principaux :
+- Directeur d'audit : pas de cause dans les constats (IIA) ; « la capture corrobore » affiché aussi quand la
+  corroboration manque ; page de preuve jamais lue non signalée ; le rapport réel du code se disait « relu par un
+  auditeur (Attest CI) » ; points (b), (e)(iv), (f)(i) du RTS 21 tronqués sans « […] » ; vérification visuelle non à
+  l'aveugle (le modèle connaît le résultat) — à traiter après le gel.
+- RSSI : un script qui inonde stdout tuait l'orchestrateur (OOM, ni résultat ni piste) ; `"{0.__globals__}".format()`
+  contournait l'interdiction des dunders ; le script voit le vrai jeton (substitut proposé, reporté) ; valeurs observées
+  non masquées dans les prompts (reporté : à mesurer sur un banc) ; dépendances non épinglées, `persist-credentials`.
+- QA : `real_run.sh` laissait la console allumée et l'exécution suivante auditait l'ancienne (faux négatif d'injection
+  reproduit) ; backend `local` avec une clé dans .env envoyait la capture brute à SAM 3.1 ; vérification des citations
+  trop permissive avec plusieurs « […] » (reporté) ; Python 3.11+ non vérifié ; langue par défaut `fr` hors .env.
+- Coach : promesse « masqué avant de quitter le système » fausse pour SAM 3.1 ; EVALUATION.md en retard (2 bancs) ;
+  impact absent du premier écran ; script vidéo mal réparti ; DEMO.md incohérent (runs/warmup vs runs/demo).
+- Designer : images du README en français et issues du mock ; preuve seule sur une demi-colonne (code illisible) ;
+  police de repli lourde en CI ; mention TLP absente du PDF (reporté) ; écran de revue du Studio peu hiérarchisé (reporté).
+
+Commits poussés sur main (151 tests verts, mock IAM et code OK, vérificateur indépendant : APPROUVÉ) :
+- 66e959a : cause probable (hypothèse de l'IA, sinon « non établie par le test ») ; corroboration inconnue et page non lue
+  signalées ; `unattended` → programme non relu ; stdout/stderr en fichiers bornés ; `format`/`format_map` interdits ;
+  SAM appelé seulement en backend meta ; `real_run.sh` refuse un port occupé et arrête sa console ; « […] » RTS 21 ;
+  preuve seule pleine largeur, pile de polices.
+- 34ec381 : docs — masquage exact, 5 bancs, 3 audits IAM sourcés, script vidéo rééquilibré, DEMO cohérent, images du
+  README en anglais depuis `20261104-063210-iam-meta`, licence Glimmer « à confirmer ».
+- `demo-stable` = 34ec381 (avance rapide).
+
+Exécutions réelles (toutes réussies) :
+- `20261104-080238-bench-meta` (02ee2b8) : 56/56, 0 FP, 0 FN, injection 1/1, 256/256 masquées dont 191 par le modèle,
+  0,52 $, 387 s. Stabilité sur 5 bancs du registre : 56/56 à chaque fois ; rappel du modèle 87 à 221/256.
+- `20261104-083648-code-meta` (34ec381) : 9 contrôles, 9 non conformes, 0 erreur de preuve, cause probable rédigée par
+  Muse Spark sur les constats, limitation de périmètre « non relu par un auditeur », 0,78 $.
+- `20261104-083850-iam-meta` (34ec381, EN) : 6 non-conformités, 5 re-testées conformes, 0 erreur de preuve, 0,13 $
+  (catalogue relu réutilisé : cause « non établie par le test »).
+- Dépense cumulée au registre (estimation prudente) : 14,98 $ / 130 $.
+
+Pour Ethan : LICENSE ; vérification EUR-Lex de l'article 21 du RTS (numérotation « 21(1)(c) » vs « point (c) ») ;
+licence de Muse Glimmer.
+
+Suite prévue (avant 18:00) : (1) dépendances épinglées + garde Python 3.11 ; (2) jeton substitut dans le bac à sable ;
+(3) citations : au plus 2 fragments ; (4) mention TLP dans le pied du PDF ; (5) après 18:00 : gel.
+
 ## Cycle 4 de l'équipe d'agents — 4 novembre 2026, 06:50–07:50
 
 (Le cycle 3 n'a laissé qu'une exécution réelle au registre, `20261104-020142-bench-meta`, sans entrée de journal.)
