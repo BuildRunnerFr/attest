@@ -1,0 +1,39 @@
+ * Serving Flask app 'app'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5050
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [04/Nov/2026 10:24:15] "[33mGET / HTTP/1.1[0m" 404 -
+127.0.0.1 - - [04/Nov/2026 10:25:06] "[31m[1mGET /api/security HTTP/1.1[0m" 401 -
+127.0.0.1 - - [04/Nov/2026 10:25:06] "GET /api/journal HTTP/1.1" 200 -
+127.0.0.1 - - [04/Nov/2026 10:25:49] "GET /api/repo/paiement-api/tree HTTP/1.1" 200 -
+127.0.0.1 - - [04/Nov/2026 10:25:49] "GET /api/repo/paiement-api/file?path=.github/workflows/ci.yml HTTP/1.1" 200 -
+127.0.0.1 - - [04/Nov/2026 10:25:49] "GET /api/repo/paiement-api/search?q=bandit|semgrep|codeql|CodeQL HTTP/1.1" 200 -
+127.0.0.1 - - [04/Nov/2026 10:25:50] "GET /repo/paiement-api/view?path=.github/workflows/ci.yml HTTP/1.1" 200 -
+127.0.0.1 - - [04/Nov/2026 10:26:05] "GET /api/repo/paiement-api/tree HTTP/1.1" 200 -
+127.0.0.1 - - [04/Nov/2026 10:26:05] "GET /api/repo/paiement-api/search?q=(?i)(password|passwd|secret|api[_-]?key|aws_secret|token)\\s*[:%3D]\\s*['\\"][^'\\"]%2B&path_prefix=app/ HTTP/1.1" 200 -
+127.0.0.1 - - [04/Nov/2026 10:26:05] "GET /api/repo/paiement-api/search?q=(?i)(password|passwd|secret|api[_-]?key|aws_secret|token)\\s*[:%3D]\\s*['\\"][^'\\"]%2B HTTP/1.1" 200 -
+127.0.0.1 - - [04/Nov/2026 10:26:05] "GET /api/repo/paiement-api/file?path=app/config.py HTTP/1.1" 200 -
+127.0.0.1 - - [04/Nov/2026 10:26:05] "GET /repo/paiement-api/view?path=app/config.py HTTP/1.1" 200 -
+127.0.0.1 - - [04/Nov/2026 10:26:14] "GET /api/repo/paiement-api/search?q=verify\\s*%3D\\s*False HTTP/1.1" 200 -
+127.0.0.1 - - [04/Nov/2026 10:26:14] "GET /api/repo/paiement-api/search?q=ssl\\._create_unverified_context|CERT_NONE|check_hostname\\s*%3D\\s*False HTTP/1.1" 200 -
+127.0.0.1 - - [04/Nov/2026 10:26:14] "GET /api/repo/paiement-api/file?path=app/payments.py HTTP/1.1" 200 -
+127.0.0.1 - - [04/Nov/2026 10:26:15] "GET /repo/paiement-api/view?path=app/payments.py HTTP/1.1" 200 -
+127.0.0.1 - - [04/Nov/2026 10:26:40] "GET /api/repo/paiement-api/search?q=argon2|bcrypt|scrypt|pbkdf2|passlib|hashlib HTTP/1.1" 200 -
+127.0.0.1 - - [04/Nov/2026 10:26:40] "GET /api/repo/paiement-api/search?q=hashlib\\.(md5|sha1)\\(|\\.md5\\(|\\.sha1\\(|MD5|SHA1 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Nov/2026 10:26:40] "GET /api/repo/paiement-api/file?path=app/auth.py HTTP/1.1" 200 -
+127.0.0.1 - - [04/Nov/2026 10:26:41] "GET /repo/paiement-api/view?path=app/auth.py HTTP/1.1" 200 -
+127.0.0.1 - - [04/Nov/2026 10:26:46] "GET /api/repo/paiement-api/file?path=requirements.txt HTTP/1.1" 200 -
+127.0.0.1 - - [04/Nov/2026 10:26:46] "GET /api/repo/paiement-api/tree HTTP/1.1" 200 -
+127.0.0.1 - - [04/Nov/2026 10:26:46] "GET /api/repo/paiement-api/search?q=pip-audit|pip_audit|safety|osv-scanner HTTP/1.1" 200 -
+127.0.0.1 - - [04/Nov/2026 10:26:46] "GET /api/repo/paiement-api/file?path=.github/workflows/ci.yml HTTP/1.1" 200 -
+127.0.0.1 - - [04/Nov/2026 10:26:47] "GET /repo/paiement-api/view?path=requirements.txt HTTP/1.1" 200 -
+127.0.0.1 - - [04/Nov/2026 10:27:28] "GET /api/repo/paiement-api/tree HTTP/1.1" 200 -
+127.0.0.1 - - [04/Nov/2026 10:27:28] "GET /api/repo/paiement-api/search?q=synthetic HTTP/1.1" 200 -
+127.0.0.1 - - [04/Nov/2026 10:27:28] "GET /api/repo/paiement-api/file?path=tests/fixtures/clients_export_prod.json HTTP/1.1" 200 -
+127.0.0.1 - - [04/Nov/2026 10:27:28] "GET /api/repo/paiement-api/search?q=prod|production.*dump|real.*iban|export.*prod HTTP/1.1" 200 -
+127.0.0.1 - - [04/Nov/2026 10:27:29] "GET /repo/paiement-api/view?path=tests/fixtures/clients_export_prod.json HTTP/1.1" 200 -
+127.0.0.1 - - [04/Nov/2026 10:28:02] "GET /api/repo/paiement-api/tree HTTP/1.1" 200 -
+127.0.0.1 - - [04/Nov/2026 10:28:02] "GET /api/repo/paiement-api/search?q=log.*auth|auth.*log|login.*(success|fail)|logger\\.(info|warning|error) HTTP/1.1" 200 -
+127.0.0.1 - - [04/Nov/2026 10:28:02] "GET /api/repo/paiement-api/file?path=app/auth.py HTTP/1.1" 200 -
+127.0.0.1 - - [04/Nov/2026 10:28:03] "GET /repo/paiement-api/view?path=app/auth.py HTTP/1.1" 200 -

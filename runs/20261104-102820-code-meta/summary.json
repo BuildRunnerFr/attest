@@ -1,0 +1,36 @@
+{
+  "id": "20261104-102820-code-meta",
+  "utc": "20261104-102820",
+  "kind": "code",
+  "backend": "meta",
+  "note": "cycle 6 : audit de code sur b68f0ff (citations, erreur encadrée)",
+  "commit": "b68f0ff",
+  "workflow_run": "41813884730",
+  "status": "success",
+  "budget_spent_usd": 0.6858,
+  "priced_usd": 0.5458,
+  "unpriced": [
+    "sam-3.1"
+  ],
+  "audits": [
+    {
+      "folder": "code/studio/20261104-102505-7a3f/audit",
+      "controls": 7,
+      "status_before": [
+        "fail",
+        "fail",
+        "fail",
+        "fail",
+        "fail",
+        "fail",
+        "fail"
+      ],
+      "status_after": [],
+      "evidence_errors": 0,
+      "opinion_initial": "insuffisant",
+      "opinion_final": "insuffisant",
+      "injection_detected": false,
+      "cost_usd": 0.54583275
+    }
+  ]
+}

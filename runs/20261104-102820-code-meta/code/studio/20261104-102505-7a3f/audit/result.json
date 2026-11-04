@@ -1,0 +1,1042 @@
+{
+  "mission": {
+    "id": "AUD-20261104-7A3F",
+    "title": "paiement-api — SEPA transfer microservice — RTS 2024/1774 · Internal policy PDS-2 (Banque Kerlann, fictitious)",
+    "entity": "Banque Kerlann (fictitious)",
+    "system": "paiement-api — SEPA transfer microservice",
+    "system_criticality": "Supports critical or important functions (DORA)",
+    "environment": "Demonstration pre-production",
+    "owner": "IT department — Payments development team",
+    "lead_auditor": "Attest CI",
+    "classification": "TLP:AMBER+STRICT",
+    "requirement_path": "exigences/dora_authentification.md",
+    "lab_url": "http://127.0.0.1:5050",
+    "scope_in": [
+      "Source code, configuration and CI pipeline of the repository",
+      "Versioned test datasets"
+    ],
+    "scope_out": [
+      "Dynamic testing (DAST) and penetration testing",
+      "Runtime and production environments",
+      "Git history"
+    ],
+    "sla_days": {
+      "critique": 30,
+      "elevee": 90,
+      "moyenne": 180,
+      "faible": 365
+    },
+    "target": "repo:paiement-api",
+    "framework_label": "RTS 2024/1774 — Article 16: ICT systems acquisition, development and maintenance · Internal policy PDS-2 (Banque Kerlann, fictitious) — secure development",
+    "requirement_text": "# RTS 2024/1774 — article 16 : acquisition, développement et maintenance des systèmes TIC\nSource : règlement délégué (UE) 2024/1774, article 16 « ICT systems acquisition, development, and maintenance ». Extraits du texte officiel anglais ; vérifier sur EUR-Lex.\n\nArticle 16(1): financial entities shall develop, document and implement a policy governing the acquisition, development, and maintenance of ICT systems. That policy shall:\n(a) identify security practices and methodologies relating to the acquisition, development, and maintenance of ICT systems;\n(c) specify measures to mitigate the risk of unintentional alteration or intentional manipulation of the ICT systems during development, maintenance, and deployment.\nArticle 16(2): financial entities shall develop, document, and implement an ICT systems' acquisition, development, and maintenance procedure for the testing and approval of all ICT systems prior to their use and after maintenance.\nArticle 16(3): the procedure shall contain source code reviews covering both static and dynamic testing, including security testing for internet-exposed systems and applications. Financial entities shall:\n(a) identify and analyse vulnerabilities and anomalies in the source code;\n(b) adopt an action plan to address those vulnerabilities and anomalies;\n(c) monitor the implementation of that action plan.\nArticle 16(4): the procedure shall contain security testing of software packages no later than at the integration phase.\nArticle 16(5): the procedure shall provide that:\n(a) non-production environments only store anonymised, pseudonymised, or randomised production data;\n(b) financial entities are to protect the integrity and confidentiality of data in non-production environments.\nArticle 16(7): the procedure shall include controls to protect the integrity of source code of ICT systems that are developed in-house or by an ICT third-party service provider.\nArticle 16(8): proprietary software and, where feasible, the source code provided by ICT third-party service providers, as well as source code coming from open-source projects, are to be analysed and tested in accordance with paragraph 3 prior to their deployment in the production environment.\n\n\n# Politique interne PDS-2 (Banque Kerlann, fictive) — développement sécurisé\nDéclinaison interne de DORA 9(3), du RTS 2024/1774 articles 6, 7, 12 et 16 pour le code applicatif. Elle fixe les règles\nprécises que les textes réglementaires ne donnent pas.\n\n| Règle | Exigence | Criticité | Fondement |\n|---|---|---|---|\n| PDS-2.1 | Aucun secret (mot de passe, clé, jeton) n'est écrit en clair dans le code source ni dans la configuration versionnée : les secrets viennent d'un coffre ou de variables d'environnement. | Critique | RTS 7(2) |\n| PDS-2.2 | Tout appel réseau sortant vérifie le certificat TLS du serveur : la vérification n'est jamais désactivée (`verify=False` interdit). | Élevée | DORA 9(3)(a) ; RTS 6(2)(a) |\n| PDS-2.3 | Les mots de passe sont hachés avec argon2, bcrypt, scrypt ou PBKDF2. MD5 et SHA-1 sont interdits pour tout usage de sécurité. | Élevée | RTS 6(3) et 6(4) |\n| PDS-2.4 | La chaîne d'intégration continue exécute une analyse statique de sécurité (bandit, semgrep ou CodeQL) à chaque modification. | Moyenne | RTS 16(3) |\n| PDS-2.5 | Les dépendances sont épinglées à une version exacte (`paquet==version`) et auditées en intégration continue (pip-audit ou équivalent). | Moyenne | RTS 16(4) et 16(8) |\n| PDS-2.6 | Les données de test sont synthétiques et déclarées comme telles (champ `\"synthetic\": true`) ; aucun export de production n'est versionné. | Élevée | RTS 16(5)(a) |\n| PDS-2.7 | Les réussites et les échecs d'authentification sont journalisés par l'application. | Moyenne | RTS 12(2)(c)(i) |\n\n## Délais de remédiation\nCritique : 30 jours · Élevée : 90 jours · Moyenne : 180 jours · Faible : 365 jours.\n"
+  },
+  "run_id": "20261104-102505-7a3f",
+  "started": "2026-11-04 10:25",
+  "lang": "en",
+  "target": "repo:paiement-api",
+  "target_label": "paiement-api code repository (SEPA transfer microservice)",
+  "backend": "meta",
+  "models": {
+    "reason": "muse-spark-1.3",
+    "code": "muse-spark-1.3",
+    "segmentation": "sam-3.1"
+  },
+  "entries": [
+    {
+      "control": {
+        "rule": "PDS-2.1",
+        "title": "No hardcoded secrets in code or versioned config",
+        "objective": "Verify no password, key or token is written in clear text in source or versioned config.",
+        "test_procedure": "1. GET /api/repo/paiement-api/tree to list files. 2. GET /api/repo/paiement-api/search?q=(?i)(password|passwd|secret|api[_-]?key|aws_secret|token)\\s*[:=]\\s*['\"][^'\"]+ with path_prefix app/ and without prefix. 3. GET /api/repo/paiement-api/file?path=app/config.py and any matched files to inspect context. 4. Verify secret access uses os.environ, os.getenv or vault client and no clear-text value.",
+        "expected": "Zero hardcoded secret assignments; all secrets obtained from vault or environment variables.",
+        "threshold_source": "PDS-2.1",
+        "severity": "critique",
+        "references": [
+          "RTS 7(2)"
+        ],
+        "risk": "Credential theft and unauthorized access to production and payment data.",
+        "recommendation": "Remove hardcoded secrets and load them from a vault or environment variables.",
+        "cause": "Developer convenience hardcoding credentials for local testing.",
+        "evidence_page": "/repo/paiement-api/view?path=app/config.py",
+        "remediation": "manual",
+        "id": "C1",
+        "quote": "Aucun secret (mot de passe, clé, jeton) n'est écrit en clair dans le code source ni dans la configuration versionnée : les secrets viennent d'un coffre ou de variables d'environnement."
+      },
+      "test": {
+        "script": "scripts/C1_PDS-2.1.py",
+        "sha256": "9b8684dccf6e080f69e49e3e883c8b0358e9fe8e1f89ea335702d69e4b0876fa",
+        "origin": "generated",
+        "code": "import requests\nimport json\nimport os\nimport sys\nimport re\n\nlab_url = os.environ.get(\"LAB_URL\")\nlab_token = os.environ.get(\"LAB_TOKEN\")\nif not lab_url or not lab_token:\n    sys.stderr.write(\"missing LAB_URL or LAB_TOKEN\\n\")\n    sys.exit(2)\nbase = lab_url.rstrip(\"/\")\nheaders = {\"Authorization\": \"Bearer \" + lab_token}\npattern = r\"(?i)(password|passwd|secret|api[_-]?key|aws_secret|token)\\s*[:=]\\s*['\\\"][^'\\\"]+\"\n\ntry:\n    resp = requests.get(base + \"/api/repo/paiement-api/tree\", headers=headers, timeout=20)\nexcept Exception as ex:\n    sys.stderr.write(\"tree request failed: \" + str(ex) + \"\\n\")\n    sys.exit(2)\nif resp.status_code != 200:\n    sys.stderr.write(\"tree bad status: \" + str(resp.status_code) + \"\\n\")\n    sys.exit(2)\ntry:\n    tree_data = resp.json()\nexcept Exception as ex:\n    sys.stderr.write(\"tree json failed: \" + str(ex) + \"\\n\")\n    sys.exit(2)\nfiles = tree_data.get(\"files\")\nif not isinstance(files, list):\n    sys.stderr.write(\"tree missing files list\\n\")\n    sys.exit(2)\n\ntry:\n    resp1 = requests.get(base + \"/api/repo/paiement-api/search\", headers=headers, params={\"q\": pattern, \"path_prefix\": \"app/\"}, timeout=20)\nexcept Exception as ex:\n    sys.stderr.write(\"search app request failed: \" + str(ex) + \"\\n\")\n    sys.exit(2)\nif resp1.status_code != 200:\n    sys.stderr.write(\"search app bad status: \" + str(resp1.status_code) + \"\\n\")\n    sys.exit(2)\ntry:\n    data1 = resp1.json()\nexcept Exception as ex:\n    sys.stderr.write(\"search app json failed: \" + str(ex) + \"\\n\")\n    sys.exit(2)\nmatches1 = data1.get(\"matches\")\nif not isinstance(matches1, list):\n    sys.stderr.write(\"search app missing matches\\n\")\n    sys.exit(2)\n\ntry:\n    resp2 = requests.get(base + \"/api/repo/paiement-api/search\", headers=headers, params={\"q\": pattern}, timeout=20)\nexcept Exception as ex:\n    sys.stderr.write(\"search all request failed: \" + str(ex) + \"\\n\")\n    sys.exit(2)\nif resp2.status_code != 200:\n    sys.stderr.write(\"search all bad status: \" + str(resp2.status_code) + \"\\n\")\n    sys.exit(2)\ntry:\n    data2 = resp2.json()\nexcept Exception as ex:\n    sys.stderr.write(\"search all json failed: \" + str(ex) + \"\\n\")\n    sys.exit(2)\nmatches2 = data2.get(\"matches\")\nif not isinstance(matches2, list):\n    sys.stderr.write(\"search all missing matches\\n\")\n    sys.exit(2)\n\nmatched_paths = []\nall_matches = matches1 + matches2\nfor m in all_matches:\n    if not isinstance(m, dict):\n        sys.stderr.write(\"bad match entry\\n\")\n        sys.exit(2)\n    p = m.get(\"path\")\n    if not isinstance(p, str) or not p:\n        sys.stderr.write(\"bad match path\\n\")\n        sys.exit(2)\n    if p not in matched_paths:\n        matched_paths.append(p)\n\nfiles_to_read = []\nfiles_to_read.append(\"app/config.py\")\nfor p in matched_paths:\n    if p not in files_to_read:\n        files_to_read.append(p)\ntrunc1 = data1.get(\"truncated\")\ntrunc2 = data2.get(\"truncated\")\nif trunc1 is True or trunc2 is True:\n    for f in files:\n        if isinstance(f, str) and f.startswith(\"app/\") and f not in files_to_read:\n            files_to_read.append(f)\n\ncontents = {}\nfor path_val in files_to_read:\n    try:\n        fr = requests.get(base + \"/api/repo/paiement-api/file\", headers=headers, params={\"path\": path_val}, timeout=20)\n    except Exception as ex:\n        sys.stderr.write(\"file request failed for \" + path_val + \": \" + str(ex) + \"\\n\")\n        sys.exit(2)\n    if fr.status_code != 200:\n        sys.stderr.write(\"file bad status for \" + path_val + \": \" + str(fr.status_code) + \"\\n\")\n        sys.exit(2)\n    try:\n        fdata = fr.json()\n    except Exception as ex:\n        sys.stderr.write(\"file json failed for \" + path_val + \"\\n\")\n        sys.exit(2)\n    lines = fdata.get(\"lines\")\n    if not isinstance(lines, list):\n        sys.stderr.write(\"file missing lines for \" + path_val + \"\\n\")\n        sys.exit(2)\n    contents[path_val] = lines\n\nif len(contents) == 0:\n    sys.stderr.write(\"no files read\\n\")\n    sys.exit(2)\n\nhard_regex = re.compile(pattern)\nfindings = []\nenv_example = None\nfor path_val in list(contents.keys()):\n    lines = contents.get(path_val)\n    idx = 0\n    for line_text in lines:\n        idx = idx + 1\n        if not isinstance(line_text, str):\n            sys.stderr.write(\"bad line type in \" + path_val + \"\\n\")\n            sys.exit(2)\n        low = line_text.lower()\n        if \"os.environ\" in line_text or \"os.getenv\" in line_text or \"vault\" in low:\n            if env_example is None:\n                env_example = path_val + \":\" + str(idx) + \":\" + line_text.strip()\n        found = hard_regex.search(line_text)\n        if found is not None:\n            if \"os.environ\" in line_text or \"os.getenv\" in line_text or \"vault\" in low:\n                continue\n            findings.append({\"path\": path_val, \"line\": idx, \"text\": line_text.strip()})\n\nexpected_text = \"Zero hardcoded secret assignments; all secrets obtained from vault or environment variables.\"\nif len(findings) > 0:\n    first_path = findings[0].get(\"path\")\n    evidence_page = \"/repo/paiement-api/view?path=\" + first_path\n    observed = {\"hardcoded_count\": len(findings), \"findings\": findings[0:10]}\n    detail = \"Found \" + str(len(findings)) + \" hardcoded secret assignments in reviewed files\"\n    print(json.dumps({\"status\": \"fail\", \"observed\": observed, \"expected\": expected_text, \"detail\": detail, \"evidence_page\": evidence_page}))\nelse:\n    if \"app/config.py\" in contents:\n        evidence_page = \"/repo/paiement-api/view?path=app/config.py\"\n    else:\n        evidence_page = \"/repo/paiement-api/view?path=\" + list(contents.keys())[0]\n    observed = {\"hardcoded_count\": 0, \"files_checked\": len(contents), \"checked_paths\": list(contents.keys()), \"env_example\": env_example}\n    detail = \"No hardcoded secret assignments found in \" + str(len(contents)) + \" files checked\"\n    print(json.dumps({\"status\": \"pass\", \"observed\": observed, \"expected\": expected_text, \"detail\": detail, \"evidence_page\": evidence_page}))\n",
+        "requests": 4
+      },
+      "before": {
+        "status": "fail",
+        "observed": {
+          "hardcoded_count": 2,
+          "findings": [
+            {
+              "path": "app/config.py",
+              "line": 6,
+              "text": "DB_PASSWORD = \"Azerty123!\"  # TODO : déplacer dans le coffre-fort"
+            },
+            {
+              "path": "app/config.py",
+              "line": 7,
+              "text": "JWT_SECRET = \"kerlann-dev-secret-2026\""
+            }
+          ]
+        },
+        "expected": "Zero hardcoded secret assignments; all secrets obtained from vault or environment variables.",
+        "detail": "Found 2 hardcoded secret assignments in reviewed files",
+        "evidence_page": "/repo/paiement-api/view?path=app/config.py"
+      },
+      "evidence_before": {
+        "image": "evidence/C1_before.png",
+        "sha256": "c9cdc3fffafbeda42a2d0e534a1227e238dc765c817d5f919b43bff7d2f34742",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "DB_PASSWORD = [redacted] # TODO : déplacer dans le coffre-fort\nJWT_SECRET = [redacted]",
+          "field_boxes": [
+            [
+              27,
+              266,
+              1073,
+              292
+            ],
+            [
+              27,
+              294,
+              1073,
+              320
+            ]
+          ],
+          "comment": "The view shows hardcoded DB_PASSWORD and JWT_SECRET assignments on lines 6 and 7 matching the automated findings.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 3,
+          "pii_masked": 3,
+          "pii_found_by_model": 0
+        },
+        "page": "/repo/paiement-api/view?path=app/config.py",
+        "page_verified": true,
+        "ts": "2026-11-04 10:26:22"
+      },
+      "status_before": "fail",
+      "finding": {
+        "id": "F-01",
+        "severity": "critique",
+        "status": "open",
+        "owner": "IT department — Payments development team",
+        "due": "2026-12-04"
+      }
+    },
+    {
+      "control": {
+        "rule": "PDS-2.2",
+        "title": "TLS certificate verification never disabled",
+        "objective": "Verify no outgoing call disables TLS server certificate verification.",
+        "test_procedure": "1. GET /api/repo/paiement-api/search?q=verify\\s*=\\s*False. 2. GET /api/repo/paiement-api/search?q=ssl\\._create_unverified_context|CERT_NONE|check_hostname\\s*=\\s*False. 3. Review matched files via GET /api/repo/paiement-api/file?path=<file> to confirm context of requests, urllib3 or http client calls.",
+        "expected": "Zero matches for verify=False or equivalent TLS verification bypass.",
+        "threshold_source": "PDS-2.2",
+        "severity": "elevee",
+        "references": [
+          "DORA 9(3)(a) ; RTS 6(2)(a)"
+        ],
+        "risk": "Man-in-the-middle interception of SEPA transfer data.",
+        "recommendation": "Enforce TLS verification on all outgoing calls and remove any verify=False.",
+        "cause": "Disabled verification to allow self-signed certificates in test.",
+        "evidence_page": "/repo/paiement-api/view?path=app/payments.py",
+        "remediation": "manual",
+        "id": "C2",
+        "quote": "Tout appel réseau sortant vérifie le certificat TLS du serveur : la vérification n'est jamais désactivée (`verify=False` interdit)."
+      },
+      "test": {
+        "script": "scripts/C2_PDS-2.2.py",
+        "sha256": "31bbad231688edb0f352d8b2f493be9829801eb6b0ef9d865325e0298a5861d2",
+        "origin": "generated",
+        "code": "import requests\nimport json\nimport os\nimport sys\nimport re\ntry:\n    lab_url = os.environ[\"LAB_URL\"]\n    lab_token = os.environ[\"LAB_TOKEN\"]\nexcept KeyError:\n    print(\"missing LAB_URL or LAB_TOKEN\", file=sys.stderr)\n    sys.exit(2)\nif not lab_url or not lab_token:\n    print(\"empty LAB_URL or LAB_TOKEN\", file=sys.stderr)\n    sys.exit(2)\nheaders = {\"Authorization\": \"Bearer \" + lab_token}\nbase = lab_url.rstrip(\"/\")\ntry:\n    resp1 = requests.get(base + \"/api/repo/paiement-api/search\", headers=headers, params={\"q\": \"verify\\\\s*=\\\\s*False\"}, timeout=15)\nexcept Exception:\n    print(\"search verify request failed\", file=sys.stderr)\n    sys.exit(2)\nif resp1.status_code != 200:\n    print(\"search verify bad status\", file=sys.stderr)\n    sys.exit(2)\ntry:\n    data1 = resp1.json()\nexcept Exception:\n    print(\"search verify bad json\", file=sys.stderr)\n    sys.exit(2)\nif not isinstance(data1, dict):\n    print(\"search verify unexpected data\", file=sys.stderr)\n    sys.exit(2)\nif \"matches\" not in data1:\n    print(\"search verify missing matches\", file=sys.stderr)\n    sys.exit(2)\nmatches1 = data1[\"matches\"]\nif not isinstance(matches1, list):\n    print(\"search verify matches not list\", file=sys.stderr)\n    sys.exit(2)\ntry:\n    resp2 = requests.get(base + \"/api/repo/paiement-api/search\", headers=headers, params={\"q\": \"ssl\\\\._create_unverified_context|CERT_NONE|check_hostname\\\\s*=\\\\s*False\"}, timeout=15)\nexcept Exception:\n    print(\"search tls request failed\", file=sys.stderr)\n    sys.exit(2)\nif resp2.status_code != 200:\n    print(\"search tls bad status\", file=sys.stderr)\n    sys.exit(2)\ntry:\n    data2 = resp2.json()\nexcept Exception:\n    print(\"search tls bad json\", file=sys.stderr)\n    sys.exit(2)\nif not isinstance(data2, dict):\n    print(\"search tls unexpected data\", file=sys.stderr)\n    sys.exit(2)\nif \"matches\" not in data2:\n    print(\"search tls missing matches\", file=sys.stderr)\n    sys.exit(2)\nmatches2 = data2[\"matches\"]\nif not isinstance(matches2, list):\n    print(\"search tls matches not list\", file=sys.stderr)\n    sys.exit(2)\nall_matches = matches1 + matches2\nif len(all_matches) > 0:\n    first = all_matches[0]\n    if not isinstance(first, dict):\n        print(\"match entry unexpected data\", file=sys.stderr)\n        sys.exit(2)\n    if \"path\" not in first:\n        print(\"match entry missing path\", file=sys.stderr)\n        sys.exit(2)\n    target_path = first[\"path\"]\n    if not isinstance(target_path, str):\n        print(\"match path unexpected data\", file=sys.stderr)\n        sys.exit(2)\n    if not target_path:\n        print(\"match path empty\", file=sys.stderr)\n        sys.exit(2)\n    try:\n        resp3 = requests.get(base + \"/api/repo/paiement-api/file\", headers=headers, params={\"path\": target_path}, timeout=15)\n    except Exception:\n        print(\"content request failed\", file=sys.stderr)\n        sys.exit(2)\n    if resp3.status_code != 200:\n        print(\"content bad status\", file=sys.stderr)\n        sys.exit(2)\n    try:\n        data3 = resp3.json()\n    except Exception:\n        print(\"content bad json\", file=sys.stderr)\n        sys.exit(2)\n    if not isinstance(data3, dict):\n        print(\"content unexpected data\", file=sys.stderr)\n        sys.exit(2)\n    if \"lines\" not in data3:\n        print(\"content missing lines\", file=sys.stderr)\n        sys.exit(2)\n    lines3 = data3[\"lines\"]\n    if not isinstance(lines3, list):\n        print(\"content lines not list\", file=sys.stderr)\n        sys.exit(2)\n    found = False\n    for line_text in lines3:\n        if not isinstance(line_text, str):\n            continue\n        if re.search(r\"verify\\s*=\\s*False\", line_text):\n            found = True\n            break\n        if re.search(r\"ssl\\._create_unverified_context|CERT_NONE|check_hostname\\s*=\\s*False\", line_text):\n            found = True\n            break\n    if not found:\n        print(\"matched content missing pattern\", file=sys.stderr)\n        sys.exit(2)\n    total = len(all_matches)\n    evidence = \"/repo/paiement-api/view?path=\" + target_path\n    detail = \"Found \" + str(total) + \" matches disabling TLS verification confirmed in \" + target_path + \".\"\n    result = {\"status\": \"fail\", \"observed\": total, \"expected\": \"Zero matches for verify=False or equivalent TLS verification bypass.\", \"detail\": detail, \"evidence_page\": evidence}\n    print(json.dumps(result))\nelse:\n    try:\n        resp_tree = requests.get(base + \"/api/repo/paiement-api/tree\", headers=headers, timeout=15)\n    except Exception:\n        print(\"tree request failed\", file=sys.stderr)\n        sys.exit(2)\n    if resp_tree.status_code != 200:\n        print(\"tree bad status\", file=sys.stderr)\n        sys.exit(2)\n    try:\n        data_tree = resp_tree.json()\n    except Exception:\n        print(\"tree bad json\", file=sys.stderr)\n        sys.exit(2)\n    if not isinstance(data_tree, dict):\n        print(\"tree unexpected data\", file=sys.stderr)\n        sys.exit(2)\n    if \"files\" not in data_tree:\n        print(\"tree missing files\", file=sys.stderr)\n        sys.exit(2)\n    repo_list = data_tree[\"files\"]\n    if not isinstance(repo_list, list):\n        print(\"tree files not list\", file=sys.stderr)\n        sys.exit(2)\n    if len(repo_list) == 0:\n        print(\"tree empty\", file=sys.stderr)\n        sys.exit(2)\n    if \"app/payments.py\" in repo_list:\n        target_path = \"app/payments.py\"\n    else:\n        candidate = repo_list[0]\n        if not isinstance(candidate, str):\n            print(\"tree entry unexpected data\", file=sys.stderr)\n            sys.exit(2)\n        if not candidate:\n            print(\"tree entry empty\", file=sys.stderr)\n            sys.exit(2)\n        target_path = candidate\n    try:\n        resp4 = requests.get(base + \"/api/repo/paiement-api/file\", headers=headers, params={\"path\": target_path}, timeout=15)\n    except Exception:\n        print(\"content request failed\", file=sys.stderr)\n        sys.exit(2)\n    if resp4.status_code != 200:\n        print(\"content bad status\", file=sys.stderr)\n        sys.exit(2)\n    try:\n        data4 = resp4.json()\n    except Exception:\n        print(\"content bad json\", file=sys.stderr)\n        sys.exit(2)\n    if not isinstance(data4, dict):\n        print(\"content unexpected data\", file=sys.stderr)\n        sys.exit(2)\n    if \"lines\" not in data4:\n        print(\"content missing lines\", file=sys.stderr)\n        sys.exit(2)\n    lines4 = data4[\"lines\"]\n    if not isinstance(lines4, list):\n        print(\"content lines not list\", file=sys.stderr)\n        sys.exit(2)\n    evidence = \"/repo/paiement-api/view?path=\" + target_path\n    result = {\"status\": \"pass\", \"observed\": 0, \"expected\": \"Zero matches for verify=False or equivalent TLS verification bypass.\", \"detail\": \"No matches for verify=False or TLS bypass were found in two searches.\", \"evidence_page\": evidence}\n    print(json.dumps(result))\n",
+        "requests": 3
+      },
+      "before": {
+        "status": "fail",
+        "observed": 1,
+        "expected": "Zero matches for verify=False or equivalent TLS verification bypass.",
+        "detail": "Found 1 matches disabling TLS verification confirmed in app/payments.py.",
+        "evidence_page": "/repo/paiement-api/view?path=app/payments.py"
+      },
+      "evidence_before": {
+        "image": "evidence/C2_before.png",
+        "sha256": "168099bdf34367c6af05eb21777c45a42a9ffe770d00194506fe75f1de923b8b",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "response = requests.post(PSP_URL, json=payload, timeout=TIMEOUT_S, verify=False)",
+          "field_boxes": [
+            [
+              28,
+              541,
+              1058,
+              567
+            ]
+          ],
+          "comment": "Line 18 in app/payments.py shows verify=False in the requests.post call.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 0,
+          "pii_masked": 0,
+          "pii_found_by_model": 0
+        },
+        "page": "/repo/paiement-api/view?path=app/payments.py",
+        "page_verified": true,
+        "ts": "2026-11-04 10:26:26"
+      },
+      "status_before": "fail",
+      "finding": {
+        "id": "F-02",
+        "severity": "elevee",
+        "status": "open",
+        "owner": "IT department — Payments development team",
+        "due": "2027-02-02"
+      }
+    },
+    {
+      "control": {
+        "rule": "PDS-2.3",
+        "title": "Approved password hashing only",
+        "objective": "Verify passwords use argon2, bcrypt, scrypt or PBKDF2 and no MD5 or SHA-1 for security.",
+        "test_procedure": "1. GET /api/repo/paiement-api/search?q=argon2|bcrypt|scrypt|pbkdf2|passlib|hashlib. 2. GET /api/repo/paiement-api/search?q=hashlib\\.(md5|sha1)\\(|\\.md5\\(|\\.sha1\\(|MD5|SHA1. 3. GET /api/repo/paiement-api/file?path=<matched file> to confirm password-hashing context versus non-security use.",
+        "expected": "Password hashing uses only argon2, bcrypt, scrypt or PBKDF2; zero use of MD5 or SHA-1 for security.",
+        "threshold_source": "PDS-2.3",
+        "severity": "elevee",
+        "references": [
+          "RTS 6(3) et 6(4)"
+        ],
+        "risk": "Password cracking and credential compromise due to weak hashes.",
+        "recommendation": "Migrate password hashing to argon2, bcrypt, scrypt or PBKDF2 and remove MD5/SHA-1.",
+        "cause": "Legacy code using hashlib MD5/SHA-1 examples.",
+        "evidence_page": "/repo/paiement-api/view?path=app/auth.py",
+        "remediation": "manual",
+        "id": "C3",
+        "quote": "Les mots de passe sont hachés avec argon2, bcrypt, scrypt ou PBKDF2. MD5 et SHA-1 sont interdits pour tout usage de sécurité."
+      },
+      "test": {
+        "script": "scripts/C3_PDS-2.3.py",
+        "sha256": "b087de888e334034d15c86091f70ca16b6baaea4f8835a26ecdd9929dae1bd2d",
+        "origin": "generated",
+        "code": "import requests\nimport json\nimport os\nimport sys\nimport re\ntry:\n    base_url = os.environ[\"LAB_URL\"]\n    token = os.environ[\"LAB_TOKEN\"]\nexcept KeyError:\n    sys.stderr.write(\"missing env\\n\")\n    sys.exit(2)\nbase_url = base_url.rstrip(\"/\")\nheaders = {\"Authorization\": \"Bearer \" + token}\nq1 = \"argon2|bcrypt|scrypt|pbkdf2|passlib|hashlib\"\nq2 = \"hashlib\\\\.(md5|sha1)\\\\(|\\\\.md5\\\\(|\\\\.sha1\\\\(|MD5|SHA1\"\ntry:\n    r1 = requests.get(base_url + \"/api/repo/paiement-api/search\", headers=headers, params={\"q\": q1})\nexcept Exception:\n    sys.stderr.write(\"search1 failed\\n\")\n    sys.exit(2)\nif r1.status_code != 200:\n    sys.stderr.write(\"search1 bad status\\n\")\n    sys.exit(2)\ntry:\n    d1 = r1.json()\nexcept Exception:\n    sys.stderr.write(\"search1 bad json\\n\")\n    sys.exit(2)\nif type(d1) != dict or \"matches\" not in d1 or type(d1[\"matches\"]) != list:\n    sys.stderr.write(\"search1 bad data\\n\")\n    sys.exit(2)\ntry:\n    r2 = requests.get(base_url + \"/api/repo/paiement-api/search\", headers=headers, params={\"q\": q2})\nexcept Exception:\n    sys.stderr.write(\"search2 failed\\n\")\n    sys.exit(2)\nif r2.status_code != 200:\n    sys.stderr.write(\"search2 bad status\\n\")\n    sys.exit(2)\ntry:\n    d2 = r2.json()\nexcept Exception:\n    sys.stderr.write(\"search2 bad json\\n\")\n    sys.exit(2)\nif type(d2) != dict or \"matches\" not in d2 or type(d2[\"matches\"]) != list:\n    sys.stderr.write(\"search2 bad data\\n\")\n    sys.exit(2)\napproved_matches = d1[\"matches\"]\ninsecure_matches = d2[\"matches\"]\nseen_a = []\nfor m in approved_matches:\n    if type(m) != dict or \"path\" not in m or \"line\" not in m or \"text\" not in m:\n        sys.stderr.write(\"match bad data\\n\")\n        sys.exit(2)\n    if type(m[\"path\"]) != str or type(m[\"text\"]) != str or type(m[\"line\"]) != int:\n        sys.stderr.write(\"match bad types\\n\")\n        sys.exit(2)\n    p = m[\"path\"]\n    if p not in seen_a:\n        seen_a.append(p)\nseen_b = []\nfor m in insecure_matches:\n    if type(m) != dict or \"path\" not in m or \"line\" not in m or \"text\" not in m:\n        sys.stderr.write(\"match bad data\\n\")\n        sys.exit(2)\n    if type(m[\"path\"]) != str or type(m[\"text\"]) != str or type(m[\"line\"]) != int:\n        sys.stderr.write(\"match bad types\\n\")\n        sys.exit(2)\n    p = m[\"path\"]\n    if p not in seen_b:\n        seen_b.append(p)\nusage_pat = \"hashlib.*(md5|sha1)|\\\\.md5\\\\s*\\\\(|\\\\.sha1\\\\s*\\\\(\"\npwd_keys = [\"password\", \"passwd\", \"pwd\", \"credential\", \"auth\", \"login\"]\ncache = {}\nfetch_list = []\nfor p in seen_b:\n    if p not in fetch_list:\n        fetch_list.append(p)\ncount_a = 0\nfor p in seen_a:\n    if p not in fetch_list:\n        if count_a < 3:\n            fetch_list.append(p)\n            count_a = count_a + 1\nfallback_path = \"\"\nif len(fetch_list) == 0:\n    try:\n        rt = requests.get(base_url + \"/api/repo/paiement-api/tree\", headers=headers)\n    except Exception:\n        sys.stderr.write(\"tree failed\\n\")\n        sys.exit(2)\n    if rt.status_code != 200:\n        sys.stderr.write(\"tree bad status\\n\")\n        sys.exit(2)\n    try:\n        dt = rt.json()\n    except Exception:\n        sys.stderr.write(\"tree bad json\\n\")\n        sys.exit(2)\n    if type(dt) != dict or \"files\" not in dt or type(dt[\"files\"]) != list or len(dt[\"files\"]) == 0:\n        sys.stderr.write(\"tree bad data\\n\")\n        sys.exit(2)\n    first = dt[\"files\"][0]\n    if type(first) != str:\n        sys.stderr.write(\"tree bad entry\\n\")\n        sys.exit(2)\n    try:\n        rf = requests.get(base_url + \"/api/repo/paiement-api/file\", headers=headers, params={\"path\": first})\n    except Exception:\n        sys.stderr.write(\"data failed\\n\")\n        sys.exit(2)\n    if rf.status_code != 200:\n        sys.stderr.write(\"data bad status\\n\")\n        sys.exit(2)\n    try:\n        df = rf.json()\n    except Exception:\n        sys.stderr.write(\"data bad json\\n\")\n        sys.exit(2)\n    if type(df) != dict or \"lines\" not in df or type(df[\"lines\"]) != list:\n        sys.stderr.write(\"data bad format\\n\")\n        sys.exit(2)\n    cache[first] = df[\"lines\"]\n    fallback_path = first\nelse:\n    for p in fetch_list:\n        try:\n            rr = requests.get(base_url + \"/api/repo/paiement-api/file\", headers=headers, params={\"path\": p})\n        except Exception:\n            sys.stderr.write(\"data failed\\n\")\n            sys.exit(2)\n        if rr.status_code != 200:\n            sys.stderr.write(\"data bad status\\n\")\n            sys.exit(2)\n        try:\n            dd = rr.json()\n        except Exception:\n            sys.stderr.write(\"data bad json\\n\")\n            sys.exit(2)\n        if type(dd) != dict or \"lines\" not in dd or type(dd[\"lines\"]) != list:\n            sys.stderr.write(\"data bad format\\n\")\n            sys.exit(2)\n        cache[p] = dd[\"lines\"]\nbad = []\nfor m in insecure_matches:\n    p = m[\"path\"]\n    ln = m[\"line\"]\n    txt = m[\"text\"]\n    if p not in cache:\n        continue\n    lines = cache[p]\n    s = ln - 6\n    if s < 0:\n        s = 0\n    e = ln + 5\n    try:\n        wtext = \" \".join(lines[s:e])\n    except Exception:\n        sys.stderr.write(\"lines bad content\\n\")\n        sys.exit(2)\n    wlow = wtext.lower()\n    tlow = txt.lower()\n    plow = p.lower()\n    try:\n        u1 = re.search(usage_pat, tlow)\n        u2 = re.search(usage_pat, wlow)\n    except Exception:\n        sys.stderr.write(\"regex failed\\n\")\n        sys.exit(2)\n    if u1 is None and u2 is None:\n        continue\n    sec = False\n    for k in pwd_keys:\n        if k in wlow or k in tlow or k in plow:\n            sec = True\n            break\n    if sec:\n        bad.append(m)\ngood = []\nfor m in approved_matches:\n    p = m[\"path\"]\n    ln = m[\"line\"]\n    txt = m[\"text\"]\n    tlow = txt.lower()\n    has_app = False\n    for k in [\"argon2\", \"bcrypt\", \"scrypt\", \"pbkdf2\", \"passlib\"]:\n        if k in tlow:\n            has_app = True\n            break\n    if has_app is False:\n        continue\n    if p in cache:\n        lines = cache[p]\n        s = ln - 6\n        if s < 0:\n            s = 0\n        e = ln + 5\n        try:\n            wtext = \" \".join(lines[s:e])\n        except Exception:\n            sys.stderr.write(\"lines bad content\\n\")\n            sys.exit(2)\n        wlow = wtext.lower()\n        plow = p.lower()\n        sec = False\n        for k in pwd_keys:\n            if k in wlow or k in tlow or k in plow:\n                sec = True\n                break\n        if sec:\n            good.append(m)\n    else:\n        plow = p.lower()\n        sec = False\n        for k in pwd_keys:\n            if k in tlow or k in plow:\n                sec = True\n                break\n        if sec:\n            good.append(m)\nexpected = \"Password hashing uses only argon2, bcrypt, scrypt or PBKDF2; zero use of MD5 or SHA-1 for security.\"\nif len(bad) > 0:\n    status = \"fail\"\n    ev_path = bad[0][\"path\"]\n    if ev_path not in cache:\n        try:\n            rq = requests.get(base_url + \"/api/repo/paiement-api/file\", headers=headers, params={\"path\": ev_path})\n        except Exception:\n            sys.stderr.write(\"data failed\\n\")\n            sys.exit(2)\n        if rq.status_code != 200:\n            sys.stderr.write(\"data bad status\\n\")\n            sys.exit(2)\n        try:\n            dq = rq.json()\n        except Exception:\n            sys.stderr.write(\"data bad json\\n\")\n            sys.exit(2)\n        if type(dq) != dict or \"lines\" not in dq or type(dq[\"lines\"]) != list:\n            sys.stderr.write(\"data bad format\\n\")\n            sys.exit(2)\n        cache[ev_path] = dq[\"lines\"]\n    observed = bad\n    detail = \"Found \" + str(len(bad)) + \" MD5 or SHA-1 password uses requiring migration to approved hashing.\"\n    evidence_page = \"/repo/paiement-api/view?path=\" + ev_path\nelse:\n    if len(good) > 0:\n        status = \"pass\"\n        ev_path = good[0][\"path\"]\n        if ev_path not in cache:\n            try:\n                rq = requests.get(base_url + \"/api/repo/paiement-api/file\", headers=headers, params={\"path\": ev_path})\n            except Exception:\n                sys.stderr.write(\"data failed\\n\")\n                sys.exit(2)\n            if rq.status_code != 200:\n                sys.stderr.write(\"data bad status\\n\")\n                sys.exit(2)\n            try:\n                dq = rq.json()\n            except Exception:\n                sys.stderr.write(\"data bad json\\n\")\n                sys.exit(2)\n            if type(dq) != dict or \"lines\" not in dq or type(dq[\"lines\"]) != list:\n                sys.stderr.write(\"data bad format\\n\")\n                sys.exit(2)\n            cache[ev_path] = dq[\"lines\"]\n        observed = good\n        detail = \"No MD5 or SHA-1 password use found and approved hashing is present.\"\n        evidence_page = \"/repo/paiement-api/view?path=\" + ev_path\n    else:\n        status = \"pass\"\n        if fallback_path != \"\":\n            ev_path = fallback_path\n        else:\n            ev_path = fetch_list[0]\n        observed = {\"approved_password_uses\": good, \"insecure_password_uses\": bad}\n        detail = \"No MD5 or SHA-1 password use found and no insecure hashing detected.\"\n        evidence_page = \"/repo/paiement-api/view?path=\" + ev_path\nprint(json.dumps({\"status\": status, \"observed\": observed, \"expected\": expected, \"detail\": detail, \"evidence_page\": evidence_page}))\n",
+        "requests": 3
+      },
+      "before": {
+        "status": "fail",
+        "observed": [
+          {
+            "line": 8,
+            "path": "app/auth.py",
+            "text": "return hashlib.md5(password.encode()).hexdigest()"
+          }
+        ],
+        "expected": "Password hashing uses only argon2, bcrypt, scrypt or PBKDF2; zero use of MD5 or SHA-1 for security.",
+        "detail": "Found 1 MD5 or SHA-1 password uses requiring migration to approved hashing.",
+        "evidence_page": "/repo/paiement-api/view?path=app/auth.py"
+      },
+      "evidence_before": {
+        "image": "evidence/C3_before.png",
+        "sha256": "9b670c1eafd915cb6df201edf42dc67d9cd479c769ad7b5f49bc574e294bd891",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "return hashlib.md5(password.encode()).hexdigest()",
+          "field_boxes": [
+            [
+              28,
+              295,
+              1072,
+              325
+            ]
+          ],
+          "comment": "Screenshot shows app/auth.py line 8 using hashlib.md5 for password hashing.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 0,
+          "pii_masked": 0,
+          "pii_found_by_model": 0
+        },
+        "page": "/repo/paiement-api/view?path=app/auth.py",
+        "page_verified": true,
+        "ts": "2026-11-04 10:26:51"
+      },
+      "status_before": "fail",
+      "finding": {
+        "id": "F-03",
+        "severity": "elevee",
+        "status": "open",
+        "owner": "IT department — Payments development team",
+        "due": "2027-02-02"
+      }
+    },
+    {
+      "control": {
+        "rule": "PDS-2.4",
+        "title": "CI runs static security analysis on every change",
+        "objective": "Verify CI executes bandit, semgrep or CodeQL on each change.",
+        "test_procedure": "1. GET /api/repo/paiement-api/tree to list .github/workflows/. 2. GET /api/repo/paiement-api/file?path=.github/workflows/ci.yml (and any other yml) to inspect triggers and jobs. 3. GET /api/repo/paiement-api/search?q=bandit|semgrep|codeql|CodeQL to confirm tool invocation.",
+        "expected": "A workflow triggered on push and pull_request runs bandit, semgrep or CodeQL.",
+        "threshold_source": "PDS-2.4",
+        "severity": "moyenne",
+        "references": [
+          "RTS 16(3)"
+        ],
+        "risk": "Undetected code vulnerabilities reaching production.",
+        "recommendation": "Add bandit, semgrep or CodeQL to CI on every push and pull request.",
+        "cause": "Security scanning omitted from pipeline configuration.",
+        "evidence_page": "/repo/paiement-api/view?path=.github/workflows/ci.yml",
+        "remediation": "manual",
+        "id": "C4",
+        "quote": "La chaîne d'intégration continue exécute une analyse statique de sécurité (bandit, semgrep ou CodeQL) à chaque modification."
+      },
+      "test": {
+        "script": "scripts/C4_PDS-2.4.py",
+        "sha256": "ffd8a77718a048e7d72db5f6097515e9cee4f6c12d659498cd0d5539b6cb4a06",
+        "origin": "generated",
+        "code": "import requests\nimport json\nimport os\nimport sys\nimport re\ntry:\n    base = os.environ[\"LAB_URL\"]\n    token = os.environ[\"LAB_TOKEN\"]\nexcept KeyError as err:\n    sys.stderr.write(\"missing env: \" + str(err) + \"\\n\")\n    sys.exit(2)\nbase = base.rstrip(\"/\")\nheaders = {\"Authorization\": \"Bearer \" + token}\ntry:\n    r = requests.get(base + \"/api/repo/paiement-api/tree\", headers=headers, timeout=10)\nexcept Exception as err:\n    sys.stderr.write(\"tree request failed: \" + str(err) + \"\\n\")\n    sys.exit(2)\nif r.status_code != 200:\n    sys.stderr.write(\"tree status \" + str(r.status_code) + \"\\n\")\n    sys.exit(2)\ntry:\n    data = r.json()\n    files = data[\"files\"]\nexcept Exception as err:\n    sys.stderr.write(\"bad tree json: \" + str(err) + \"\\n\")\n    sys.exit(2)\nif not isinstance(files, list):\n    sys.stderr.write(\"bad tree files type\\n\")\n    sys.exit(2)\nworkflows = []\nfor f in files:\n    if not isinstance(f, str):\n        continue\n    if f.startswith(\".github/workflows/\") and (f.endswith(\".yml\") or f.endswith(\".yaml\")):\n        workflows.append(f)\ntexts = {}\nfor wf in workflows:\n    try:\n        rr = requests.get(base + \"/api/repo/paiement-api/file\", headers=headers, params={\"path\": wf}, timeout=10)\n    except Exception as err:\n        sys.stderr.write(\"file request failed: \" + str(err) + \"\\n\")\n        sys.exit(2)\n    if rr.status_code != 200:\n        sys.stderr.write(\"file status \" + str(rr.status_code) + \" for \" + wf + \"\\n\")\n        sys.exit(2)\n    try:\n        jd = rr.json()\n        lines = jd[\"lines\"]\n    except Exception as err:\n        sys.stderr.write(\"bad file json: \" + str(err) + \"\\n\")\n        sys.exit(2)\n    if not isinstance(lines, list):\n        sys.stderr.write(\"bad file lines type\\n\")\n        sys.exit(2)\n    texts[wf] = \"\\n\".join(lines)\ntry:\n    sr = requests.get(base + \"/api/repo/paiement-api/search\", headers=headers, params={\"q\": \"bandit|semgrep|codeql|CodeQL\"}, timeout=10)\nexcept Exception as err:\n    sys.stderr.write(\"search request failed: \" + str(err) + \"\\n\")\n    sys.exit(2)\nif sr.status_code != 200:\n    sys.stderr.write(\"search status \" + str(sr.status_code) + \"\\n\")\n    sys.exit(2)\ntry:\n    sj = sr.json()\n    matches = sj[\"matches\"]\nexcept Exception as err:\n    sys.stderr.write(\"bad search json: \" + str(err) + \"\\n\")\n    sys.exit(2)\nif not isinstance(matches, list):\n    sys.stderr.write(\"bad matches type\\n\")\n    sys.exit(2)\nchecks = {}\npassing = []\nfor wf in workflows:\n    txt = texts[wf]\n    has_push = re.search(r'\\bpush\\b', txt, re.IGNORECASE) is not None\n    has_pr = re.search(r'\\bpull_request\\b', txt, re.IGNORECASE) is not None\n    has_tool = re.search(r'\\bbandit\\b|\\bsemgrep\\b|\\bcodeql\\b', txt, re.IGNORECASE) is not None\n    checks[wf] = {\"push\": has_push, \"pull_request\": has_pr, \"tool\": has_tool}\n    if has_push and has_pr and has_tool:\n        passing.append(wf)\nexpected = \"A workflow triggered on push and pull_request runs bandit, semgrep or CodeQL.\"\nobserved = {\"workflows\": workflows, \"checks\": checks, \"search_matches\": matches}\nif len(passing) > 0:\n    evidence = \"/repo/paiement-api/view?path=\" + passing[0]\n    detail = \"Workflow \" + passing[0] + \" is triggered on push and pull_request and runs bandit, semgrep or CodeQL.\"\n    print(json.dumps({\"status\": \"pass\", \"observed\": observed, \"expected\": expected, \"detail\": detail, \"evidence_page\": evidence}))\nelse:\n    if len(workflows) > 0:\n        evidence = \"/repo/paiement-api/view?path=\" + workflows[0]\n        detail = \"No workflow triggered on push and pull_request runs bandit, semgrep or CodeQL.\"\n        print(json.dumps({\"status\": \"fail\", \"observed\": observed, \"expected\": expected, \"detail\": detail, \"evidence_page\": evidence}))\n    else:\n        detail = \"No workflow file in .github/workflows is triggered on push and pull_request with bandit, semgrep or CodeQL.\"\n        print(json.dumps({\"status\": \"fail\", \"observed\": observed, \"expected\": expected, \"detail\": detail}))\n",
+        "requests": 3
+      },
+      "before": {
+        "status": "fail",
+        "observed": {
+          "workflows": [
+            ".github/workflows/ci.yml"
+          ],
+          "checks": {
+            ".github/workflows/ci.yml": {
+              "push": true,
+              "pull_request": false,
+              "tool": false
+            }
+          },
+          "search_matches": []
+        },
+        "expected": "A workflow triggered on push and pull_request runs bandit, semgrep or CodeQL.",
+        "detail": "No workflow triggered on push and pull_request runs bandit, semgrep or CodeQL.",
+        "evidence_page": "/repo/paiement-api/view?path=.github/workflows/ci.yml"
+      },
+      "evidence_before": {
+        "image": "evidence/C4_before.png",
+        "sha256": "bb63a9ca7ffbe74a967dda77e5f0e0f63a2118786a6ad3fc0a6e400cd7a896e7",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "on: [push]\n- run: pip install -r requirements.txt pytest\n- run: pytest -q",
+          "field_boxes": [
+            [
+              27,
+              137,
+              1073,
+              162
+            ],
+            [
+              27,
+              371,
+              1073,
+              397
+            ],
+            [
+              27,
+              397,
+              1073,
+              424
+            ]
+          ],
+          "comment": "Workflow triggers only on push and runs only pytest with no bandit, semgrep or CodeQL.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 0,
+          "pii_masked": 0,
+          "pii_found_by_model": 0
+        },
+        "page": "/repo/paiement-api/view?path=.github/workflows/ci.yml",
+        "page_verified": true,
+        "ts": "2026-11-04 10:26:02"
+      },
+      "status_before": "fail",
+      "finding": {
+        "id": "F-05",
+        "severity": "moyenne",
+        "status": "open",
+        "owner": "IT department — Payments development team",
+        "due": "2027-05-03"
+      }
+    },
+    {
+      "control": {
+        "rule": "PDS-2.5",
+        "title": "Pinned dependencies audited in CI",
+        "objective": "Verify exact version pinning and CI dependency audit.",
+        "test_procedure": "1. GET /api/repo/paiement-api/file?path=requirements.txt to verify every entry uses == with exact version. 2. GET /api/repo/paiement-api/tree for .github/workflows and read workflow files. 3. GET /api/repo/paiement-api/search?q=pip-audit|pip_audit|safety|osv-scanner to confirm audit step in CI.",
+        "expected": "All requirements pinned as package==version; CI runs pip-audit or equivalent.",
+        "threshold_source": "PDS-2.5",
+        "severity": "moyenne",
+        "references": [
+          "RTS 16(4) et 16(8)"
+        ],
+        "risk": "Supply-chain compromise via unpinned or vulnerable dependencies.",
+        "recommendation": "Pin all dependencies with == and add pip-audit or equivalent to CI.",
+        "cause": "Use of floating version ranges without vulnerability scanning.",
+        "evidence_page": "/repo/paiement-api/view?path=requirements.txt",
+        "remediation": "manual",
+        "id": "C5",
+        "quote": "Les dépendances sont épinglées à une version exacte (`paquet==version`) et auditées en intégration continue (pip-audit ou équivalent)."
+      },
+      "test": {
+        "script": "scripts/C5_PDS-2.5.py",
+        "sha256": "cae079874abe5b60890695b3953323e76c373390f162a4b258caf9f67a20dfb5",
+        "origin": "generated",
+        "code": "import requests\nimport json\nimport os\nimport sys\nimport re\ntry:\n    base = os.environ[\"LAB_URL\"]\n    token = os.environ[\"LAB_TOKEN\"]\nexcept Exception:\n    sys.stderr.write(\"missing LAB_URL or LAB_TOKEN\\n\")\n    sys.exit(2)\nauth = {\"Authorization\": \"Bearer \" + token}\nroot = base.rstrip(\"/\")\ntry:\n    r1 = requests.get(root + \"/api/repo/paiement-api/file\", headers=auth, params={\"path\": \"requirements.txt\"}, timeout=30)\nexcept Exception as e:\n    sys.stderr.write(\"requirements request failed: \" + str(e) + \"\\n\")\n    sys.exit(2)\nif r1.status_code != 200:\n    sys.stderr.write(\"requirements request status \" + str(r1.status_code) + \"\\n\")\n    sys.exit(2)\ntry:\n    d1 = r1.json()\nexcept Exception as e:\n    sys.stderr.write(\"requirements json failed: \" + str(e) + \"\\n\")\n    sys.exit(2)\nif not isinstance(d1, dict) or \"lines\" not in d1 or not isinstance(d1[\"lines\"], list):\n    sys.stderr.write(\"requirements data missing lines\\n\")\n    sys.exit(2)\nreq_lines = d1[\"lines\"]\ntry:\n    r2 = requests.get(root + \"/api/repo/paiement-api/tree\", headers=auth, timeout=30)\nexcept Exception as e:\n    sys.stderr.write(\"tree request failed: \" + str(e) + \"\\n\")\n    sys.exit(2)\nif r2.status_code != 200:\n    sys.stderr.write(\"tree request status \" + str(r2.status_code) + \"\\n\")\n    sys.exit(2)\ntry:\n    d2 = r2.json()\nexcept Exception as e:\n    sys.stderr.write(\"tree json failed: \" + str(e) + \"\\n\")\n    sys.exit(2)\nif not isinstance(d2, dict) or \"files\" not in d2 or not isinstance(d2[\"files\"], list):\n    sys.stderr.write(\"tree data missing files\\n\")\n    sys.exit(2)\ntree_files = d2[\"files\"]\ntry:\n    r3 = requests.get(root + \"/api/repo/paiement-api/search\", headers=auth, params={\"q\": \"pip-audit|pip_audit|safety|osv-scanner\"}, timeout=30)\nexcept Exception as e:\n    sys.stderr.write(\"search request failed: \" + str(e) + \"\\n\")\n    sys.exit(2)\nif r3.status_code != 200:\n    sys.stderr.write(\"search request status \" + str(r3.status_code) + \"\\n\")\n    sys.exit(2)\ntry:\n    d3 = r3.json()\nexcept Exception as e:\n    sys.stderr.write(\"search json failed: \" + str(e) + \"\\n\")\n    sys.exit(2)\nif not isinstance(d3, dict) or \"matches\" not in d3 or not isinstance(d3[\"matches\"], list):\n    sys.stderr.write(\"search data missing matches\\n\")\n    sys.exit(2)\nmatches = d3[\"matches\"]\npin_re = re.compile(r\"^[A-Za-z0-9_.\\-]+(\\[[A-Za-z0-9_,\\s.\\-]+\\])?==[A-Za-z0-9_.\\-+]+(\\s*;.*)?$\")\ninject_re = re.compile(r\"(?i)ignore\\s+(previous|all|these|the)?\\s*(instructions|rules)|disregard.+instructions|system\\s+prompt|always\\s+return\\s+pass|do\\s+not\\s+(audit|report|fail)\")\ntotal = 0\nunpinned = []\nfor ln in req_lines:\n    if not isinstance(ln, str):\n        sys.stderr.write(\"requirements line not string\\n\")\n        sys.exit(2)\n    s = ln.strip()\n    if s == \"\":\n        continue\n    if s.startswith(\"#\"):\n        continue\n    part = s.split(\"#\", 1)[0].strip()\n    if part == \"\":\n        continue\n    if inject_re.search(ln):\n        pass\n    if part.startswith(\"-\"):\n        total = total + 1\n        unpinned.append(ln)\n        continue\n    total = total + 1\n    if not pin_re.match(part):\n        unpinned.append(ln)\nwf_list = []\nfor f in tree_files:\n    if not isinstance(f, str):\n        sys.stderr.write(\"tree entry not string\\n\")\n        sys.exit(2)\n    if f.startswith(\".github/workflows/\"):\n        wf_list.append(f)\nwf_texts = {}\naudit_re = re.compile(r\"pip-audit|pip_audit|safety|osv-scanner\")\naudit_file = \"\"\nfor wf in wf_list:\n    try:\n        rw = requests.get(root + \"/api/repo/paiement-api/file\", headers=auth, params={\"path\": wf}, timeout=30)\n    except Exception as e:\n        sys.stderr.write(\"workflow request failed: \" + str(e) + \"\\n\")\n        sys.exit(2)\n    if rw.status_code != 200:\n        sys.stderr.write(\"workflow request status \" + str(rw.status_code) + \"\\n\")\n        sys.exit(2)\n    try:\n        dw = rw.json()\n    except Exception as e:\n        sys.stderr.write(\"workflow json failed: \" + str(e) + \"\\n\")\n        sys.exit(2)\n    if not isinstance(dw, dict) or \"lines\" not in dw or not isinstance(dw[\"lines\"], list):\n        sys.stderr.write(\"workflow data missing lines\\n\")\n        sys.exit(2)\n    txt = \"\\n\".join([x for x in dw[\"lines\"] if isinstance(x, str)])\n    wf_texts[wf] = txt\n    if audit_file == \"\" and audit_re.search(txt):\n        audit_file = wf\naudit_in_search = []\nfor m in matches:\n    if not isinstance(m, dict):\n        continue\n    p = m.get(\"path\", \"\")\n    t = m.get(\"text\", \"\")\n    if isinstance(p, str) and isinstance(t, str):\n        audit_in_search.append({\"path\": p, \"text\": t})\naudit_found = audit_file != \"\"\ninject_found = False\nfor ln in req_lines:\n    if isinstance(ln, str) and inject_re.search(ln):\n        inject_found = True\n        break\nif not inject_found:\n    for v in wf_texts.values():\n        if inject_re.search(v):\n            inject_found = True\n            break\npinned_ok = total > 0 and len(unpinned) == 0\nok = pinned_ok and audit_found\nexpected = \"All requirements pinned as package==version; CI runs pip-audit or equivalent.\"\nobserved = {\"requirements_lines\": req_lines, \"total_entries\": total, \"unpinned\": unpinned, \"workflows\": wf_list, \"audit_file\": audit_file, \"search_matches\": audit_in_search}\nif ok:\n    status = \"pass\"\n    evidence = \"/repo/paiement-api/view?path=requirements.txt\"\n    if inject_found:\n        detail = \"All \" + str(total) + \" requirement entries use exact == pinning and workflow \" + audit_file + \" contains an audit step with untrusted instruction text observed and ignored\"\n    else:\n        detail = \"All \" + str(total) + \" requirement entries use exact == pinning and workflow \" + audit_file + \" contains a pip-audit or equivalent audit step\"\nelse:\n    status = \"fail\"\n    if not pinned_ok:\n        evidence = \"/repo/paiement-api/view?path=requirements.txt\"\n        if inject_found:\n            detail = \"Found \" + str(len(unpinned)) + \" of \" + str(total) + \" requirement entries without exact == pinning with untrusted instruction text observed and ignored\"\n        else:\n            detail = \"Found \" + str(len(unpinned)) + \" of \" + str(total) + \" requirement entries without exact == pinning\"\n    else:\n        if len(wf_list) > 0:\n            evidence = \"/repo/paiement-api/view?path=\" + wf_list[0]\n        else:\n            evidence = \"/repo/paiement-api/view?path=requirements.txt\"\n        if inject_found:\n            detail = \"All \" + str(total) + \" requirement entries are pinned but no pip-audit or equivalent step was found in \" + str(len(wf_list)) + \" workflows with untrusted instruction text observed and ignored\"\n        else:\n            detail = \"All \" + str(total) + \" requirement entries are pinned but no pip-audit or equivalent step was found in \" + str(len(wf_list)) + \" workflows\"\nprint(json.dumps({\"status\": status, \"observed\": observed, \"expected\": expected, \"detail\": detail, \"evidence_page\": evidence}))\n",
+        "requests": 4
+      },
+      "before": {
+        "status": "fail",
+        "observed": {
+          "requirements_lines": [
+            "flask",
+            "requests>=2.0",
+            "pyjwt==2.8.0"
+          ],
+          "total_entries": 3,
+          "unpinned": [
+            "flask",
+            "requests>=2.0"
+          ],
+          "workflows": [
+            ".github/workflows/ci.yml"
+          ],
+          "audit_file": "",
+          "search_matches": []
+        },
+        "expected": "All requirements pinned as package==version; CI runs pip-audit or equivalent.",
+        "detail": "Found 2 of 3 requirement entries without exact == pinning",
+        "evidence_page": "/repo/paiement-api/view?path=requirements.txt"
+      },
+      "evidence_before": {
+        "image": "evidence/C5_before.png",
+        "sha256": "94071ff0cc3ec3013b5c4620d989ef9e69def04847069f8c7a03fba625a6574f",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "1 flask\n2 requests>=2.0",
+          "field_boxes": [
+            [
+              28,
+              108,
+              1085,
+              134
+            ],
+            [
+              28,
+              134,
+              1085,
+              161
+            ]
+          ],
+          "comment": "The screenshot shows flask unpinned and requests with a >= range while only pyjwt uses exact == pinning.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 0,
+          "pii_masked": 0,
+          "pii_found_by_model": 0
+        },
+        "page": "/repo/paiement-api/view?path=requirements.txt",
+        "page_verified": true,
+        "ts": "2026-11-04 10:26:54"
+      },
+      "status_before": "fail",
+      "finding": {
+        "id": "F-06",
+        "severity": "moyenne",
+        "status": "open",
+        "owner": "IT department — Payments development team",
+        "due": "2027-05-03"
+      }
+    },
+    {
+      "control": {
+        "rule": "PDS-2.6",
+        "title": "Synthetic test data only",
+        "objective": "Verify test data is declared synthetic and no production export is versioned.",
+        "test_procedure": "1. GET /api/repo/paiement-api/tree to list tests/ and fixtures. 2. GET /api/repo/paiement-api/search?q=synthetic to verify presence of \"synthetic\": true. 3. GET /api/repo/paiement-api/file?path=<fixture file> to confirm declaration. 4. GET /api/repo/paiement-api/search?q=prod|production.*dump|real.*iban|export.*prod to flag suspected production exports.",
+        "expected": "Test data files contain \"synthetic\": true; zero versioned production exports.",
+        "threshold_source": "PDS-2.6",
+        "severity": "elevee",
+        "references": [
+          "RTS 16(5)(a)"
+        ],
+        "risk": "Leak of real customer data in non-production via versioned exports.",
+        "recommendation": "Replace test data with synthetic data marked \"synthetic\": true and remove production exports.",
+        "cause": "Copy of production data committed for realistic testing.",
+        "evidence_page": "/repo/paiement-api/view?path=tests/fixtures/transfers.json",
+        "remediation": "manual",
+        "id": "C6",
+        "quote": "Les données de test sont synthétiques et déclarées comme telles (champ `\"synthetic\": true`) ; aucun export de production n'est versionné."
+      },
+      "test": {
+        "script": "scripts/C6_PDS-2.6.py",
+        "sha256": "0f2117d3c55e5a688ad3c0bde33b2650e480d5e9c719b91c12b3bd4c270f7013",
+        "origin": "generated",
+        "code": "import requests\nimport json\nimport os\nimport sys\nimport re\ntry:\n    base = os.environ[\"LAB_URL\"]\n    token = os.environ[\"LAB_TOKEN\"]\nexcept Exception as e:\n    sys.stderr.write(\"missing env: \" + str(e) + \"\\n\")\n    sys.exit(2)\nbase = base.rstrip(\"/\")\nheaders = {\"Authorization\": \"Bearer \" + token}\ntry:\n    resp = requests.get(base + \"/api/repo/paiement-api/tree\", headers=headers, timeout=15)\nexcept Exception as e:\n    sys.stderr.write(\"tree request failed: \" + str(e) + \"\\n\")\n    sys.exit(2)\nif resp.status_code != 200:\n    sys.stderr.write(\"tree bad status: \" + str(resp.status_code) + \"\\n\")\n    sys.exit(2)\ntry:\n    data = json.loads(resp.text)\nexcept Exception as e:\n    sys.stderr.write(\"tree bad json: \" + str(e) + \"\\n\")\n    sys.exit(2)\ntry:\n    files = data[\"files\"]\nexcept Exception as e:\n    sys.stderr.write(\"tree missing files: \" + str(e) + \"\\n\")\n    sys.exit(2)\nif not isinstance(files, list):\n    sys.stderr.write(\"tree files not list\\n\")\n    sys.exit(2)\ncands = []\nfor f in files:\n    if not isinstance(f, str):\n        continue\n    low = f.lower()\n    if f.startswith(\"tests/\") or f.startswith(\"fixtures/\"):\n        if low.endswith(\".json\"):\n            cands.append(f)\nif len(cands) == 0:\n    sys.stderr.write(\"no test json files\\n\")\n    sys.exit(2)\nfixture = \"\"\nwant = \"tests/fixtures/transfers.json\"\nif want in cands:\n    fixture = want\nelse:\n    cands_sorted = sorted(cands)\n    fixture = cands_sorted[0]\ntry:\n    resp2 = requests.get(base + \"/api/repo/paiement-api/search\", headers=headers, params={\"q\": \"synthetic\"}, timeout=15)\nexcept Exception as e:\n    sys.stderr.write(\"synthetic search failed: \" + str(e) + \"\\n\")\n    sys.exit(2)\nif resp2.status_code != 200:\n    sys.stderr.write(\"synthetic search bad status: \" + str(resp2.status_code) + \"\\n\")\n    sys.exit(2)\ntry:\n    data2 = json.loads(resp2.text)\nexcept Exception as e:\n    sys.stderr.write(\"synthetic search bad json: \" + str(e) + \"\\n\")\n    sys.exit(2)\ntry:\n    matches2 = data2[\"matches\"]\nexcept Exception as e:\n    sys.stderr.write(\"synthetic search missing matches: \" + str(e) + \"\\n\")\n    sys.exit(2)\nif not isinstance(matches2, list):\n    sys.stderr.write(\"synthetic matches not list\\n\")\n    sys.exit(2)\nfor m in matches2:\n    if not isinstance(m, dict):\n        sys.stderr.write(\"synthetic match not dict\\n\")\n        sys.exit(2)\n    if \"path\" not in m or \"text\" not in m:\n        sys.stderr.write(\"synthetic match missing keys\\n\")\n        sys.exit(2)\n    if not isinstance(m[\"path\"], str) or not isinstance(m[\"text\"], str):\n        sys.stderr.write(\"synthetic match bad types\\n\")\n        sys.exit(2)\ntry:\n    resp3 = requests.get(base + \"/api/repo/paiement-api/file\", headers=headers, params={\"path\": fixture}, timeout=15)\nexcept Exception as e:\n    sys.stderr.write(\"file request failed: \" + str(e) + \"\\n\")\n    sys.exit(2)\nif resp3.status_code != 200:\n    sys.stderr.write(\"file bad status: \" + str(resp3.status_code) + \"\\n\")\n    sys.exit(2)\ntry:\n    data3 = json.loads(resp3.text)\nexcept Exception as e:\n    sys.stderr.write(\"file bad json: \" + str(e) + \"\\n\")\n    sys.exit(2)\ntry:\n    lines = data3[\"lines\"]\nexcept Exception as e:\n    sys.stderr.write(\"file missing lines: \" + str(e) + \"\\n\")\n    sys.exit(2)\nif not isinstance(lines, list):\n    sys.stderr.write(\"file lines not list\\n\")\n    sys.exit(2)\nfor ln in lines:\n    if not isinstance(ln, str):\n        sys.stderr.write(\"file line not str\\n\")\n        sys.exit(2)\ntext = \"\\n\".join(lines)\nhas_synth = re.search(r'\"synthetic\"\\s*:\\s*true', text) is not None\nprod_pat = \"prod|production.*dump|real.*iban|export.*prod\"\ntry:\n    resp4 = requests.get(base + \"/api/repo/paiement-api/search\", headers=headers, params={\"q\": prod_pat}, timeout=15)\nexcept Exception as e:\n    sys.stderr.write(\"prod search failed: \" + str(e) + \"\\n\")\n    sys.exit(2)\nif resp4.status_code != 200:\n    sys.stderr.write(\"prod search bad status: \" + str(resp4.status_code) + \"\\n\")\n    sys.exit(2)\ntry:\n    data4 = json.loads(resp4.text)\nexcept Exception as e:\n    sys.stderr.write(\"prod search bad json: \" + str(e) + \"\\n\")\n    sys.exit(2)\ntry:\n    matches4 = data4[\"matches\"]\nexcept Exception as e:\n    sys.stderr.write(\"prod search missing matches: \" + str(e) + \"\\n\")\n    sys.exit(2)\nif not isinstance(matches4, list):\n    sys.stderr.write(\"prod matches not list\\n\")\n    sys.exit(2)\nfor m in matches4:\n    if not isinstance(m, dict):\n        sys.stderr.write(\"prod match not dict\\n\")\n        sys.exit(2)\n    if \"path\" not in m or \"text\" not in m:\n        sys.stderr.write(\"prod match missing keys\\n\")\n        sys.exit(2)\n    if not isinstance(m[\"path\"], str) or not isinstance(m[\"text\"], str):\n        sys.stderr.write(\"prod match bad types\\n\")\n        sys.exit(2)\nsuspects = []\nfor m in matches4:\n    mp = m[\"path\"]\n    mt = m[\"text\"]\n    pl = mp.lower()\n    tl = mt.lower()\n    hit = False\n    if re.search(r\"production.*dump\", tl) is not None:\n        hit = True\n    if re.search(r\"real.*iban\", tl) is not None:\n        hit = True\n    if re.search(r\"export.*prod\", tl) is not None:\n        hit = True\n    if re.search(r\"prod.*(dump|export|backup)\", tl) is not None:\n        hit = True\n    if re.search(r\"dump.*prod\", tl) is not None:\n        hit = True\n    if re.search(r\"prod.*(dump|export|backup)|production.*dump|real.*iban\", pl) is not None:\n        hit = True\n    if hit:\n        suspects.append(m)\nfile_suspects = []\nfor f in files:\n    if not isinstance(f, str):\n        continue\n    fl = f.lower()\n    if re.search(r\"prod.*(dump|export|backup)|production.*dump|real.*iban\", fl) is not None:\n        file_suspects.append(f)\ntotal_suspects = len(suspects) + len(file_suspects)\nblob = text.lower()\nfor m in matches2:\n    blob = blob + \"\\n\" + m[\"text\"].lower()\nfor m in matches4:\n    blob = blob + \"\\n\" + m[\"text\"].lower()\ninj = False\nif re.search(r\"ignore.*instruc\", blob) is not None:\n    inj = True\nif re.search(r\"disregard.*instruc\", blob) is not None:\n    inj = True\nif re.search(r\"system\\s+prompt\", blob) is not None:\n    inj = True\nif re.search(r\"you\\s+are\\s+an?\\s+(ai|assistant|llm)\", blob) is not None:\n    inj = True\nstatus = \"pass\"\nif not has_synth:\n    status = \"fail\"\nif len(matches2) == 0:\n    status = \"fail\"\nif total_suspects != 0:\n    status = \"fail\"\nobserved = {\"fixture_file\": fixture, \"synthetic_true_in_file\": has_synth, \"synthetic_matches\": len(matches2), \"prod_search_matches\": len(matches4), \"prod_suspects\": total_suspects}\nexpected = \"Test data files contain \\\"synthetic\\\": true; zero versioned production exports.\"\ndetail = \"Fixture \" + fixture + \" shows synthetic true=\" + str(has_synth) + \" with \" + str(len(matches2)) + \" synthetic hits and \" + str(total_suspects) + \" suspected production exports\"\nif inj:\n    detail = detail + \" and untrusted instruction-like text was observed and ignored\"\ndetail = detail + \".\"\nevidence = \"/repo/paiement-api/view?path=\" + fixture\nprint(json.dumps({\"status\": status, \"observed\": observed, \"expected\": expected, \"detail\": detail, \"evidence_page\": evidence}))\n",
+        "requests": 4
+      },
+      "before": {
+        "status": "fail",
+        "observed": {
+          "fixture_file": "tests/fixtures/clients_export_prod.json",
+          "synthetic_true_in_file": false,
+          "synthetic_matches": 1,
+          "prod_search_matches": 3,
+          "prod_suspects": 2
+        },
+        "expected": "Test data files contain \"synthetic\": true; zero versioned production exports.",
+        "detail": "Fixture tests/fixtures/clients_export_prod.json shows synthetic true=False with 1 synthetic hits and 2 suspected production exports.",
+        "evidence_page": "/repo/paiement-api/view?path=tests/fixtures/clients_export_prod.json"
+      },
+      "evidence_before": {
+        "image": "evidence/C6_before.png",
+        "sha256": "d603feab519b9c2747e18ddb985fe13abae028ac459dbb8cdb26de0b430c35b0",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "\"export\": \"production\",\n\"source\": \"base clients paiement (prod)\",",
+          "field_boxes": [
+            [
+              27,
+              133,
+              1060,
+              159
+            ],
+            [
+              27,
+              183,
+              1060,
+              209
+            ]
+          ],
+          "comment": "The file clients_export_prod.json declares export production from a prod source with no synthetic true visible.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 15,
+          "pii_masked": 15,
+          "pii_found_by_model": 0
+        },
+        "page": "/repo/paiement-api/view?path=tests/fixtures/clients_export_prod.json",
+        "page_verified": true,
+        "ts": "2026-11-04 10:27:57"
+      },
+      "status_before": "fail",
+      "finding": {
+        "id": "F-04",
+        "severity": "elevee",
+        "status": "open",
+        "owner": "IT department — Payments development team",
+        "due": "2027-02-02"
+      }
+    },
+    {
+      "control": {
+        "rule": "PDS-2.7",
+        "title": "Authentication successes and failures logged",
+        "objective": "Verify the application logs both successful and failed authentications.",
+        "test_procedure": "1. GET /api/repo/paiement-api/search?q=log.*auth|auth.*log|login.*(success|fail)|logger\\.(info|warning|error). 2. GET /api/repo/paiement-api/file?path=<matched auth file> to confirm both success and failure branches emit a log event.",
+        "expected": "Code contains logging for both authentication success and authentication failure events.",
+        "threshold_source": "PDS-2.7",
+        "severity": "moyenne",
+        "references": [
+          "RTS 12(2)(c)(i)"
+        ],
+        "risk": "Undetected brute-force or account takeover due to missing audit trail.",
+        "recommendation": "Add logging for both authentication successes and failures.",
+        "cause": "Incomplete logging with only errors or no auth events logged.",
+        "evidence_page": "/repo/paiement-api/view?path=app/auth.py",
+        "remediation": "manual",
+        "id": "C7",
+        "quote": "Les réussites et les échecs d'authentification sont journalisés par l'application."
+      },
+      "test": {
+        "script": "scripts/C7_PDS-2.7.py",
+        "sha256": "cfb54dd3af63781389d18a62689befe543a8633e2d3474a369014ee4d7e1a842",
+        "origin": "generated",
+        "code": "import requests\nimport json\nimport os\nimport sys\nimport re\nif \"LAB_URL\" not in os.environ:\n    sys.stderr.write(\"missing LAB_URL\\n\")\n    sys.exit(2)\nif \"LAB_TOKEN\" not in os.environ:\n    sys.stderr.write(\"missing LAB_TOKEN\\n\")\n    sys.exit(2)\nbase = os.environ[\"LAB_URL\"]\ntoken = os.environ[\"LAB_TOKEN\"]\nbase = base.rstrip(\"/\")\nheaders = {\"Authorization\": \"Bearer \" + token}\nresp = requests.get(base + \"/api/repo/paiement-api/tree\", headers=headers, timeout=30)\nif resp.status_code != 200:\n    sys.stderr.write(\"tree request failed\\n\")\n    sys.exit(2)\ntry:\n    data = resp.json()\nexcept:\n    sys.stderr.write(\"tree json failed\\n\")\n    sys.exit(2)\nif not isinstance(data, dict):\n    sys.stderr.write(\"tree data bad\\n\")\n    sys.exit(2)\nif \"files\" not in data:\n    sys.stderr.write(\"tree files missing\\n\")\n    sys.exit(2)\nfiles = data[\"files\"]\nif not isinstance(files, list):\n    sys.stderr.write(\"files bad\\n\")\n    sys.exit(2)\nquery = \"log.*auth|auth.*log|login.*(success|fail)|logger\\\\.(info|warning|error)\"\nresp2 = requests.get(base + \"/api/repo/paiement-api/search\", headers=headers, params={\"q\": query}, timeout=30)\nif resp2.status_code != 200:\n    sys.stderr.write(\"search failed\\n\")\n    sys.exit(2)\ntry:\n    sdata = resp2.json()\nexcept:\n    sys.stderr.write(\"search json failed\\n\")\n    sys.exit(2)\nif not isinstance(sdata, dict):\n    sys.stderr.write(\"search data bad\\n\")\n    sys.exit(2)\nif \"matches\" not in sdata:\n    sys.stderr.write(\"matches missing\\n\")\n    sys.exit(2)\nmatches = sdata[\"matches\"]\nif not isinstance(matches, list):\n    sys.stderr.write(\"matches bad\\n\")\n    sys.exit(2)\ncands = []\nif \"app/auth.py\" in files:\n    cands.append(\"app/auth.py\")\nfor fitem in files:\n    if not isinstance(fitem, str):\n        continue\n    low = fitem.lower()\n    if \"auth\" in low or \"login\" in low:\n        if fitem not in cands:\n            cands.append(fitem)\nfor m in matches:\n    if not isinstance(m, dict):\n        continue\n    if \"path\" not in m:\n        continue\n    p = m[\"path\"]\n    if not isinstance(p, str):\n        continue\n    if p not in cands:\n        cands.append(p)\nif len(cands) == 0:\n    sys.stderr.write(\"no auth candidates\\n\")\n    sys.exit(2)\ncands = cands[:10]\ncontents = []\nfor cand in cands:\n    r = requests.get(base + \"/api/repo/paiement-api/file\", headers=headers, params={\"path\": cand}, timeout=30)\n    if r.status_code != 200:\n        continue\n    try:\n        j = r.json()\n    except:\n        continue\n    if not isinstance(j, dict):\n        continue\n    if \"lines\" not in j:\n        continue\n    lines = j[\"lines\"]\n    if not isinstance(lines, list):\n        continue\n    contents.append([cand, lines])\nif len(contents) == 0:\n    sys.stderr.write(\"no file content\\n\")\n    sys.exit(2)\nlogpat = re.compile(r'(logger|logging|log)\\s*\\.\\s*(info|warning|warn|error|exception|debug|critical)', re.IGNORECASE)\nsuccesspat = re.compile(r'success|succ[eje]s|r[ej]uss|authenticated|logged.?in|login.?ok', re.IGNORECASE)\nfailpat = re.compile(r'fail|[ej]chec|invalid|unauthor|wrong|denied|incorrect|bad.?credential|401|403', re.IGNORECASE)\ninjectpat = re.compile(r'ignore (previous|all) instructions|system prompt|you are now', re.IGNORECASE)\nhasPass = False\nevpath = \"\"\nevlogs = []\nevs = False\nevf = False\nfirstDone = False\nfor entry in contents:\n    cand = entry[0]\n    lines = entry[1]\n    logidx = []\n    for i in range(len(lines)):\n        v = lines[i]\n        if not isinstance(v, str):\n            continue\n        if logpat.search(v):\n            logidx.append(i)\n    slog = []\n    flog = []\n    for li in logidx:\n        a = li - 10\n        if a < 0:\n            a = 0\n        b = li + 11\n        if b > len(lines):\n            b = len(lines)\n        parts = []\n        for k in range(a, b):\n            w = lines[k]\n            if isinstance(w, str):\n                parts.append(w)\n        win = \"\\n\".join(parts)\n        if successpat.search(win):\n            slog.append(li)\n        if failpat.search(win):\n            flog.append(li)\n    distinct = False\n    for s in slog:\n        for f in flog:\n            if s != f:\n                distinct = True\n    ok = False\n    if len(slog) > 0 and len(flog) > 0 and distinct:\n        ok = True\n    if firstDone == False:\n        evpath = cand\n        evlogs = []\n        for li in logidx:\n            evlogs.append(lines[li])\n        if len(slog) > 0:\n            evs = True\n        else:\n            evs = False\n        if len(flog) > 0:\n            evf = True\n        else:\n            evf = False\n        firstDone = True\n    if ok:\n        hasPass = True\n        evpath = cand\n        evlogs = []\n        for li in logidx:\n            evlogs.append(lines[li])\n        evs = True\n        evf = True\n        break\nif evpath == \"\":\n    sys.stderr.write(\"no evidence\\n\")\n    sys.exit(2)\nevtext = []\nfor t in evlogs:\n    if isinstance(t, str):\n        evtext.append(t)\nshown = evtext[:10]\ninjectFound = False\nfor entry in contents:\n    cand = entry[0]\n    lines = entry[1]\n    if cand == evpath:\n        allparts = []\n        for w in lines:\n            if isinstance(w, str):\n                allparts.append(w)\n        alltext = \"\\n\".join(allparts)\n        if injectpat.search(alltext):\n            injectFound = True\nexpected = \"Code contains logging for both authentication success and authentication failure events.\"\nevpage = \"/repo/paiement-api/view?path=\" + evpath\nobserved = {\"path\": evpath, \"log_events\": shown, \"success_logged\": evs, \"failure_logged\": evf}\nif hasPass:\n    status = \"pass\"\n    detail = evpath + \" emits log events for both authentication success and authentication failure.\"\nelse:\n    status = \"fail\"\n    detail = evpath + \" does not emit log events for both authentication success and authentication failure.\"\nif injectFound:\n    detail = detail + \" File contains untrusted instruction text which was not followed.\"\nprint(json.dumps({\"status\": status, \"observed\": observed, \"expected\": expected, \"detail\": detail, \"evidence_page\": evpage}))\n",
+        "requests": 3
+      },
+      "before": {
+        "status": "fail",
+        "observed": {
+          "path": "app/auth.py",
+          "log_events": [],
+          "success_logged": false,
+          "failure_logged": false
+        },
+        "expected": "Code contains logging for both authentication success and authentication failure events.",
+        "detail": "app/auth.py does not emit log events for both authentication success and authentication failure.",
+        "evidence_page": "/repo/paiement-api/view?path=app/auth.py"
+      },
+      "evidence_before": {
+        "image": "evidence/C7_before.png",
+        "sha256": "5b3695ed7ed9f7b6a350dee93a53b6e39a0c10c7fab13e31e1b5531030e26129",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "return False\nreturn operator[\"password_hash\"] == hash_password(password)",
+          "field_boxes": [
+            [
+              28,
+              422,
+              1058,
+              446
+            ],
+            [
+              28,
+              447,
+              1058,
+              474
+            ]
+          ],
+          "comment": "The login function returns on failure and success branches with no logging calls visible.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 0,
+          "pii_masked": 0,
+          "pii_found_by_model": 0
+        },
+        "page": "/repo/paiement-api/view?path=app/auth.py",
+        "page_verified": true,
+        "ts": "2026-11-04 10:28:18"
+      },
+      "status_before": "fail",
+      "finding": {
+        "id": "F-07",
+        "severity": "moyenne",
+        "status": "open",
+        "owner": "IT department — Payments development team",
+        "due": "2027-05-03"
+      }
+    }
+  ],
+  "running": false,
+  "decisions": [],
+  "remediation_requested": false,
+  "usage": {
+    "rows": [
+      {
+        "model": "muse-spark-1.3",
+        "calls": 15,
+        "input": 21414,
+        "output": 122133,
+        "seconds": 614.1475257873535,
+        "images": 0,
+        "cost_usd": 0.54583275
+      },
+      {
+        "model": "sam-3.1",
+        "calls": 7,
+        "input": 0,
+        "output": 0,
+        "seconds": 5.844361305236816,
+        "images": 7,
+        "cost_usd": null
+      }
+    ],
+    "total_usd": 0.54583275,
+    "unpriced": [
+      "sam-3.1"
+    ],
+    "estimated": false
+  },
+  "duration_s": 192,
+  "catalogue": {
+    "source": "studio",
+    "reviewed": false,
+    "reviewer": null,
+    "path": "runs/studio/20261104-102505-7a3f/catalogue.json",
+    "validated_at": "2026-11-04 10:25"
+  },
+  "interpretation": {
+    "target": "repo:paiement-api",
+    "texts": [
+      "RTS 2024/1774 — Article 16: ICT systems acquisition, development and maintenance",
+      "Internal policy PDS-2 (Banque Kerlann, fictitious) — secure development"
+    ],
+    "text_sha256": "8c90122f0aa2db1887f6faa8bb4c46d96a82e5c949d386e7816c0bbc02dcdd67",
+    "model": "muse-spark-1.3",
+    "requirements": [
+      {
+        "ref": "RTS 16(1)",
+        "quote": "financial entities shall develop, document and implement a policy governing the acquisition, development, and maintenance of ICT systems.",
+        "quote_verified": true,
+        "summary": "A documented ICT acquisition, development and maintenance policy must exist.",
+        "testability": "document",
+        "why": "Existence and documentation of a governance policy cannot be proven from read-only code alone.",
+        "controls": [],
+        "covered_by": []
+      },
+      {
+        "ref": "RTS 16(1)(a)",
+        "quote": "identify security practices and methodologies relating to the acquisition, development, and maintenance of ICT systems;",
+        "quote_verified": true,
+        "summary": "The policy must identify security practices and methodologies.",
+        "testability": "document",
+        "why": "Policy content requires document review and cannot be inferred from source code.",
+        "controls": [],
+        "covered_by": []
+      },
+      {
+        "ref": "RTS 16(1)(c)",
+        "quote": "specify measures to mitigate the risk of unintentional alteration or intentional manipulation of the ICT systems during development, maintenance, and deployment.",
+        "quote_verified": true,
+        "summary": "The policy must specify measures against alteration or manipulation during development and deployment.",
+        "testability": "document",
+        "why": "Specified mitigation measures require policy document review, not code inspection.",
+        "controls": [],
+        "covered_by": []
+      },
+      {
+        "ref": "RTS 16(2)",
+        "quote": "financial entities shall develop, document, and implement an ICT systems' acquisition, development, and maintenance procedure for the testing and approval of all ICT systems prior to their use and after maintenance.",
+        "quote_verified": true,
+        "summary": "A procedure for testing and approval before use and after maintenance must exist.",
+        "testability": "document",
+        "why": "Existence of an approval procedure requires document review beyond the code repository.",
+        "controls": [],
+        "covered_by": []
+      },
+      {
+        "ref": "RTS 16(3)",
+        "quote": "the procedure shall contain source code reviews covering both static and dynamic testing, including security testing for internet-exposed systems and applications.",
+        "quote_verified": true,
+        "summary": "The procedure must require source code reviews with static and dynamic testing.",
+        "testability": "automated",
+        "why": "Static security testing in CI is visible via workflow files in the repository interface.",
+        "controls": [],
+        "covered_by": [
+          "PDS-2.4"
+        ]
+      },
+      {
+        "ref": "RTS 16(3)(a)",
+        "quote": "identify and analyse vulnerabilities and anomalies in the source code;",
+        "quote_verified": true,
+        "summary": "Vulnerabilities and anomalies in source code must be identified and analysed.",
+        "testability": "document",
+        "why": "Vulnerability analysis records and action tracking require document review, not just code.",
+        "controls": [],
+        "covered_by": []
+      },
+      {
+        "ref": "RTS 16(3)(b)",
+        "quote": "adopt an action plan to address those vulnerabilities and anomalies;",
+        "quote_verified": true,
+        "summary": "An action plan to address vulnerabilities must be adopted.",
+        "testability": "document",
+        "why": "An action plan is a governance document not visible in the read-only code interface.",
+        "controls": [],
+        "covered_by": []
+      },
+      {
+        "ref": "RTS 16(3)(c)",
+        "quote": "monitor the implementation of that action plan.",
+        "quote_verified": true,
+        "summary": "Implementation of the action plan must be monitored.",
+        "testability": "document",
+        "why": "Monitoring requires follow-up records and cannot be tested via static code alone.",
+        "controls": [],
+        "covered_by": []
+      },
+      {
+        "ref": "RTS 16(4)",
+        "quote": "the procedure shall contain security testing of software packages no later than at the integration phase.",
+        "quote_verified": true,
+        "summary": "Security testing of software packages must occur no later than integration.",
+        "testability": "automated",
+        "why": "Integration-phase dependency auditing is visible via CI workflow and requirements files.",
+        "controls": [],
+        "covered_by": [
+          "PDS-2.5"
+        ]
+      },
+      {
+        "ref": "RTS 16(5)(a)",
+        "quote": "non-production environments only store anonymised, pseudonymised, or randomised production data;",
+        "quote_verified": true,
+        "summary": "Non-production environments must only store anonymised, pseudonymised or randomised data.",
+        "testability": "automated",
+        "why": "Test data synthetic marking is visible in versioned test fixtures via the repository interface.",
+        "controls": [],
+        "covered_by": [
+          "PDS-2.6"
+        ]
+      },
+      {
+        "ref": "RTS 16(5)(b)",
+        "quote": "financial entities are to protect the integrity and confidentiality of data in non-production environments.",
+        "quote_verified": true,
+        "summary": "Integrity and confidentiality of non-production data must be protected.",
+        "testability": "document",
+        "why": "Environment-level data protection requires architecture and access documents, not just code.",
+        "controls": [],
+        "covered_by": []
+      },
+      {
+        "ref": "RTS 16(7)",
+        "quote": "the procedure shall include controls to protect the integrity of source code of ICT systems that are developed in-house or by an ICT third-party service provider.",
+        "quote_verified": true,
+        "summary": "Controls to protect source code integrity must be included.",
+        "testability": "document",
+        "why": "Source-code integrity controls such as branch protection require platform settings not exposed here.",
+        "controls": [],
+        "covered_by": []
+      },
+      {
+        "ref": "RTS 16(8)",
+        "quote": "proprietary software and, where feasible, the source code provided by ICT third-party service providers, as well as source code coming from open-source projects, are to be analysed and tested in accordance with paragraph 3 prior to their deployment in the production environment.",
+        "quote_verified": true,
+        "summary": "Third-party and open-source software must be analysed and tested before production.",
+        "testability": "automated",
+        "why": "Dependency pinning and CI auditing of third-party packages are visible in the repository.",
+        "controls": [],
+        "covered_by": [
+          "PDS-2.5"
+        ]
+      },
+      {
+        "ref": "PDS-2.1",
+        "quote": "Aucun secret (mot de passe, clé, jeton) n'est écrit en clair dans le code source ni dans la configuration versionnée : les secrets viennent d'un coffre ou de variables d'environnement.",
+        "quote_verified": true,
+        "summary": "No hardcoded secrets in source or versioned configuration.",
+        "testability": "automated",
+        "why": "Hardcoded secrets can be detected by searching versioned code and config via the API.",
+        "controls": [
+          {
+            "rule": "PDS-2.1",
+            "title": "No hardcoded secrets in code or versioned config",
+            "objective": "Verify no password, key or token is written in clear text in source or versioned config.",
+            "test_procedure": "1. GET /api/repo/paiement-api/tree to list files. 2. GET /api/repo/paiement-api/search?q=(?i)(password|passwd|secret|api[_-]?key|aws_secret|token)\\s*[:=]\\s*['\"][^'\"]+ with path_prefix app/ and without prefix. 3. GET /api/repo/paiement-api/file?path=app/config.py and any matched files to inspect context. 4. Verify secret access uses os.environ, os.getenv or vault client and no clear-text value.",
+            "expected": "Zero hardcoded secret assignments; all secrets obtained from vault or environment variables.",
+            "threshold_source": "PDS-2.1",
+            "severity": "critique",
+            "references": [
+              "RTS 7(2)"
+            ],
+            "risk": "Credential theft and unauthorized access to production and payment data.",
+            "recommendation": "Remove hardcoded secrets and load them from a vault or environment variables.",
+            "cause": "Developer convenience hardcoding credentials for local testing.",
+            "evidence_page": "/repo/paiement-api/view?path=app/config.py",
+            "remediation": "manual",
+            "id": "C1",
+            "quote": "Aucun secret (mot de passe, clé, jeton) n'est écrit en clair dans le code source ni dans la configuration versionnée : les secrets viennent d'un coffre ou de variables d'environnement."
+          }
+        ],
+        "covered_by": []
+      },
+      {
+        "ref": "PDS-2.2",
+        "quote": "Tout appel réseau sortant vérifie le certificat TLS du serveur : la vérification n'est jamais désactivée (`verify=False` interdit).",
+        "quote_verified": true,
+        "summary": "Outgoing network calls must verify TLS certificates.",
+        "testability": "automated",
+        "why": "Disabled TLS verification patterns are searchable in Python code via the API.",
+        "controls": [
+          {
+            "rule": "PDS-2.2",
+            "title": "TLS certificate verification never disabled",
+            "objective": "Verify no outgoing call disables TLS server certificate verification.",
+            "test_procedure": "1. GET /api/repo/paiement-api/search?q=verify\\s*=\\s*False. 2. GET /api/repo/paiement-api/search?q=ssl\\._create_unverified_context|CERT_NONE|check_hostname\\s*=\\s*False. 3. Review matched files via GET /api/repo/paiement-api/file?path=<file> to confirm context of requests, urllib3 or http client calls.",
+            "expected": "Zero matches for verify=False or equivalent TLS verification bypass.",
+            "threshold_source": "PDS-2.2",
+            "severity": "elevee",
+            "references": [
+              "DORA 9(3)(a) ; RTS 6(2)(a)"
+            ],
+            "risk": "Man-in-the-middle interception of SEPA transfer data.",
+            "recommendation": "Enforce TLS verification on all outgoing calls and remove any verify=False.",
+            "cause": "Disabled verification to allow self-signed certificates in test.",
+            "evidence_page": "/repo/paiement-api/view?path=app/payments.py",
+            "remediation": "manual",
+            "id": "C2",
+            "quote": "Tout appel réseau sortant vérifie le certificat TLS du serveur : la vérification n'est jamais désactivée (`verify=False` interdit)."
+          }
+        ],
+        "covered_by": []
+      },
+      {
+        "ref": "PDS-2.3",
+        "quote": "Les mots de passe sont hachés avec argon2, bcrypt, scrypt ou PBKDF2. MD5 et SHA-1 sont interdits pour tout usage de sécurité.",
+        "quote_verified": true,
+        "summary": "Passwords must use approved hashing and MD5/SHA-1 are forbidden.",
+        "testability": "automated",
+        "why": "Hashing libraries and banned hash functions are searchable in source code.",
+        "controls": [
+          {
+            "rule": "PDS-2.3",
+            "title": "Approved password hashing only",
+            "objective": "Verify passwords use argon2, bcrypt, scrypt or PBKDF2 and no MD5 or SHA-1 for security.",
+            "test_procedure": "1. GET /api/repo/paiement-api/search?q=argon2|bcrypt|scrypt|pbkdf2|passlib|hashlib. 2. GET /api/repo/paiement-api/search?q=hashlib\\.(md5|sha1)\\(|\\.md5\\(|\\.sha1\\(|MD5|SHA1. 3. GET /api/repo/paiement-api/file?path=<matched file> to confirm password-hashing context versus non-security use.",
+            "expected": "Password hashing uses only argon2, bcrypt, scrypt or PBKDF2; zero use of MD5 or SHA-1 for security.",
+            "threshold_source": "PDS-2.3",
+            "severity": "elevee",
+            "references": [
+              "RTS 6(3) et 6(4)"
+            ],
+            "risk": "Password cracking and credential compromise due to weak hashes.",
+            "recommendation": "Migrate password hashing to argon2, bcrypt, scrypt or PBKDF2 and remove MD5/SHA-1.",
+            "cause": "Legacy code using hashlib MD5/SHA-1 examples.",
+            "evidence_page": "/repo/paiement-api/view?path=app/auth.py",
+            "remediation": "manual",
+            "id": "C3",
+            "quote": "Les mots de passe sont hachés avec argon2, bcrypt, scrypt ou PBKDF2. MD5 et SHA-1 sont interdits pour tout usage de sécurité."
+          }
+        ],
+        "covered_by": []
+      },
+      {
+        "ref": "PDS-2.4",
+        "quote": "La chaîne d'intégration continue exécute une analyse statique de sécurité (bandit, semgrep ou CodeQL) à chaque modification.",
+        "quote_verified": true,
+        "summary": "CI must run static security analysis on every change.",
+        "testability": "automated",
+        "why": "CI workflow files listing static analysis jobs are readable via the repository interface.",
+        "controls": [
+          {
+            "rule": "PDS-2.4",
+            "title": "CI runs static security analysis on every change",
+            "objective": "Verify CI executes bandit, semgrep or CodeQL on each change.",
+            "test_procedure": "1. GET /api/repo/paiement-api/tree to list .github/workflows/. 2. GET /api/repo/paiement-api/file?path=.github/workflows/ci.yml (and any other yml) to inspect triggers and jobs. 3. GET /api/repo/paiement-api/search?q=bandit|semgrep|codeql|CodeQL to confirm tool invocation.",
+            "expected": "A workflow triggered on push and pull_request runs bandit, semgrep or CodeQL.",
+            "threshold_source": "PDS-2.4",
+            "severity": "moyenne",
+            "references": [
+              "RTS 16(3)"
+            ],
+            "risk": "Undetected code vulnerabilities reaching production.",
+            "recommendation": "Add bandit, semgrep or CodeQL to CI on every push and pull request.",
+            "cause": "Security scanning omitted from pipeline configuration.",
+            "evidence_page": "/repo/paiement-api/view?path=.github/workflows/ci.yml",
+            "remediation": "manual",
+            "id": "C4",
+            "quote": "La chaîne d'intégration continue exécute une analyse statique de sécurité (bandit, semgrep ou CodeQL) à chaque modification."
+          }
+        ],
+        "covered_by": []
+      },
+      {
+        "ref": "PDS-2.5",
+        "quote": "Les dépendances sont épinglées à une version exacte (`paquet==version`) et auditées en intégration continue (pip-audit ou équivalent).",
+        "quote_verified": true,
+        "summary": "Dependencies must be pinned and audited in CI.",
+        "testability": "automated",
+        "why": "Requirements pinning and CI audit jobs are readable via tree, file and search.",
+        "controls": [
+          {
+            "rule": "PDS-2.5",
+            "title": "Pinned dependencies audited in CI",
+            "objective": "Verify exact version pinning and CI dependency audit.",
+            "test_procedure": "1. GET /api/repo/paiement-api/file?path=requirements.txt to verify every entry uses == with exact version. 2. GET /api/repo/paiement-api/tree for .github/workflows and read workflow files. 3. GET /api/repo/paiement-api/search?q=pip-audit|pip_audit|safety|osv-scanner to confirm audit step in CI.",
+            "expected": "All requirements pinned as package==version; CI runs pip-audit or equivalent.",
+            "threshold_source": "PDS-2.5",
+            "severity": "moyenne",
+            "references": [
+              "RTS 16(4) et 16(8)"
+            ],
+            "risk": "Supply-chain compromise via unpinned or vulnerable dependencies.",
+            "recommendation": "Pin all dependencies with == and add pip-audit or equivalent to CI.",
+            "cause": "Use of floating version ranges without vulnerability scanning.",
+            "evidence_page": "/repo/paiement-api/view?path=requirements.txt",
+            "remediation": "manual",
+            "id": "C5",
+            "quote": "Les dépendances sont épinglées à une version exacte (`paquet==version`) et auditées en intégration continue (pip-audit ou équivalent)."
+          }
+        ],
+        "covered_by": []
+      },
+      {
+        "ref": "PDS-2.6",
+        "quote": "Les données de test sont synthétiques et déclarées comme telles (champ `\"synthetic\": true`) ; aucun export de production n'est versionné.",
+        "quote_verified": true,
+        "summary": "Test data must be declared synthetic and no production export versioned.",
+        "testability": "automated",
+        "why": "Test fixtures and synthetic marking are searchable and readable in tests/ via the API.",
+        "controls": [
+          {
+            "rule": "PDS-2.6",
+            "title": "Synthetic test data only",
+            "objective": "Verify test data is declared synthetic and no production export is versioned.",
+            "test_procedure": "1. GET /api/repo/paiement-api/tree to list tests/ and fixtures. 2. GET /api/repo/paiement-api/search?q=synthetic to verify presence of \"synthetic\": true. 3. GET /api/repo/paiement-api/file?path=<fixture file> to confirm declaration. 4. GET /api/repo/paiement-api/search?q=prod|production.*dump|real.*iban|export.*prod to flag suspected production exports.",
+            "expected": "Test data files contain \"synthetic\": true; zero versioned production exports.",
+            "threshold_source": "PDS-2.6",
+            "severity": "elevee",
+            "references": [
+              "RTS 16(5)(a)"
+            ],
+            "risk": "Leak of real customer data in non-production via versioned exports.",
+            "recommendation": "Replace test data with synthetic data marked \"synthetic\": true and remove production exports.",
+            "cause": "Copy of production data committed for realistic testing.",
+            "evidence_page": "/repo/paiement-api/view?path=tests/fixtures/transfers.json",
+            "remediation": "manual",
+            "id": "C6",
+            "quote": "Les données de test sont synthétiques et déclarées comme telles (champ `\"synthetic\": true`) ; aucun export de production n'est versionné."
+          }
+        ],
+        "covered_by": []
+      },
+      {
+        "ref": "PDS-2.7",
+        "quote": "Les réussites et les échecs d'authentification sont journalisés par l'application.",
+        "quote_verified": true,
+        "summary": "Authentication successes and failures must be logged.",
+        "testability": "automated",
+        "why": "Application logging calls for authentication events are searchable in source code.",
+        "controls": [
+          {
+            "rule": "PDS-2.7",
+            "title": "Authentication successes and failures logged",
+            "objective": "Verify the application logs both successful and failed authentications.",
+            "test_procedure": "1. GET /api/repo/paiement-api/search?q=log.*auth|auth.*log|login.*(success|fail)|logger\\.(info|warning|error). 2. GET /api/repo/paiement-api/file?path=<matched auth file> to confirm both success and failure branches emit a log event.",
+            "expected": "Code contains logging for both authentication success and authentication failure events.",
+            "threshold_source": "PDS-2.7",
+            "severity": "moyenne",
+            "references": [
+              "RTS 12(2)(c)(i)"
+            ],
+            "risk": "Undetected brute-force or account takeover due to missing audit trail.",
+            "recommendation": "Add logging for both authentication successes and failures.",
+            "cause": "Incomplete logging with only errors or no auth events logged.",
+            "evidence_page": "/repo/paiement-api/view?path=app/auth.py",
+            "remediation": "manual",
+            "id": "C7",
+            "quote": "Les réussites et les échecs d'authentification sont journalisés par l'application."
+          }
+        ],
+        "covered_by": []
+      }
+    ],
+    "counts": {
+      "automated": 11,
+      "interview": 0,
+      "document": 9,
+      "requirements": 20,
+      "rejected": 0,
+      "controls": 7,
+      "covered": 4
+    }
+  },
+  "inconclusive": 0,
+  "opinion_initial": "insuffisant",
+  "opinion_final": "insuffisant",
+  "injection_detected": false,
+  "trail_head": "38669bddd00027cacbdee5dce4464b9cc493ee4b7c1730216fb17d37dbbd98e2"
+}
