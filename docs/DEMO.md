@@ -20,7 +20,7 @@ Three warm-ups, all before the recording session:
    code repository target, *Draft the work programme*, approve, run the audit. The finished report lands in
    `runs/studio/<session>/audit/report.html`; note the session id, it is the fallback for the code scene. The Studio
    re-plans on each new session, so the live take may list a different number of controls (7 to 10 on our real runs).
-3. **Benchmark scorecard (pre-recorded)** — a full bench is far too long to run on camera (300–417 s on the six ledger
+3. **Benchmark scorecard (pre-recorded)** — a full bench is far too long to run on camera (300–417 s on the seven ledger
    runs), so record the scorecard from a finished one:
    ```bash
    python -m attest bench --lang en --out runs/bench-demo      # then open runs/bench-demo/scorecard.html
@@ -42,6 +42,9 @@ Record the live run once at normal speed; speed up the waiting parts in editing.
 The final 3-minute script, with timings, captions and the source of every spoken number, is in
 [SUBMISSION.md](SUBMISSION.md#final-video-script-300-english). This file covers recording setup and fallbacks only,
 so that there is a single script to record from.
+
+Studio scene, on-screen caption note: *The fictitious bank's internal policy and console are in French, quoted
+verbatim in their original language; the report is in English.*
 
 ## Fallbacks
 

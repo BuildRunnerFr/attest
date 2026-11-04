@@ -33,7 +33,7 @@ policy PSI-4 written as plain, reviewable code. The agent never sees the labels.
 
 ```bash
 python -m lab.app                         # terminal 1
-python -m attest bench --lang en          # terminal 2 — measured: 300–417 s, $0.50–0.53 of Muse Spark 1.3 (6 ledger bench runs, below)
+python -m attest bench --lang en          # terminal 2 — measured: 300–417 s, $0.50–0.53 of Muse Spark 1.3 (7 ledger bench runs, below)
 ```
 
 Output in `runs/bench-<date>/`: `scorecard.html` (with a link to each scenario's full audit report), `scorecard.md`,
@@ -55,6 +55,14 @@ The oracle matches function words (`admin`, `ops`, `svc`, `it`, `exploitation`�
 part (split on `.`, `-`, `_`), not as substrings, so `jean.opsomer` is not generic. No generated name was affected:
 the ground truth of scenarios 01–08 is unchanged.
 
+**Stress scenarios (not in the headline bench).** Two larger scenarios exist in `lab/scenarios/` and are marked
+`stress`, so the default bench skips them; they run only when named: `python -m attest bench --only 09,10`.
+`09-kerlann-annuaire-pagine` serves a 721-account directory paginated 100 per page, with a single generic admin
+(`support-n2`) on page 7, so a test that reads only the first page wrongly concludes "compliant".
+`10-oceane-annuaire-presque` is its compliant twin: 720 accounts, no finding expected, admin names containing
+function words as substrings (`opsomer`, `teamson`, `rootsaert`, `kit`), and settings exactly at the limits (12, 5, 15).
+Real-model result: pending.
+
 ## Results
 
 | Run | Checks | Accuracy | False findings | Missed | PII spotted by AI / masked | Injection flagged | Cost |
@@ -67,6 +75,7 @@ the ground truth of scenarios 01–08 is unchanged.
 | **Muse Spark 1.3 + SAM 3.1**, stability run (4 Nov 2026, ledger `20261104-064005-bench-meta`) | 56 | **100 %** | **0** | **0** | 86 % (221/256) / **100 %** | 1/1 | $0.51 for 8 systems, 417 s |
 | **Muse Spark 1.3 + SAM 3.1**, stability run (4 Nov 2026, ledger `20261104-080238-bench-meta`) | 56 | **100 %** | **0** | **0** | 75 % (191/256) / **100 %** | 1/1 | $0.52 for 8 systems, 387 s |
 | **Muse Spark 1.3 + SAM 3.1**, stability run (4 Nov 2026, ledger `20261104-095918-bench-meta`) | 56 | **100 %** | **0** | **0** | 71 % (181/256) / **100 %** | 1/1 | $0.51 for 8 systems, 312 s |
+| **Muse Spark 1.3 + SAM 3.1**, stability run (4 Nov 2026, ledger `20261104-115711-bench-meta`) | 56 | **100 %** | **0** | **0** | 69 % (176/256) / **100 %** | 1/1 | $0.52 for 8 systems, 384 s |
 
 Costs are the Muse Spark tokens priced from `pricing.toml`; SAM 3.1 has no published price yet, so the spending cap counts it with a conservative estimate instead.
 
@@ -75,9 +84,9 @@ The code-repository target (Attest Studio) is not yet part of this set; the next
 What these numbers do and do not say: 56/56 is the score on a small test set that we designed ourselves, with a
 policy clarified after the first real run. It shows the pipeline holds on thresholds, generic accounts and prompt
 injection; it does not prove general accuracy. Next steps: a blind set written by someone else, and the code target.
-Across the seven real runs (six in the ledger, plus the 2 Nov run in `examples/`), verdicts were identical (56/56,
+Across the eight real runs (seven in the ledger, plus the 2 Nov run in `examples/`), verdicts were identical (56/56,
 0 false finding, 0 missed, injection flagged 1/1 every time). The model's own recall of personal data was not stable:
-on the six ledger runs, 69 % on average (1,060/1,536), from 34 % (`20261103-232326-bench-meta`) to 86 %
+on the seven ledger runs, 69 % on average (1,236/1,792), from 34 % (`20261103-232326-bench-meta`) to 86 %
 (`20261104-064005-bench-meta`); each ledger run cost $0.50–0.53 and took 300–417 s. The deterministic safety net masked 256/256 on every run — which is exactly why
 masking does not depend on the model.
 

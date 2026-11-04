@@ -10,11 +10,13 @@ spreadsheets, re-checked by hand months later. Attest turns it into a sealed, re
 `20261104-083850-iam-meta`, a full IAM console audit (7 controls tested, 6 non-compliances, 5 fixes applied after a
 demo pre-approval and re-tested compliant, sealed report) took 62 s and $0.13 of Muse Spark calls.
 
-Measured on real runs with the Meta Model API (ids from our run ledger; Muse Spark cost, SAM 3.1 has no public price):
+Measured on real runs with the Meta Model API (ids from our [run ledger](https://github.com/BuildRunnerFr/attest/blob/real-results/ledger.jsonl); Muse Spark cost, SAM 3.1 has no public price).
+Each ledger entry carries the GitHub Actions `workflow_run` id of the run that produced it, viewable at
+`https://github.com/BuildRunnerFr/attest/actions/runs/<workflow_run>`:
 
 | Run | Result | Cost |
 |---|---|---|
-| Benchmark, 8 fictitious banks, 6 runs (`20261103-232326`, `20261103-235819`, `20261104-020142`, `20261104-064005`, `20261104-080238`, `20261104-095918` `-bench-meta`) | **56/56 checks correct on every run, 0 false finding, 0 missed, prompt injection flagged 6/6**, 256/256 personal-data items masked each time | $0.50–0.53, 300–417 s per run |
+| Benchmark, 8 fictitious banks, 7 runs (`20261103-232326`, `20261103-235819`, `20261104-020142`, `20261104-064005`, `20261104-080238`, `20261104-095918`, `20261104-115711` `-bench-meta`) | **56/56 checks correct on every run, 0 false finding, 0 missed, prompt injection flagged 7/7**, 256/256 personal-data items masked each time | $0.50–0.53, 300–417 s per run |
 | IAM console audit with remediation, 5 runs (`20261103-234915`, `20261104-001606`, `20261104-063210`, `20261104-083850`, `20261104-102217` `-iam-meta`) | **6 non-compliances on every run; 5 fixes applied after (demo) pre-approval and re-tested compliant**, 1 action plan | $0.12–0.13, 62–87 s per run |
 | Code repository audit, 7 runs (`20261103-230340`, `20261103-234658`, `20261104-002236`, `20261104-060119`, `20261104-062938`, `20261104-083648`, `20261104-102820` `-code-meta`) | **7/7 planted flaws found on 6 of 7 runs**, each with its evidence (the work programme, re-planned on each run, tested them as 7 to 10 controls); on `20261104-002236`, 6 found, 1 sent to human review because the screenshot did not back the script, 1 evidence error (fixed since: a missing file is now a technical error, never a finding) | $0.33–0.78, 190–390 s per run |
 
@@ -98,6 +100,8 @@ model API makes that API an ICT third-party provider under DORA. See [docs/BUSIN
 ## Quickstart
 
 Requires Python 3.11+ (tested on 3.12 and 3.13). No API key needed to try it: the `mock` backend runs offline.
+Mock mode returns canned, partly French text; real English outputs are in [`examples/`](examples/) and on the
+[`real-results`](https://github.com/BuildRunnerFr/attest/tree/real-results) branch.
 
 ```bash
 git clone https://github.com/BuildRunnerFr/attest.git && cd attest
@@ -136,7 +140,7 @@ We do not fine-tune anything: the model is not the judge, and a bank cannot hand
 edge cases, generic accounts, prompt injection, a 56-account directory) and reports accuracy, false findings, missed
 non-compliances, privacy masking and cost. See [docs/EVALUATION.md](docs/EVALUATION.md).
 
-Seven real runs of the same benchmark (Muse Spark 1.3 + SAM 3.1; the first from `examples/`, the other six from the run ledger):
+Eight real runs of the same benchmark (Muse Spark 1.3 + SAM 3.1; the first from `examples/`, the other seven from the run ledger):
 
 | Run | Checks correct | False findings / missed | Injection | Personal data spotted by the model / masked | Cost, time |
 |---|---|---|---|---|---|
@@ -147,8 +151,9 @@ Seven real runs of the same benchmark (Muse Spark 1.3 + SAM 3.1; the first from 
 | Stability run, ledger `20261104-064005-bench-meta` | 56/56 | 0 / 0 | flagged | 221/256 (86 %) / 256/256 | $0.51, 417 s |
 | Stability run, ledger `20261104-080238-bench-meta` | 56/56 | 0 / 0 | flagged | 191/256 (75 %) / 256/256 | $0.52, 387 s |
 | Stability run, ledger `20261104-095918-bench-meta` | 56/56 | 0 / 0 | flagged | 181/256 (71 %) / 256/256 | $0.51, 312 s |
+| Stability run, ledger `20261104-115711-bench-meta` | 56/56 | 0 / 0 | flagged | 176/256 (69 %) / 256/256 | $0.52, 384 s |
 
-Verdicts were identical on all seven runs (56/56, 0 false finding, 0 missed, injection flagged). On the six ledger runs,
+Verdicts were identical on all eight runs (56/56, 0 false finding, 0 missed, injection flagged). On the seven ledger runs,
 the model's own recall of personal data averaged 69 % and ranged from 34 % to 86 %, which is why masking never depends on it: the deterministic
 safety net masked 256/256 every time. Each ledger run cost $0.50–0.53 and took 300–417 s. A small, self-built test set: encouraging, not a proof of general accuracy.
 
