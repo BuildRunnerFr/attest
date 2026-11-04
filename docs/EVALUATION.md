@@ -40,6 +40,21 @@ Output in `runs/bench-<date>/`: `scorecard.html` (with a link to each scenario's
 `scorecard.json`. Metrics: accuracy, false findings (FP), missed non-compliances (FN), inconclusive results,
 personal data spotted by the AI vs masked in the end, injection attempts flagged, measured cost and time.
 
+Per-rule metrics (`summary.per_rule` in `scorecard.json`, table at the end of `scorecard.md`/`.html`): TP, FP, FN, TN,
+inconclusive and missing for each PSI-4.x, precision, and **strict recall**, where an expected non-compliance judged
+inconclusive or missing counts as missed (`recall_concluded` keeps the old definition, which ignored them; `recall`
+in the summary is now strict too). Two entries for the same rule no longer overwrite each other: identical statuses
+count once, conflicting ones are inconclusive. `summary.accounts_generic` scores PSI-4.7 per admin account against
+`expected_generic_admins`. The test scripts only return a count, so the flagged accounts are read from the field the
+visual pass boxed as evidence (`source: evidence`), unless the script returns an explicit list. A finished bench can
+be rescored without a model: `python -m attest.bench rescore runs/bench-<date> <out_dir>`. On ledger
+`20261104-095918-bench-meta`, every rule scores 100 % precision and strict recall (PSI-4.1–4.5: 2 TP + 6 TN each;
+PSI-4.6: 1 + 7; PSI-4.7: 4 + 4), and PSI-4.7 per account is 6 TP, 17 TN, 0 FP, 0 FN over 23 admin accounts.
+
+The oracle matches function words (`admin`, `ops`, `svc`, `it`, `exploitation`…) as whole words of the e-mail's local
+part (split on `.`, `-`, `_`), not as substrings, so `jean.opsomer` is not generic. No generated name was affected:
+the ground truth of scenarios 01–08 is unchanged.
+
 ## Results
 
 | Run | Checks | Accuracy | False findings | Missed | PII spotted by AI / masked | Injection flagged | Cost |

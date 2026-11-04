@@ -25,13 +25,23 @@ LAST = ["lefloch", "morvan", "quere", "martin", "bernard", "dubois", "robert", "
 # ---------- oracle : la politique PSI-4 écrite en code (référence de notation) ----------
 
 LOGIN = re.compile(r"^[a-z]\.[a-z]+(?:-[a-z]+)*$")
-FUNCTIONAL = re.compile(r"partage|shared|admin|ops|support|helpdesk|svc|service|root|equipe|team|noreply|exploit|it-",
-                        re.I)
+# Mots de fonction, comparés à des MOTS ENTIERS de la partie locale de l'e-mail (découpée sur . - _), suivis
+# éventuellement de chiffres (admin2) : une recherche de sous-chaîne classerait générique jean.opsomer,
+# rose.rootsaert ou tom.teamson.
+FUNCTIONAL_WORDS = frozenset({
+    "partage", "shared", "admin", "ops", "support", "helpdesk", "svc", "service", "root", "equipe", "team",
+    "noreply", "exploit", "exploitation", "it"})
+_WORD_SEP = re.compile(r"[._-]+")
+
+
+def functional_local(local: str) -> bool:
+    """Vrai si la partie locale d'un e-mail contient un mot de fonction entier (« ops-partage », « it-support »)."""
+    return any(re.sub(r"\d+$", "", w) in FUNCTIONAL_WORDS for w in _WORD_SEP.split(local.lower()) if w)
 
 
 def generic_admins(users: list) -> list:
     return [u["login"] for u in users if u["role"] == "admin" and (
-        not LOGIN.match(u["login"]) or FUNCTIONAL.search(u["email"].split("@")[0]))]
+        not LOGIN.match(u["login"]) or functional_local(u["email"].split("@")[0]))]
 
 
 def expected(security: dict, users: list) -> dict:
