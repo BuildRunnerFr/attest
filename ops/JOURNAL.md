@@ -14,6 +14,51 @@ suite prévue. Les chiffres cités viennent tous de `ledger.jsonl` (branche `rea
 - Gel du code le 4 novembre 2026 à 18:00 (Paris) : ensuite, documentation, texte de soumission et vérifications
   seulement. Soumission : 5 novembre 2026, 03:00 (Paris) = 4 novembre 21:00 (ET).
 
+## Cycle 6 de l'équipe d'agents — 4 novembre 2026, 10:50–11:45
+
+Constats principaux :
+- Directeur d'audit : plan d'action (F-03) affichant une adresse e-mail en clair dans les PDF réels
+  `20261104-063210-iam-meta` et `20261104-083850-iam-meta` alors que la condition la masquait ; citations recomposables
+  avec plusieurs « […] » et à cheval sur deux documents ; approbateur vide accepté ; « Lead auditor: Attest CI ».
+  Reportés : opinion « impossibilité de conclure » si rien n'est concluant ; « […] » final RTS 21 (c) et (f)(ii)
+  (à vérifier sur EUR-Lex) ; troncature de citation à 220 caractères sans « […] » dans le rapport.
+- RSSI : l'erreur du script précédent revenait telle quelle au modèle (seul chemin d'injection vers le code de verdict) ;
+  dépendances non épinglées. Reportés : jeton substitut dans le bac à sable ; pseudonymisation des valeurs observées
+  dans les prompts (à mesurer sur banc) ; modèle de menace à compléter (docs, possible après le gel).
+- QA : clone neuf → 1 test rouge (playwright 1.64.1 sans son Chromium) ; pytest absent des dépendances ; négation
+  supprimable par « […] » (« shall […] store » accepté face à « shall not store ») ; `verify` en français en EN (reporté).
+- Coach : texte de soumission non prêt à coller ; registre plus riche que les docs (4 IAM, 6 code) ; impact non chiffré
+  en premier écran ; Open Weights sans réserve.
+- Designer : mention TLP absente des pages du PDF ; reportés : hiérarchie de l'écran de revue du Studio, bouton
+  « Valider » actif avec 0 contrôle, chaînes `why` du mock en français en EN, langue active non signalée.
+
+Commits poussés sur main (160 tests verts, mock IAM et code OK, vérificateurs indépendants : APPROUVÉ ×2) :
+- b68f0ff : citations — au plus 2 fragments de 4 mots ou plus, limites de mots, aucune négation dans le passage omis,
+  vérification document par document ; erreur du script encadrée `<<<BEGIN/END UNTRUSTED DATA>>>`, tronquée à 300
+  caractères ; approbateur vide refusé ; plan d'action et demande de changement pseudonymisés ; « Distribution :
+  TLP… · Attest » au pied de chaque page du PDF ; auditeur CI « Attest CI (automated run, no human auditor) » ;
+  dépendances épinglées (numpy borné : 2.5 exige Python 3.12), requirements-dev.txt, garde Python 3.11,
+  `persist-credentials: false` en CI.
+- 9df6622, 24d4dd4 : docs — 6 bancs, 4 IAM, 6 code sourcés ; phrase d'impact (`20261104-083850-iam-meta` : 62 s,
+  0,13 $) ; formulaire de soumission prêt à coller (188 mots) ; réserve Open Weights.
+- `demo-stable` = b68f0ff (avance rapide).
+
+Exécutions réelles (toutes réussies) :
+- `20261104-095918-bench-meta` (a1a63b5) : 56/56, 0 FP, 0 FN, injection 1/1, 256/256 masquées dont 181 par le modèle,
+  0,51 $, 312 s. Stabilité sur 6 bancs : 56/56 à chaque fois ; rappel du modèle 87 à 221/256 (moyenne 69 %).
+- `20261104-102217-iam-meta` (b68f0ff, EN) : 6 non-conformités, 5 re-testées conformes, 0 erreur de preuve, 0,13 $ ;
+  PDF : adresse du plan d'action masquée, pied TLP sur chaque page, auditeur CI explicite.
+- `20261104-102820-code-meta` (b68f0ff, Studio) : 20 exigences interprétées, 0 citation rejetée par le vérificateur
+  durci, 7 contrôles, 7 non conformes, 0 erreur de preuve, 0,55 $.
+- Dépense cumulée au registre (estimation prudente) : 17,92 $ / 130 $.
+
+Pour Ethan : LICENSE ; vérification EUR-Lex du RTS 21 ; licence de Muse Glimmer ; lien vidéo à mettre dans
+docs/SUBMISSION.md (`<VIDEO_URL>`).
+
+Suite prévue (avant 18:00) : (1) Studio : bouton « Valider » désactivé sans contrôle, chaînes `why` du mock en EN,
+langue active ; (2) opinion « impossibilité de conclure » ; (3) `verify` bilingue ; (4) jeton substitut si le temps
+le permet ; après 18:00 : gel (docs, modèle de menace, vérifications).
+
 ## Cycle 5 de l'équipe d'agents — 4 novembre 2026, 08:50–09:55
 
 Constats principaux :
