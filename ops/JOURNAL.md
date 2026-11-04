@@ -42,7 +42,7 @@ REFUSÉ (script réutilisé présenté comme deux générations, formulation de 
 Pour Ethan : décider s'il faut corriger le faux négatif avant 03:00 (dérogation au gel) ou le laisser documenté ;
 inchangé : EUR-Lex RTS 21 lignes 9 et 11 ; LICENSE ; `<VIDEO_URL>`.
 
-Durée du cycle : 17 min. Cycle suivant programmé : 4 novembre 22:50 (Paris).
+Durée du cycle : 17 min. Cycle de 22:50 annulé à la demande d'Ethan : tâche planifiée désactivée, plus aucun cycle.
 
 Suite prévue (gel) : relecture finale des docs de soumission (« 0 false finding » → « findings » dans SUBMISSION.md),
 vérification d'un clone neuf ; après le 5 novembre 03:00 : clôture et désactivation de la tâche.
