@@ -13,6 +13,7 @@ import re
 import sys
 import threading
 import time
+from urllib.parse import parse_qs, quote, urlsplit
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import asdict
 from datetime import date, timedelta
@@ -111,6 +112,7 @@ def run_test(e: dict, ctx: Ctx):
     e["before"] = res
     ctx.trail.log("test_executed", control=c["id"], rule=c["rule"], origin=origin,
                   file=ctx.rel(path), sha256=sha, result=res, requests=reqs)
+    return reqs
 
 
 # ---------- preuves ----------
@@ -256,30 +258,99 @@ def measure(masks: dict, dom: dict) -> dict:
             "pii_found_by_model": sum(covered(masks["pii_model"], p["box"]) for p in items)}
 
 
-def evidence_page(control: dict, result: dict) -> str:
+_REPO_PAGE = re.compile(r"^/(?:api/)?repo/([^/?]+)/(?:view|file)\?")
+
+
+def _repo_file(path: str):
+    """(dépôt, fichier) d'une page de dépôt /repo/<r>/view?path=… ou de l'API /api/repo/<r>/file?path=…"""
+    m = _REPO_PAGE.match(path or "")
+    if not m:
+        return None
+    f = (parse_qs(urlsplit(path).query).get("path") or [""])[0]
+    return (m.group(1), f) if f else None
+
+
+def _read_ok(reqlog: list) -> list:
+    """Fichiers de dépôt effectivement lus par le script (réponse 2xx), dans l'ordre de lecture."""
+    out = []
+    for r in reqlog:
+        try:
+            ok = 200 <= int(r.get("status")) < 300
+        except (TypeError, ValueError, AttributeError):
+            continue
+        rf = _repo_file(str(r.get("path") or "")) if ok else None
+        if rf and rf not in out:
+            out.append(rf)
+    return out
+
+
+def _observed_paths(observed) -> list:
+    """Chemins de fichiers cités par le script dans « observed » (objets {path} ou {file}, à plat ou en listes)."""
+    if isinstance(observed, dict):
+        items = [x for v in observed.values() if isinstance(v, list) for x in v]
+    else:
+        items = observed if isinstance(observed, list) else []
+    out = []
+    for x in items:
+        f = (x.get("path") or x.get("file")) if isinstance(x, dict) else None
+        if isinstance(f, str) and f and ".." not in f and f not in out:
+            out.append(f)
+    return out
+
+
+def evidence_page(control: dict, result: dict, reqlog: list | None = None) -> str:
     """La page qui prouve le résultat : celle désignée par le test (ex. le fichier fautif d'un dépôt),
-    sinon celle prévue au programme de travail. Toujours un chemin local de la passerelle."""
+    sinon celle prévue au programme de travail. Toujours un chemin local de la passerelle.
+
+    Avec le journal des requêtes du script, une page de dépôt n'est retenue que si ce fichier a été
+    lu avec succès (2xx) ; sinon le premier fichier cité dans « observed » et lu avec succès ;
+    sinon la page prévue au programme. Les pages hors dépôt restent acceptées comme avant."""
     page = str(result.get("evidence_page") or "")
-    if page.startswith("/") and "://" not in page and ".." not in page:
+    safe = page.startswith("/") and "://" not in page and ".." not in page
+    if not reqlog:
+        return page if safe else control["evidence_page"]
+    read = _read_ok(reqlog)
+    if safe and (_repo_file(page) is None or _repo_file(page) in read):
         return page
+    for f in _observed_paths(result.get("observed")):
+        hit = next((r for r in read if r[1] == f), None)
+        if hit:
+            return f"/repo/{hit[0]}/view?path={quote(f, safe='/')}"
     return control["evidence_page"]
 
 
-def collect_evidence(e: dict, result: dict, phase: str, ctx: Ctx) -> dict:
+def premask(shot: Path, boxes, out: Path) -> Path:
+    """Copie de la capture où les données personnelles du filet déterministe sont noircies :
+    c'est elle, et non la capture brute, qui part vers le modèle (résidence des données)."""
+    img = Image.open(shot).convert("RGB")
+    draw = ImageDraw.Draw(img)
+    for x1, y1, x2, y2 in boxes:
+        draw.rectangle((max(0, x1 - 4), max(0, y1 - 4), x2 + 4, y2 + 4), fill=(0, 0, 0))
+    img.save(out)
+    return out
+
+
+def collect_evidence(e: dict, result: dict, phase: str, ctx: Ctx, reqlog: list | None = None) -> dict:
     c = e["control"]
     raw = ctx.out / "evidence" / f"{c['id']}_{phase}_raw.png"
-    page = evidence_page(c, result)
+    page = evidence_page(c, result, reqlog)
     dom = evidence.capture(ctx.mission.lab_url + page, raw, config.AUDIT_TOKEN)
-    insp = inspect(c, result, raw, dom)
+    net = [tuple(p["box"]) for p in dom.get("pii", [])]
+    masked = config.PREMASK
+    sent = premask(raw, net, ctx.out / "evidence" / f"{c['id']}_{phase}_premask.png") if masked else raw
+    try:
+        insp = inspect(c, result, sent, dom)
+    finally:
+        if masked:
+            sent.unlink(missing_ok=True)           # la copie envoyée au modèle n'est pas conservée
     final = ctx.out / "evidence" / f"{c['id']}_{phase}.png"
-    masks = annotate(raw, insp, result["status"], final,
-                     net_boxes=[tuple(p["box"]) for p in dom.get("pii", [])],
+    masks = annotate(raw, insp, result["status"], final, net_boxes=net,
                      rows=[tuple(r) for r in dom.get("lines", {}).values()])
     raw.unlink()                                   # la capture non masquée n'est pas conservée
     sha = sha256_file(final)
     metrics = measure(masks, dom)
     ctx.trail.log("evidence_sealed", control=c["id"], phase=phase, file=ctx.rel(final), sha256=sha,
-                  page=page, corroborates=insp.get("corroborates"),
+                  page=page, premask=masked, corroborates=insp.get("corroborates"),
                   injection_detected=bool(insp.get("injection_detected")), **metrics)
     return {"image": ctx.rel(final), "sha256": sha, "inspection": insp, "metrics": metrics, "page": page,
             "ts": time.strftime("%Y-%m-%d %H:%M:%S")}
@@ -295,12 +366,12 @@ def classify(result: dict, ev: dict | None) -> str:
 
 def observe(e: dict, ctx: Ctx, refresh):
     c = e["control"]
-    run_test(e, ctx)
+    reqs = run_test(e, ctx)
     refresh()
     ev = None
     if e["before"]["status"] != "error":
         try:
-            ev = collect_evidence(e, e["before"], "before", ctx)
+            ev = collect_evidence(e, e["before"], "before", ctx, reqs.get("log"))
         except Exception as ex:
             e["evidence_error"] = f"{type(ex).__name__} : {str(ex)[:240]}"
             ctx.trail.log("evidence_failed", control=c["id"], phase="before", error=e["evidence_error"])
@@ -453,7 +524,7 @@ def verify_fix(e: dict, ctx: Ctx, refresh):
     reqs = _requests(res)
     ev = None
     try:
-        ev = collect_evidence(e, res, "after", ctx) if res["status"] != "error" else None
+        ev = collect_evidence(e, res, "after", ctx, reqs.get("log")) if res["status"] != "error" else None
     except Exception as ex:
         e["evidence_error_after"] = f"{type(ex).__name__} : {str(ex)[:240]}"
         ctx.trail.log("evidence_failed", control=e["control"]["id"], phase="after", error=e["evidence_error_after"])
@@ -473,8 +544,14 @@ def verify_fix(e: dict, ctx: Ctx, refresh):
 
 # ---------- synthèse ----------
 
+def inconclusive_count(entries: list) -> int:
+    """Contrôles sans verdict exploitable : erreur de test, ou test et preuve en désaccord (en attente de revue)."""
+    return sum(1 for e in entries if e.get("status_before") in ("error", "review"))
+
+
 def opinion(severities: list, inconclusive: int = 0) -> str:
-    """Opinion fondée sur les constats ; un contrôle non concluant (erreur de test) ne vaut jamais conformité."""
+    """Opinion fondée sur les constats ; un contrôle non concluant (erreur de test) ou en attente de revue
+    ne vaut jamais conformité."""
     if "critique" in severities:
         return "insuffisant"
     if "elevee" in severities:
@@ -595,7 +672,7 @@ def _phases(state, ctx, refresh, remediate, approve_all, approver, replan, reset
     with ThreadPoolExecutor(WORKERS) as pool:                         # Phase 1 — constat
         list(pool.map(lambda e: observe(e, ctx, refresh), entries))
     raise_findings(entries, mission)
-    inconclusive = sum(1 for e in entries if e.get("status_before") == "error")
+    inconclusive = state["inconclusive"] = inconclusive_count(entries)
     state["opinion_initial"] = opinion([e["finding"]["severity"] for e in entries if e.get("finding")], inconclusive)
     refresh()
 

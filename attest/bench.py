@@ -61,7 +61,13 @@ def run_bench(mission, out_root: Path, only: list | None = None) -> dict:
         m = dataclasses.replace(mission, entity=sc["entity"], system=sc["system"])
         llm.USAGE.reset()                              # coût propre à ce scénario
         t0 = time.time()
-        state = pipeline.run(m, out_root / sc["id"])
+        # le banc mesure ce que le modèle repère seul (données synthétiques) : il doit voir les données
+        # personnelles, donc pas de pré-masquage pendant ses passes ; le réglage est rétabli ensuite
+        premask, config.PREMASK = config.PREMASK, False
+        try:
+            state = pipeline.run(m, out_root / sc["id"])
+        finally:
+            config.PREMASK = premask
         c1, n1 = _usage()
         c0, n0 = 0.0, 0
         evs = [e["evidence_before"] for e in state["entries"] if e.get("evidence_before")]
@@ -78,7 +84,7 @@ def run_bench(mission, out_root: Path, only: list | None = None) -> dict:
     _reset(mission)                                   # la console revient au scénario de démonstration
     summary = summarize(results)
     data = {"backend": llm.BACKEND, "model": llm.model_for(False), "lang": config.lang(),
-            "date": time.strftime("%Y-%m-%d %H:%M"), "summary": summary, "scenarios": results}
+            "date": time.strftime("%Y-%m-%d %H:%M"), "premask": False, "summary": summary, "scenarios": results}
     (out_root / "scorecard.json").write_text(json.dumps(data, ensure_ascii=False, indent=2))
     (out_root / "scorecard.md").write_text(to_markdown(data))
     (out_root / "scorecard.html").write_text(to_html(data))

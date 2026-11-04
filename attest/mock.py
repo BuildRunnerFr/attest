@@ -338,12 +338,18 @@ def report(ok, observed, expected, detail, page):
 _REPO_CHECKS = {
     "secrets": r'''m = [x for x in get("/search", q=r"(?i)(password|passwd|secret|api_key|token)\w*\s*=\s*[\"'][^\"']{6,}[\"']")["matches"]
      if not x["path"].startswith("tests/")]
+if m:
+    get("/file", path=m[0]["path"])                   # le fichier désigné comme preuve est relu
 report(not m, {"matches": m}, "aucun secret littéral", f"{len(m)} secret(s) en clair dans le code.",
        view(m[0]["path"]) if m else view("README.md"))''',
     "tls": r'''m = get("/search", q=r"verify\s*=\s*False")["matches"]
+if m:
+    get("/file", path=m[0]["path"])
 report(not m, {"matches": m}, "aucun verify=False", f"{len(m)} appel(s) sans vérification TLS.",
        view(m[0]["path"]) if m else view("README.md"))''',
     "hash": r'''m = get("/search", q=r"hashlib\.(md5|sha1)\(")["matches"]
+if m:
+    get("/file", path=m[0]["path"])
 report(not m, {"matches": m}, "argon2, bcrypt, scrypt ou PBKDF2", f"{len(m)} usage(s) de MD5 ou SHA-1.",
        view(m[0]["path"]) if m else view("README.md"))''',
     "sast": r'''ci = [f for f in get("/tree")["files"] if f.startswith(".github/workflows/")]

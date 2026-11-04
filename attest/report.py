@@ -265,6 +265,10 @@ def basis(state: dict) -> str:
     conclusive = sum(1 for x in entries if x.get("status_before") in ("pass", "fail"))
     txt = t("basis.text").format(n=len(entries), k=conclusive, fw=m.get("framework_label") or FRAMEWORK_DEFAULT,
                                  date=state.get("started", ""), env=m.get("environment") or "—")
+    # non concluants et « à revoir » : la réserve est dite, même quand l'opinion vient des constats
+    unsure = sum(1 for x in entries if x.get("status_before") in ("error", "review"))
+    if unsure:
+        txt += " " + t("basis.qualified").format(n=unsure)
     # aucun script n'a de statut « relu » : ceux de la bibliothèque comme ceux écrits pour la mission sont des brouillons
     scripts_unreviewed = any(x.get("test") for x in entries)
     scope = ("basis.scope_all" if not state.get("catalogue", {}).get("reviewed")
