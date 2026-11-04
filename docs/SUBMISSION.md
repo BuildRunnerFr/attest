@@ -52,7 +52,7 @@ has no public price and is excluded); 7/7 → `20261103-234658-code-meta`; 56/56
   llama.cpp / vLLM / SGLang) because DORA third-party risk makes on-premise models the realistic target for banks.
   It has **not yet been benchmarked on real hardware**; say so in the submission if this prize is entered.
 
-## Before submitting (for Ethan)
+## Before submitting (for the author)
 
 - **Choose a LICENSE** for the repository and add it yourself (none is included on purpose).
 - Check the regulation excerpts in `exigences/library/` on EUR-Lex (in particular RTS 2024/1774 article 21(1)(e)(ii),
