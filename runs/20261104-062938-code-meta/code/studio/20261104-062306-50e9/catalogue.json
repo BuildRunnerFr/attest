@@ -1,0 +1,172 @@
+{
+  "source": "studio",
+  "reviewed": true,
+  "reviewer": "Attest CI",
+  "path": "runs/studio/20261104-062306-50e9/catalogue.json",
+  "validated_at": "2026-11-04 06:23",
+  "controls": [
+    {
+      "rule": "PDS-2.1",
+      "title": "No clear-text secrets in versioned code or config",
+      "objective": "Verify no password, key or token is hard-coded in clear text.",
+      "test_procedure": "GET /api/repo/paiement-api/tree to list files, then GET /api/repo/paiement-api/search?q=(?i)(password|passwd|secret|api[_-]?key|token)\\s*[:=]\\s*['\"][^'\"]+['\"] and q=os\\.environ|vault|secrets, then GET /api/repo/paiement-api/file?path=app/config.py to inspect secret handling.",
+      "expected": "Zero hard-coded secrets in clear text; secrets only loaded via os.environ or vault client.",
+      "threshold_source": "PDS-2.1",
+      "severity": "critique",
+      "references": [
+        "RTS 7(2)"
+      ],
+      "risk": "Hard-coded secrets allow credential theft and unauthorized transfers.",
+      "recommendation": "Remove clear-text secrets and load them from vault or environment variables.",
+      "evidence_page": "/repo/paiement-api/view?path=app/config.py",
+      "remediation": "manual",
+      "id": "C1",
+      "quote": "Aucun secret (mot de passe, clé, jeton) n'est écrit en clair dans le code source ni dans la configuration versionnée : les secrets viennent d'un coffre ou de variables d'environnement."
+    },
+    {
+      "rule": "PDS-2.2",
+      "title": "TLS certificate verification never disabled",
+      "objective": "Verify no outgoing call disables TLS certificate verification.",
+      "test_procedure": "GET /api/repo/paiement-api/search?q=verify\\s*=\\s*False and q=requests\\.|httpx\\.|urllib|ssl\\._create_unverified, then GET /api/repo/paiement-api/file?path=<matched file> to confirm context.",
+      "expected": "Zero occurrences of verify=False or unverified SSL context; TLS verification enabled.",
+      "threshold_source": "PDS-2.2",
+      "severity": "elevee",
+      "references": [
+        "DORA 9(3)(a)",
+        "RTS 6(2)(a)"
+      ],
+      "risk": "Disabled TLS verification enables man-in-the-middle interception of SEPA transfers.",
+      "recommendation": "Remove verify=False and enforce default TLS certificate verification.",
+      "evidence_page": "/repo/paiement-api/view?path=app/config.py",
+      "remediation": "manual",
+      "id": "C2",
+      "quote": "Tout appel réseau sortant vérifie le certificat TLS du serveur : la vérification n'est jamais désactivée (`verify=False` interdit)."
+    },
+    {
+      "rule": "PDS-2.3",
+      "title": "Approved password hashing, no MD5/SHA-1 for security",
+      "objective": "Verify passwords use argon2, bcrypt, scrypt or PBKDF2 and MD5/SHA-1 are not used for security.",
+      "test_procedure": "GET /api/repo/paiement-api/search?q=argon2|bcrypt|scrypt|pbkdf2|passlib|hashlib\\.(md5|sha1)\\(|hashlib\\.sha1|hashlib\\.md5 and GET /api/repo/paiement-api/file?path=<matched file> to verify usage context is password hashing.",
+      "expected": "Password hashing uses only argon2, bcrypt, scrypt or PBKDF2; zero security use of MD5 or SHA-1.",
+      "threshold_source": "PDS-2.3",
+      "severity": "elevee",
+      "references": [
+        "RTS 6(3) et 6(4)"
+      ],
+      "risk": "Weak hashes allow password recovery and authentication bypass.",
+      "recommendation": "Migrate to argon2, bcrypt, scrypt or PBKDF2 and remove MD5/SHA-1 for security uses.",
+      "evidence_page": "/repo/paiement-api/view?path=app/config.py",
+      "remediation": "manual",
+      "id": "C3",
+      "quote": "Les mots de passe sont hachés avec argon2, bcrypt, scrypt ou PBKDF2. MD5 et SHA-1 sont interdits pour tout usage de sécurité."
+    },
+    {
+      "rule": "PDS-2.4",
+      "title": "Static security analysis in CI on every change",
+      "objective": "Verify CI runs bandit, semgrep or CodeQL on every change.",
+      "test_procedure": "GET /api/repo/paiement-api/tree to list .github/workflows files, then GET /api/repo/paiement-api/file?path=.github/workflows/<workflow file> and GET /api/repo/paiement-api/search?q=bandit|semgrep|CodeQL|codeql to confirm SAST step on push/pull_request.",
+      "expected": "CI workflow contains a step invoking bandit, semgrep or CodeQL on push and pull_request.",
+      "threshold_source": "PDS-2.4",
+      "severity": "moyenne",
+      "references": [
+        "RTS 16(3)"
+      ],
+      "risk": "Missing SAST lets code vulnerabilities reach production undetected.",
+      "recommendation": "Add bandit, semgrep or CodeQL step to CI on every change.",
+      "evidence_page": "/repo/paiement-api/view?path=.github/workflows/ci.yml",
+      "remediation": "manual",
+      "id": "C4",
+      "quote": "La chaîne d'intégration continue exécute une analyse statique de sécurité (bandit, semgrep ou CodeQL) à chaque modification."
+    },
+    {
+      "rule": "PDS-2.5",
+      "title": "Dependencies pinned to exact versions",
+      "objective": "Verify all dependencies are pinned to an exact version.",
+      "test_procedure": "GET /api/repo/paiement-api/file?path=requirements.txt and verify every dependency line matches paquet==version with no unpinned, wildcard or range specifiers.",
+      "expected": "Every entry in requirements.txt uses == exact pinning.",
+      "threshold_source": "PDS-2.5",
+      "severity": "moyenne",
+      "references": [
+        "RTS 16(4) et 16(8)"
+      ],
+      "risk": "Unpinned dependencies allow untested vulnerable versions to be deployed.",
+      "recommendation": "Pin all dependencies to exact versions with paquet==version.",
+      "evidence_page": "/repo/paiement-api/view?path=requirements.txt",
+      "remediation": "manual",
+      "id": "C5",
+      "quote": "Les dépendances sont épinglées à une version exacte (`paquet==version`) et auditées en intégration continue (pip-audit ou équivalent)."
+    },
+    {
+      "rule": "PDS-2.5",
+      "title": "Dependencies audited in CI",
+      "objective": "Verify dependencies are audited in CI with pip-audit or equivalent.",
+      "test_procedure": "GET /api/repo/paiement-api/tree to list .github/workflows files, then GET /api/repo/paiement-api/file?path=.github/workflows/<workflow file> and GET /api/repo/paiement-api/search?q=pip-audit|safety|audit-ci|dependabot|osv-scanner to confirm audit step.",
+      "expected": "CI workflow contains pip-audit or equivalent audit step.",
+      "threshold_source": "PDS-2.5",
+      "severity": "moyenne",
+      "references": [
+        "RTS 16(4) et 16(8)"
+      ],
+      "risk": "Unaudited dependencies allow known vulnerabilities into production.",
+      "recommendation": "Add pip-audit or equivalent dependency audit to CI.",
+      "evidence_page": "/repo/paiement-api/view?path=.github/workflows/ci.yml",
+      "remediation": "manual",
+      "id": "C6",
+      "quote": "Les dépendances sont épinglées à une version exacte (`paquet==version`) et auditées en intégration continue (pip-audit ou équivalent)."
+    },
+    {
+      "rule": "PDS-2.6",
+      "title": "Test data declared synthetic",
+      "objective": "Verify test data is synthetic and declared with synthetic true.",
+      "test_procedure": "GET /api/repo/paiement-api/tree to list tests/ fixtures, then GET /api/repo/paiement-api/search?q=synthetic and GET /api/repo/paiement-api/file?path=tests/<fixture file> to verify synthetic true marker.",
+      "expected": "Test fixtures contain \"synthetic\": true declaration.",
+      "threshold_source": "PDS-2.6",
+      "severity": "elevee",
+      "references": [
+        "RTS 16(5)(a)"
+      ],
+      "risk": "Real production data in tests breaches confidentiality of transfer data.",
+      "recommendation": "Replace test data with synthetic data declared with \"synthetic\": true.",
+      "evidence_page": "/repo/paiement-api/view?path=tests/test_data.json",
+      "remediation": "manual",
+      "id": "C7",
+      "quote": "Les données de test sont synthétiques et déclarées comme telles (champ `\"synthetic\": true`) ; aucun export de production n'est versionné."
+    },
+    {
+      "rule": "PDS-2.6",
+      "title": "No production export versioned",
+      "objective": "Verify no production data export is stored in the repository.",
+      "test_procedure": "GET /api/repo/paiement-api/tree to list all files and GET /api/repo/paiement-api/search?q=(?i)production|prod_dump|real_data|export_prod to verify no versioned production export or dump file.",
+      "expected": "Zero versioned files constituting a production data export.",
+      "threshold_source": "PDS-2.6",
+      "severity": "elevee",
+      "references": [
+        "RTS 16(5)(a)"
+      ],
+      "risk": "Versioned production exports expose real customer data in non-production.",
+      "recommendation": "Remove any production exports from version control and use synthetic data.",
+      "evidence_page": "/repo/paiement-api/view?path=tests/test_data.json",
+      "remediation": "manual",
+      "id": "C8",
+      "quote": "Les données de test sont synthétiques et déclarées comme telles (champ `\"synthetic\": true`) ; aucun export de production n'est versionné."
+    },
+    {
+      "rule": "PDS-2.7",
+      "title": "Authentication successes and failures logged",
+      "objective": "Verify the application logs both successful and failed authentications.",
+      "test_procedure": "GET /api/repo/paiement-api/search?q=(?i)auth.*log|log.*auth|login.*(success|fail)|authenticate and GET /api/repo/paiement-api/file?path=<matched app file> to confirm logging of both success and failure paths.",
+      "expected": "Code contains logging of both authentication success and authentication failure.",
+      "threshold_source": "PDS-2.7",
+      "severity": "moyenne",
+      "references": [
+        "RTS 12(2)(c)(i)"
+      ],
+      "risk": "Missing auth logs prevent detection of brute-force and account takeover.",
+      "recommendation": "Add logging for both authentication successes and failures.",
+      "evidence_page": "/repo/paiement-api/view?path=app/auth.py",
+      "remediation": "manual",
+      "id": "C9",
+      "quote": "Les réussites et les échecs d'authentification sont journalisés par l'application."
+    }
+  ]
+}

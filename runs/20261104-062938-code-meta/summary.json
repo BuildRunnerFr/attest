@@ -1,0 +1,38 @@
+{
+  "id": "20261104-062938-code-meta",
+  "utc": "20261104-062938",
+  "kind": "code",
+  "backend": "meta",
+  "note": "cycle 4 : audit de code sur a74a3ac (404 → erreur, page de preuve lue, pre-masquage)",
+  "commit": "a74a3ac",
+  "workflow_run": "41784923026",
+  "status": "success",
+  "budget_spent_usd": 0.8534,
+  "priced_usd": 0.6534,
+  "unpriced": [
+    "sam-3.1"
+  ],
+  "audits": [
+    {
+      "folder": "code/studio/20261104-062306-50e9/audit",
+      "controls": 9,
+      "status_before": [
+        "fail",
+        "fail",
+        "fail",
+        "fail",
+        "fail",
+        "fail",
+        "fail",
+        "fail",
+        "fail"
+      ],
+      "status_after": [],
+      "evidence_errors": 0,
+      "opinion_initial": "insuffisant",
+      "opinion_final": "insuffisant",
+      "injection_detected": false,
+      "cost_usd": 0.6533555
+    }
+  ]
+}

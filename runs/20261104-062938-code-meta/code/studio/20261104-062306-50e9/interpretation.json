@@ -1,0 +1,398 @@
+{
+  "target": "repo:paiement-api",
+  "texts": [
+    "RTS 2024/1774 — Article 16: ICT systems acquisition, development and maintenance",
+    "Internal policy PDS-2 (Banque Kerlann, fictitious) — secure development"
+  ],
+  "text_sha256": "8c90122f0aa2db1887f6faa8bb4c46d96a82e5c949d386e7816c0bbc02dcdd67",
+  "model": "muse-spark-1.3",
+  "requirements": [
+    {
+      "ref": "RTS 16(1)",
+      "quote": "financial entities shall develop, document and implement a policy governing the acquisition, development, and maintenance of ICT systems.",
+      "quote_verified": true,
+      "summary": "A governing policy for ICT acquisition, development and maintenance must exist.",
+      "testability": "document",
+      "why": "Existence and content of a governance policy cannot be proven from read-only source code alone.",
+      "controls": [],
+      "covered_by": []
+    },
+    {
+      "ref": "RTS 16(1)(a)",
+      "quote": "identify security practices and methodologies relating to the acquisition, development, and maintenance of ICT systems;",
+      "quote_verified": true,
+      "summary": "The policy must identify security practices and methodologies.",
+      "testability": "document",
+      "why": "Policy content requires document review and is not visible in the code repository.",
+      "controls": [],
+      "covered_by": []
+    },
+    {
+      "ref": "RTS 16(1)(c)",
+      "quote": "specify measures to mitigate the risk of unintentional alteration or intentional manipulation of the ICT systems during development, maintenance, and deployment.",
+      "quote_verified": true,
+      "summary": "The policy must specify measures against unintentional alteration or intentional manipulation.",
+      "testability": "document",
+      "why": "Required measures are policy statements requiring document review, not code inspection.",
+      "controls": [],
+      "covered_by": []
+    },
+    {
+      "ref": "RTS 16(2)",
+      "quote": "financial entities shall develop, document, and implement an ICT systems' acquisition, development, and maintenance procedure for the testing and approval of all ICT systems prior to their use and after maintenance.",
+      "quote_verified": true,
+      "summary": "A procedure for testing and approval before use and after maintenance must exist.",
+      "testability": "document",
+      "why": "Existence of a testing and approval procedure requires document review beyond the repository.",
+      "controls": [],
+      "covered_by": []
+    },
+    {
+      "ref": "RTS 16(3)",
+      "quote": "the procedure shall contain source code reviews covering both static and dynamic testing, including security testing for internet-exposed systems and applications.",
+      "quote_verified": true,
+      "summary": "Source code reviews must cover static and dynamic testing including security testing.",
+      "testability": "automated",
+      "why": "Static testing part is testable in the repository via CI configuration and is implemented by PDS-2.4.",
+      "controls": [],
+      "covered_by": [
+        "PDS-2.4"
+      ]
+    },
+    {
+      "ref": "RTS 16(3)(a)",
+      "quote": "identify and analyse vulnerabilities and anomalies in the source code;",
+      "quote_verified": true,
+      "summary": "Vulnerabilities and anomalies in source code must be identified and analysed.",
+      "testability": "document",
+      "why": "Identification and analysis activity requires reports and action tracking, not just current code.",
+      "controls": [],
+      "covered_by": []
+    },
+    {
+      "ref": "RTS 16(3)(b)",
+      "quote": "adopt an action plan to address those vulnerabilities and anomalies;",
+      "quote_verified": true,
+      "summary": "An action plan to address vulnerabilities must be adopted.",
+      "testability": "document",
+      "why": "An action plan is a governance document not observable in read-only code.",
+      "controls": [],
+      "covered_by": []
+    },
+    {
+      "ref": "RTS 16(3)(c)",
+      "quote": "monitor the implementation of that action plan.",
+      "quote_verified": true,
+      "summary": "Implementation of the action plan must be monitored.",
+      "testability": "document",
+      "why": "Monitoring requires follow-up records and interviews, not testable via code snapshot.",
+      "controls": [],
+      "covered_by": []
+    },
+    {
+      "ref": "RTS 16(4)",
+      "quote": "the procedure shall contain security testing of software packages no later than at the integration phase.",
+      "quote_verified": true,
+      "summary": "Software packages must undergo security testing no later than integration.",
+      "testability": "automated",
+      "why": "Integration-phase package testing is implemented by PDS-2.5 and visible in CI and dependencies.",
+      "controls": [],
+      "covered_by": [
+        "PDS-2.5"
+      ]
+    },
+    {
+      "ref": "RTS 16(5)(a)",
+      "quote": "non-production environments only store anonymised, pseudonymised, or randomised production data;",
+      "quote_verified": true,
+      "summary": "Non-production must only store anonymised, pseudonymised or randomised production data.",
+      "testability": "automated",
+      "why": "Use of synthetic versus production data in versioned fixtures is testable via repository search.",
+      "controls": [],
+      "covered_by": [
+        "PDS-2.6"
+      ]
+    },
+    {
+      "ref": "RTS 16(5)(b)",
+      "quote": "financial entities are to protect the integrity and confidentiality of data in non-production environments.",
+      "quote_verified": true,
+      "summary": "Integrity and confidentiality of non-production data must be protected.",
+      "testability": "document",
+      "why": "Protection controls for environments require configuration and process review beyond code.",
+      "controls": [],
+      "covered_by": []
+    },
+    {
+      "ref": "RTS 16(7)",
+      "quote": "the procedure shall include controls to protect the integrity of source code of ICT systems that are developed in-house or by an ICT third-party service provider.",
+      "quote_verified": true,
+      "summary": "Controls to protect source code integrity must be included.",
+      "testability": "document",
+      "why": "Source code integrity controls require procedure and branch protection review, not code content alone.",
+      "controls": [],
+      "covered_by": []
+    },
+    {
+      "ref": "RTS 16(8)",
+      "quote": "proprietary software and, where feasible, the source code provided by ICT third-party service providers, as well as source code coming from open-source projects, are to be analysed and tested in accordance with paragraph 3 prior to their deployment in the production environment.",
+      "quote_verified": true,
+      "summary": "Third-party and open-source software must be analysed and tested before production.",
+      "testability": "automated",
+      "why": "Dependency analysis and testing before deployment is implemented by PDS-2.5 and visible in CI.",
+      "controls": [],
+      "covered_by": [
+        "PDS-2.5"
+      ]
+    },
+    {
+      "ref": "PDS-2.1",
+      "quote": "Aucun secret (mot de passe, clé, jeton) n'est écrit en clair dans le code source ni dans la configuration versionnée : les secrets viennent d'un coffre ou de variables d'environnement.",
+      "quote_verified": true,
+      "summary": "No clear-text secrets in versioned code or config; secrets come from vault or environment.",
+      "testability": "automated",
+      "why": "Clear-text secrets are directly searchable in repository files and config via the read-only gateway.",
+      "controls": [
+        {
+          "rule": "PDS-2.1",
+          "title": "No clear-text secrets in versioned code or config",
+          "objective": "Verify no password, key or token is hard-coded in clear text.",
+          "test_procedure": "GET /api/repo/paiement-api/tree to list files, then GET /api/repo/paiement-api/search?q=(?i)(password|passwd|secret|api[_-]?key|token)\\s*[:=]\\s*['\"][^'\"]+['\"] and q=os\\.environ|vault|secrets, then GET /api/repo/paiement-api/file?path=app/config.py to inspect secret handling.",
+          "expected": "Zero hard-coded secrets in clear text; secrets only loaded via os.environ or vault client.",
+          "threshold_source": "PDS-2.1",
+          "severity": "critique",
+          "references": [
+            "RTS 7(2)"
+          ],
+          "risk": "Hard-coded secrets allow credential theft and unauthorized transfers.",
+          "recommendation": "Remove clear-text secrets and load them from vault or environment variables.",
+          "evidence_page": "/repo/paiement-api/view?path=app/config.py",
+          "remediation": "manual",
+          "id": "C1",
+          "quote": "Aucun secret (mot de passe, clé, jeton) n'est écrit en clair dans le code source ni dans la configuration versionnée : les secrets viennent d'un coffre ou de variables d'environnement."
+        }
+      ],
+      "covered_by": []
+    },
+    {
+      "ref": "PDS-2.2",
+      "quote": "Tout appel réseau sortant vérifie le certificat TLS du serveur : la vérification n'est jamais désactivée (`verify=False` interdit).",
+      "quote_verified": true,
+      "summary": "Outgoing network calls must verify TLS certificates and never disable verification.",
+      "testability": "automated",
+      "why": "TLS verification disabling is searchable as code pattern verify=False in the repository.",
+      "controls": [
+        {
+          "rule": "PDS-2.2",
+          "title": "TLS certificate verification never disabled",
+          "objective": "Verify no outgoing call disables TLS certificate verification.",
+          "test_procedure": "GET /api/repo/paiement-api/search?q=verify\\s*=\\s*False and q=requests\\.|httpx\\.|urllib|ssl\\._create_unverified, then GET /api/repo/paiement-api/file?path=<matched file> to confirm context.",
+          "expected": "Zero occurrences of verify=False or unverified SSL context; TLS verification enabled.",
+          "threshold_source": "PDS-2.2",
+          "severity": "elevee",
+          "references": [
+            "DORA 9(3)(a)",
+            "RTS 6(2)(a)"
+          ],
+          "risk": "Disabled TLS verification enables man-in-the-middle interception of SEPA transfers.",
+          "recommendation": "Remove verify=False and enforce default TLS certificate verification.",
+          "evidence_page": "/repo/paiement-api/view?path=app/config.py",
+          "remediation": "manual",
+          "id": "C2",
+          "quote": "Tout appel réseau sortant vérifie le certificat TLS du serveur : la vérification n'est jamais désactivée (`verify=False` interdit)."
+        }
+      ],
+      "covered_by": []
+    },
+    {
+      "ref": "PDS-2.3",
+      "quote": "Les mots de passe sont hachés avec argon2, bcrypt, scrypt ou PBKDF2. MD5 et SHA-1 sont interdits pour tout usage de sécurité.",
+      "quote_verified": true,
+      "summary": "Passwords must use approved hashing and MD5/SHA-1 must not be used for security.",
+      "testability": "automated",
+      "why": "Hashing libraries and forbidden hash functions are searchable in Python source.",
+      "controls": [
+        {
+          "rule": "PDS-2.3",
+          "title": "Approved password hashing, no MD5/SHA-1 for security",
+          "objective": "Verify passwords use argon2, bcrypt, scrypt or PBKDF2 and MD5/SHA-1 are not used for security.",
+          "test_procedure": "GET /api/repo/paiement-api/search?q=argon2|bcrypt|scrypt|pbkdf2|passlib|hashlib\\.(md5|sha1)\\(|hashlib\\.sha1|hashlib\\.md5 and GET /api/repo/paiement-api/file?path=<matched file> to verify usage context is password hashing.",
+          "expected": "Password hashing uses only argon2, bcrypt, scrypt or PBKDF2; zero security use of MD5 or SHA-1.",
+          "threshold_source": "PDS-2.3",
+          "severity": "elevee",
+          "references": [
+            "RTS 6(3) et 6(4)"
+          ],
+          "risk": "Weak hashes allow password recovery and authentication bypass.",
+          "recommendation": "Migrate to argon2, bcrypt, scrypt or PBKDF2 and remove MD5/SHA-1 for security uses.",
+          "evidence_page": "/repo/paiement-api/view?path=app/config.py",
+          "remediation": "manual",
+          "id": "C3",
+          "quote": "Les mots de passe sont hachés avec argon2, bcrypt, scrypt ou PBKDF2. MD5 et SHA-1 sont interdits pour tout usage de sécurité."
+        }
+      ],
+      "covered_by": []
+    },
+    {
+      "ref": "PDS-2.4",
+      "quote": "La chaîne d'intégration continue exécute une analyse statique de sécurité (bandit, semgrep ou CodeQL) à chaque modification.",
+      "quote_verified": true,
+      "summary": "CI must run static security analysis on every change.",
+      "testability": "automated",
+      "why": "CI workflow files in .github/workflows are readable via the gateway and show SAST tools.",
+      "controls": [
+        {
+          "rule": "PDS-2.4",
+          "title": "Static security analysis in CI on every change",
+          "objective": "Verify CI runs bandit, semgrep or CodeQL on every change.",
+          "test_procedure": "GET /api/repo/paiement-api/tree to list .github/workflows files, then GET /api/repo/paiement-api/file?path=.github/workflows/<workflow file> and GET /api/repo/paiement-api/search?q=bandit|semgrep|CodeQL|codeql to confirm SAST step on push/pull_request.",
+          "expected": "CI workflow contains a step invoking bandit, semgrep or CodeQL on push and pull_request.",
+          "threshold_source": "PDS-2.4",
+          "severity": "moyenne",
+          "references": [
+            "RTS 16(3)"
+          ],
+          "risk": "Missing SAST lets code vulnerabilities reach production undetected.",
+          "recommendation": "Add bandit, semgrep or CodeQL step to CI on every change.",
+          "evidence_page": "/repo/paiement-api/view?path=.github/workflows/ci.yml",
+          "remediation": "manual",
+          "id": "C4",
+          "quote": "La chaîne d'intégration continue exécute une analyse statique de sécurité (bandit, semgrep ou CodeQL) à chaque modification."
+        }
+      ],
+      "covered_by": []
+    },
+    {
+      "ref": "PDS-2.5",
+      "quote": "Les dépendances sont épinglées à une version exacte (`paquet==version`) et auditées en intégration continue (pip-audit ou équivalent).",
+      "quote_verified": true,
+      "summary": "Dependencies must be pinned to exact versions and audited in CI.",
+      "testability": "automated",
+      "why": "requirements.txt pinning and CI audit steps are directly readable via tree, file and search.",
+      "controls": [
+        {
+          "rule": "PDS-2.5",
+          "title": "Dependencies pinned to exact versions",
+          "objective": "Verify all dependencies are pinned to an exact version.",
+          "test_procedure": "GET /api/repo/paiement-api/file?path=requirements.txt and verify every dependency line matches paquet==version with no unpinned, wildcard or range specifiers.",
+          "expected": "Every entry in requirements.txt uses == exact pinning.",
+          "threshold_source": "PDS-2.5",
+          "severity": "moyenne",
+          "references": [
+            "RTS 16(4) et 16(8)"
+          ],
+          "risk": "Unpinned dependencies allow untested vulnerable versions to be deployed.",
+          "recommendation": "Pin all dependencies to exact versions with paquet==version.",
+          "evidence_page": "/repo/paiement-api/view?path=requirements.txt",
+          "remediation": "manual",
+          "id": "C5",
+          "quote": "Les dépendances sont épinglées à une version exacte (`paquet==version`) et auditées en intégration continue (pip-audit ou équivalent)."
+        },
+        {
+          "rule": "PDS-2.5",
+          "title": "Dependencies audited in CI",
+          "objective": "Verify dependencies are audited in CI with pip-audit or equivalent.",
+          "test_procedure": "GET /api/repo/paiement-api/tree to list .github/workflows files, then GET /api/repo/paiement-api/file?path=.github/workflows/<workflow file> and GET /api/repo/paiement-api/search?q=pip-audit|safety|audit-ci|dependabot|osv-scanner to confirm audit step.",
+          "expected": "CI workflow contains pip-audit or equivalent audit step.",
+          "threshold_source": "PDS-2.5",
+          "severity": "moyenne",
+          "references": [
+            "RTS 16(4) et 16(8)"
+          ],
+          "risk": "Unaudited dependencies allow known vulnerabilities into production.",
+          "recommendation": "Add pip-audit or equivalent dependency audit to CI.",
+          "evidence_page": "/repo/paiement-api/view?path=.github/workflows/ci.yml",
+          "remediation": "manual",
+          "id": "C6",
+          "quote": "Les dépendances sont épinglées à une version exacte (`paquet==version`) et auditées en intégration continue (pip-audit ou équivalent)."
+        }
+      ],
+      "covered_by": []
+    },
+    {
+      "ref": "PDS-2.6",
+      "quote": "Les données de test sont synthétiques et déclarées comme telles (champ `\"synthetic\": true`) ; aucun export de production n'est versionné.",
+      "quote_verified": true,
+      "summary": "Test data must be declared synthetic and no production export must be versioned.",
+      "testability": "automated",
+      "why": "Test fixtures and versioned files are listable and searchable for synthetic marker via the gateway.",
+      "controls": [
+        {
+          "rule": "PDS-2.6",
+          "title": "Test data declared synthetic",
+          "objective": "Verify test data is synthetic and declared with synthetic true.",
+          "test_procedure": "GET /api/repo/paiement-api/tree to list tests/ fixtures, then GET /api/repo/paiement-api/search?q=synthetic and GET /api/repo/paiement-api/file?path=tests/<fixture file> to verify synthetic true marker.",
+          "expected": "Test fixtures contain \"synthetic\": true declaration.",
+          "threshold_source": "PDS-2.6",
+          "severity": "elevee",
+          "references": [
+            "RTS 16(5)(a)"
+          ],
+          "risk": "Real production data in tests breaches confidentiality of transfer data.",
+          "recommendation": "Replace test data with synthetic data declared with \"synthetic\": true.",
+          "evidence_page": "/repo/paiement-api/view?path=tests/test_data.json",
+          "remediation": "manual",
+          "id": "C7",
+          "quote": "Les données de test sont synthétiques et déclarées comme telles (champ `\"synthetic\": true`) ; aucun export de production n'est versionné."
+        },
+        {
+          "rule": "PDS-2.6",
+          "title": "No production export versioned",
+          "objective": "Verify no production data export is stored in the repository.",
+          "test_procedure": "GET /api/repo/paiement-api/tree to list all files and GET /api/repo/paiement-api/search?q=(?i)production|prod_dump|real_data|export_prod to verify no versioned production export or dump file.",
+          "expected": "Zero versioned files constituting a production data export.",
+          "threshold_source": "PDS-2.6",
+          "severity": "elevee",
+          "references": [
+            "RTS 16(5)(a)"
+          ],
+          "risk": "Versioned production exports expose real customer data in non-production.",
+          "recommendation": "Remove any production exports from version control and use synthetic data.",
+          "evidence_page": "/repo/paiement-api/view?path=tests/test_data.json",
+          "remediation": "manual",
+          "id": "C8",
+          "quote": "Les données de test sont synthétiques et déclarées comme telles (champ `\"synthetic\": true`) ; aucun export de production n'est versionné."
+        }
+      ],
+      "covered_by": []
+    },
+    {
+      "ref": "PDS-2.7",
+      "quote": "Les réussites et les échecs d'authentification sont journalisés par l'application.",
+      "quote_verified": true,
+      "summary": "Authentication successes and failures must be logged by the application.",
+      "testability": "automated",
+      "why": "Application logging calls for authentication outcomes are searchable in source code.",
+      "controls": [
+        {
+          "rule": "PDS-2.7",
+          "title": "Authentication successes and failures logged",
+          "objective": "Verify the application logs both successful and failed authentications.",
+          "test_procedure": "GET /api/repo/paiement-api/search?q=(?i)auth.*log|log.*auth|login.*(success|fail)|authenticate and GET /api/repo/paiement-api/file?path=<matched app file> to confirm logging of both success and failure paths.",
+          "expected": "Code contains logging of both authentication success and authentication failure.",
+          "threshold_source": "PDS-2.7",
+          "severity": "moyenne",
+          "references": [
+            "RTS 12(2)(c)(i)"
+          ],
+          "risk": "Missing auth logs prevent detection of brute-force and account takeover.",
+          "recommendation": "Add logging for both authentication successes and failures.",
+          "evidence_page": "/repo/paiement-api/view?path=app/auth.py",
+          "remediation": "manual",
+          "id": "C9",
+          "quote": "Les réussites et les échecs d'authentification sont journalisés par l'application."
+        }
+      ],
+      "covered_by": []
+    }
+  ],
+  "counts": {
+    "document": 9,
+    "automated": 11,
+    "interview": 0,
+    "requirements": 20,
+    "rejected": 0,
+    "controls": 9,
+    "covered": 4
+  }
+}
