@@ -20,7 +20,7 @@ Three warm-ups, all before the recording session:
    code repository target, *Draft the work programme*, approve, run the audit. The finished report lands in
    `runs/studio/<session>/audit/report.html`; note the session id, it is the fallback for the code scene. The Studio
    re-plans on each new session, so the live take may list a different number of controls (7 to 10 on our real runs).
-3. **Benchmark scorecard (pre-recorded)** — a full bench is far too long to run on camera (300–417 s on the five ledger
+3. **Benchmark scorecard (pre-recorded)** — a full bench is far too long to run on camera (300–417 s on the six ledger
    runs), so record the scorecard from a finished one:
    ```bash
    python -m attest bench --lang en --out runs/bench-demo      # then open runs/bench-demo/scorecard.html

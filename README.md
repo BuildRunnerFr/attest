@@ -15,8 +15,8 @@ Measured on real runs with the Meta Model API (ids from our run ledger; Muse Spa
 | Run | Result | Cost |
 |---|---|---|
 | Benchmark, 8 fictitious banks, 6 runs (`20261103-232326`, `20261103-235819`, `20261104-020142`, `20261104-064005`, `20261104-080238`, `20261104-095918` `-bench-meta`) | **56/56 checks correct on every run, 0 false finding, 0 missed, prompt injection flagged 6/6**, 256/256 personal-data items masked each time | $0.50–0.53, 300–417 s per run |
-| IAM console audit with remediation, 4 runs (`20261103-234915`, `20261104-001606`, `20261104-063210`, `20261104-083850` `-iam-meta`) | **6 non-compliances on every run; 5 fixes applied after (demo) pre-approval and re-tested compliant**, 1 action plan | $0.12–0.13, 62–87 s per run |
-| Code repository audit, 6 runs (`20261103-230340`, `20261103-234658`, `20261104-002236`, `20261104-060119`, `20261104-062938`, `20261104-083648` `-code-meta`) | **7/7 planted flaws found on 5 of 6 runs**, each with its evidence (the work programme, re-planned on each run, tested them as 7 to 10 controls); on `20261104-002236`, 6 found, 1 sent to human review because the screenshot did not back the script, 1 evidence error (fixed since: a missing file is now a technical error, never a finding) | $0.33–0.78, 190–390 s per run |
+| IAM console audit with remediation, 5 runs (`20261103-234915`, `20261104-001606`, `20261104-063210`, `20261104-083850`, `20261104-102217` `-iam-meta`) | **6 non-compliances on every run; 5 fixes applied after (demo) pre-approval and re-tested compliant**, 1 action plan | $0.12–0.13, 62–87 s per run |
+| Code repository audit, 7 runs (`20261103-230340`, `20261103-234658`, `20261104-002236`, `20261104-060119`, `20261104-062938`, `20261104-083648`, `20261104-102820` `-code-meta`) | **7/7 planted flaws found on 6 of 7 runs**, each with its evidence (the work programme, re-planned on each run, tested them as 7 to 10 controls); on `20261104-002236`, 6 found, 1 sent to human review because the screenshot did not back the script, 1 evidence error (fixed since: a missing file is now a technical error, never a finding) | $0.33–0.78, 190–390 s per run |
 
 Caveat: the test set is small, fictitious and built by us. Encouraging, not a proof of general accuracy.
 
@@ -92,6 +92,8 @@ model API makes that API an ICT third-party provider under DORA. See [docs/BUSIN
   confidential mode it must run inside the bank as well.
 - **Measured cost**: tokens are counted on every call and priced from `pricing.toml` (sources cited).
 - **Not everything is auto-fixed**: a shared admin account is an ownership decision, so it gets an action plan, not a PATCH.
+- **No opinion without evidence**: when no control is conclusive, or more than half are inconclusive with no high or critical finding, the report issues a *Disclaimer of opinion* (ISA 705 §9; ISACA ITAF 1401) instead of a rating.
+- **Per-rule bench metrics**: the benchmark now scores precision and strict recall for each PSI-4.x rule; rescoring ledger `20261104-095918-bench-meta` gives 100 % precision and 100 % strict recall on all 7 rules (15 TP, 41 TN, 0 FP, 0 FN), and PSI-4.7 per account 6 TP, 17 TN, 0 FP, 0 FN over 23 admin accounts.
 
 ## Quickstart
 
@@ -121,7 +123,7 @@ python -m attest verify runs/<run-folder>              # integrity check
 
 The report (`runs/<run>/report.html`) refreshes live during the audit; `report.pdf` is written at the end.
 A real IAM audit with remediation cost $0.12–0.13 of Muse Spark calls and 62–87 s (ledger runs `20261103-234915`,
-`20261104-001606`, `20261104-063210`, `20261104-083850` `-iam-meta`); what the
+`20261104-001606`, `20261104-063210`, `20261104-083850`, `20261104-102217` `-iam-meta`); what the
 first real runs measured and revealed is in [`examples/README.md`](examples/README.md) and
 [docs/BUSINESS_CASE.md](docs/BUSINESS_CASE.md).
 Useful flags: `--lang en`, `--approve-all --approver "IAM owner"` (pre-approved, demo only), `--fresh`

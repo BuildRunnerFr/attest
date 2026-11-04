@@ -33,7 +33,7 @@ h3{font-size:15px;margin:22px 0 10px}
 .op{border:1px solid var(--line);border-radius:10px;padding:14px 16px}
 .op span{display:block;font-size:12px;color:var(--mute);text-transform:uppercase;letter-spacing:.06em}
 .op b{display:inline-block;margin-top:6px;font:600 20px/1.2 Georgia,serif}
-.op.insuffisant b{color:var(--crit)}.op.reserve b{color:var(--med)}.op.ameliorer b{color:var(--high)}.op.globalement b{color:var(--med)}.op.satisfaisant b{color:var(--ok)}
+.op.insuffisant b{color:var(--crit)}.op.reserve b{color:var(--med)}.op.impossible b{color:var(--high)}.op.ameliorer b{color:var(--high)}.op.globalement b{color:var(--med)}.op.satisfaisant b{color:var(--ok)}
 .kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:20px}
 .kpi{background:#f6f7f9;border-radius:8px;padding:12px 14px}
 .kpi b{display:block;font:600 24px/1.1 Georgia,serif}.kpi span{font-size:12.5px;color:var(--mute)}
@@ -288,6 +288,8 @@ def basis(state: dict) -> str:
     unsure = sum(1 for x in entries if x.get("status_before") in ("error", "review"))
     if unsure:
         txt += " " + t("basis.qualified").format(n=unsure)
+    if "impossible" in (state.get("opinion_initial"), state.get("opinion_final")):
+        txt += " " + t("basis.disclaimer")
     # aucun script n'a de statut « relu » : ceux de la bibliothèque comme ceux écrits pour la mission sont des brouillons
     scripts_unreviewed = any(x.get("test") for x in entries)
     scope = ("basis.scope_all" if not state.get("catalogue", {}).get("reviewed")
