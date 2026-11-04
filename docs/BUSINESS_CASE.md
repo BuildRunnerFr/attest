@@ -27,31 +27,38 @@ Every run measures its own tokens and prices them from `pricing.toml` (report, a
 Muse Spark 1.3 **$1.25 / $4.25 per million input / output tokens** (source cited in `pricing.toml`).
 SAM 3.1 price was not found in public sources: fill it in from the Meta console.
 
-**Measured on the first real run** (2 November 2026, Meta Model API, 7 controls, cached work programme and scripts,
-remediation with interactive approval — see [`examples/README.md`](../examples/README.md)):
+**Measured on a real run** (ledger run `20261103-234915-iam-meta`, 3 November 2026, Meta Model API in GitHub Actions,
+English, 7 controls, cached work programme and scripts, remediation with demo pre-approvals — figures from that run's
+`result.json` and `run.log`):
 
 | Item | Measured |
 |---|---|
-| Muse Spark 1.3 calls | 18 (12 evidence reviews + 6 change requests) |
-| Tokens | 22,663 input · 25,181 output (reasoning makes output larger than input) |
-| Muse Spark cost | **$0.135** for the whole engagement, ≈ $0.0075 per call |
-| SAM 3.1 | 12 images, 15 s in total; price not public |
-| Wall-clock | 29 s to test and evidence 7 controls · 8 s to re-test 5 fixes · 108 s end to end including about a minute of human approvals |
+| Muse Spark 1.3 calls | 18 |
+| Tokens | 22,585 input · 21,815 output (reasoning makes output large) |
+| Muse Spark cost | **$0.121** for the whole engagement, ≈ $0.0067 per call |
+| SAM 3.1 | 12 images, 12.6 s of model time in total; price not public (the spending cap counts it with a conservative estimate) |
+| Wall-clock | 41 s to test and evidence 7 controls · 22 s to re-test 5 fixes · 77 s end to end (no human wait: changes were pre-approved for the demo) |
 
-Measured on the evaluation run (8 systems, read-only, English): **$0.19** for the first system (work programme and 7
-test scripts written), then **$0.056–0.086 per system** with the programme and scripts reused — about 30 seconds each.
+The first real run on 2 November 2026 (interactive approval, see [`examples/README.md`](../examples/README.md))
+measured $0.135 for the same engagement.
 
-Estimates for other runs, scaled from those measurements:
+Measured on the evaluation runs (8 systems, read-only, English): on the first run
+([scorecard](../examples/evaluation-en/scorecard.md)) **$0.19** for the first system (work programme and 7 test scripts
+written), then **$0.056–0.086 per system** with the programme and scripts reused, 240 s for the 8 systems; on the replay
+(ledger `20261103-232326-bench-meta`, everything cached) $0.057–0.094 per system, $0.53 and 300 s for the 8 systems.
+
+Estimates for other runs **(assumption: scaled from the measurements above, not measured)**:
 
 | Scenario | Model calls | Muse Spark cost |
 |---|---|---|
-| First engagement, nothing cached: work programme + 7 test scripts + the run above | ≈ 26 | ≈ $0.20 |
-| Monitoring run: cached programme and scripts, evidence review only, no remediation | ≈ 7 | ≈ $0.05 |
+| First engagement, nothing cached: work programme + 7 test scripts + the run above (assumption) | ≈ 26 | ≈ $0.20 |
+| Monitoring run: cached programme and scripts, evidence review only, no remediation (assumption) | ≈ 7 | ≈ $0.05 |
 
 **At scale (assumption)**: 150 critical systems × 10 configuration controls, tested monthly = 1,500 control tests a month.
-At ≈ $0.0075 per monitoring control test, that is **≈ $11 a month** of model cost on the API. With **Muse Glimmer**
-served internally (30B dense, under 20 GB quantised, runs on a single GPU according to Meta and Nvidia's launch
-communication) the marginal model cost is the GPU time the bank already operates.
+At ≈ $0.007 per monitoring control test (assumption: the average cost per Muse Spark call measured in
+`20261103-234915-iam-meta`), that is **≈ $10 a month** of model cost on the API. **Muse Glimmer** is a supported local
+backend in Attest but has **not yet been benchmarked on real hardware**; if it is served internally, the marginal model
+cost becomes GPU time the bank already operates (assumption, to be measured in the pilot).
 
 **People time (assumption, replace with your baseline)**: if a manual control test takes 45 minutes (access, screenshots,
 write-up, review) and reviewing an Attest result takes 10, the 1,500 monthly tests above free ≈ 875 hours a month.
@@ -70,8 +77,8 @@ Team for the pilot **(assumption)**: one product owner from the second line, one
 ## 5. Governance of the tool itself
 
 - **DORA third-party risk**: using an external model API for audit evidence makes the provider an ICT third-party service
-  provider (contract provisions, register of information — DORA articles 28 and 30). Confidential evidence therefore goes
-  through the **local open-weights backend**; the API is acceptable for non-confidential tests. To be confirmed with
+  provider (contract provisions, register of information — DORA articles 28 and 30). Confidential evidence is therefore meant
+  to go through the **local open-weights backend** (supported, not yet benchmarked on real hardware); the API is acceptable for non-confidential tests. To be confirmed with
   Legal and Compliance.
 - **Model risk management**: the agent is validated like any model: test suite (in `tests/`), benchmark against manual
   testing, monitoring of disagreement and *needs review* rates.

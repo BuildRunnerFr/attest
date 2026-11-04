@@ -29,7 +29,7 @@ flowchart LR
   end
 ```
 
-With `ATTEST_BACKEND=local`, every Muse Spark box runs on **Muse Glimmer** inside the perimeter.
+With `ATTEST_BACKEND=local`, every Muse Spark box runs on **Muse Glimmer** inside the perimeter (supported backend, not yet benchmarked on real hardware).
 
 ## Interpretation (Attest Studio)
 

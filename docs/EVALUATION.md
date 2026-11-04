@@ -33,7 +33,7 @@ policy PSI-4 written as plain, reviewable code. The agent never sees the labels.
 
 ```bash
 python -m lab.app                         # terminal 1
-python -m attest bench --lang en          # terminal 2 — about 8 minutes, about $0.50 with Muse Spark 1.3
+python -m attest bench --lang en          # terminal 2 — measured: 300 s, $0.53 of Muse Spark 1.3 (ledger 20261103-232326-bench-meta)
 ```
 
 Output in `runs/bench-<date>/`: `scorecard.html` (with a link to each scenario's full audit report), `scorecard.md`,
@@ -44,7 +44,7 @@ personal data spotted by the AI vs masked in the end, injection attempts flagged
 
 | Run | Checks | Accuracy | False findings | Missed | PII spotted by AI / masked | Injection flagged | Cost |
 |---|---|---|---|---|---|---|---|
-| Mock (pipeline sanity check, CI) | 56 | 100 % | 0 | 0 | 50 % / 100 % | 1/1 | — |
+| Mock (pipeline sanity check in CI, `tests/test_bench.py`: 2 scenarios, simulated model — not a measurement) | 14 | 100 % | 0 | 0 | simulated / 100 % | 1/1 | — |
 | **Muse Spark 1.3 + SAM 3.1** (2 Nov 2026, [scorecard](../examples/evaluation-en/scorecard.md)) | 56 | **100 %** | **0** | **0** | 70 % (178/256) / **100 %** | 1/1 | $0.65 for 8 systems, 240 s |
 | **Muse Spark 1.3 + SAM 3.1**, replay in GitHub Actions (3 Nov 2026, ledger `20261103-232326-bench-meta`) | 56 | **100 %** | **0** | **0** | 34 % (87/256) / **100 %** | 1/1 | $0.53 for 8 systems, 300 s |
 

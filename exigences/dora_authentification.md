@@ -18,8 +18,10 @@
 - Article 21(1)(f)(ii) : « the use of strong authentication methods in accordance with leading practices and
   techniques for remote access, […] privileged access, for access to ICT assets supporting critical or
   important functions »
-- Article 21(3) : les tâches d'administration utilisent, lorsque c'est possible, des comptes dédiés.
-- Article 12(2)(c)(i) : journaliser les événements liés au contrôle d'accès logique et à la gestion des identités.
+- Article 21(1)(e)(ii) : « assignment of privileged, emergency, and administrator access on a need-to-use or an
+  ad-hoc basis for all ICT systems »
+- Article 12(2)(c)(i) : « logical and physical access control, as referred to in Article 21, and identity
+  management » (événements à journaliser)
 
 Vérifier les extraits sur EUR-Lex avant toute diffusion.
 
@@ -36,7 +38,7 @@ par le propriétaire de la politique (RSSI) et s'applique aux constats.
 | PSI-4.4 | Verrouillage du compte après 5 échecs de connexion au plus (et jamais désactivé). | Moyenne | DORA 9(4)(c) |
 | PSI-4.5 | Expiration des sessions inactives après 15 minutes au plus (et jamais désactivée). | Moyenne | DORA 9(4)(c) |
 | PSI-4.6 | Journalisation de toutes les actions d'administration. | Élevée | RTS 12(2)(c)(i) |
-| PSI-4.7 | Aucun compte générique ou partagé ne dispose de droits d'administration. Un compte nominatif a un identifiant de la forme `initiale.nom` (ex. `a.lefloch`, nom composé accepté : `m.le-goff`) et une adresse e-mail personnelle, généralement `prenom.nom@` (ex. `anne.lefloch@…`) : l'adresse n'a pas à reproduire l'identifiant. Une boîte partagée (`ops-partage@`, `admin@`…) ou un identifiant de fonction (`ops`, `admin`, `root`…) caractérise un compte générique. | Élevée | DORA 9(4)(c) ; RTS 21(1)(c) et 21(3) |
+| PSI-4.7 | Aucun compte générique ou partagé ne dispose de droits d'administration. Un compte nominatif a un identifiant de la forme `initiale.nom` (ex. `a.lefloch`, nom composé accepté : `m.le-goff`) et une adresse e-mail personnelle, généralement `prenom.nom@` (ex. `anne.lefloch@…`) : l'adresse n'a pas à reproduire l'identifiant. Une boîte partagée (`ops-partage@`, `admin@`…) ou un identifiant de fonction (`ops`, `admin`, `root`…) caractérise un compte générique. | Élevée | DORA 9(4)(c) ; RTS 21(1)(c) et 21(1)(e)(ii) |
 
 ## 3. Délais de remédiation (politique interne)
 Critique : 30 jours · Élevée : 90 jours · Moyenne : 180 jours · Faible : 365 jours, à compter de la date du rapport.

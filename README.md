@@ -1,16 +1,29 @@
-# Attest — the compliance auditor that tests instead of reading
+# Attest — the DORA compliance auditor that tests instead of reading
 
-**Meta Global AI Developer Hackathon · track "Build for Your World"**
+**Attest is an AI agent that audits a bank's systems against DORA: it tests them read-only, seals and masks the
+evidence, routes fixes to the system owner for approval, re-tests, and writes the report a CISO signs.**
+Built on **Muse Spark 1.3** (work programme, test scripts, evidence review, change requests) and **SAM 3.1**
+(proving rows outlined, personal data masked). Meta Global AI Developer Hackathon · track "Build for Your World".
+
+Measured on real runs with the Meta Model API (ids from our run ledger; Muse Spark cost, SAM 3.1 has no public price):
+
+| Run | Result | Cost |
+|---|---|---|
+| Benchmark, 8 fictitious banks (`20261103-232326-bench-meta`) | **56/56 checks correct, 0 false finding, 0 missed, prompt injection flagged**, 256/256 personal-data items masked | $0.53, 300 s |
+| IAM console audit with remediation (`20261103-234915-iam-meta`) | **6 non-compliances; 5 fixes applied after (demo) pre-approval and re-tested compliant**, 1 action plan | $0.12, 77 s |
+| Code repository audit (`20261103-234658-code-meta`) | **7/7 planted flaws found**, each with its evidence | $0.48 |
+
+Caveat: the test set is small, fictitious and built by us. Encouraging, not a proof of general accuracy.
+
+![Executive summary of an Attest report](docs/img/report-summary.png)
+
+## Why
 
 Banks must prove to supervisors that their security controls work. Under **DORA** (EU Regulation 2022/2554,
 applicable since 17 January 2025) that proof is still mostly built by hand: someone reads the policy, logs into
 each system, takes screenshots, pastes them into a spreadsheet, and an auditor re-checks it all months later.
-
-Attest is an AI agent that runs that audit the way a bank's second line of defence must run it:
-it **tests** the system read-only, **seals** the evidence, **masks** personal data, drafts **change requests**
-that a human owner approves, **re-tests** after the fix, and issues an audit report a CISO can sign.
-
-![Executive summary of an Attest report](docs/img/report-summary.png)
+Attest runs that audit the way a bank's second line of defence must run it: independent, read-only, evidenced,
+with human approval for every change.
 
 ## Attest Studio: pick an article, pick a target, approve, audit
 
@@ -49,9 +62,10 @@ Quote verification, testability triage and mandatory approval are there because 
 | 5. Remediate (optional) | Drafts a minimal change request per finding. A **human system owner approves it** (the auditor cannot); it is applied with a separate change account, a ticket, and logged by the audited system (DORA 9(4)(e)). Organisational fixes (a shared admin account) become an action plan with an owner and a due date. | **Muse Spark 1.3** |
 | 6. Re-test and report | Replays the same script, seals new evidence, issues an HTML + PDF report with an executive opinion, findings in Criteria / Condition / Risk / Recommendation form, a traceability matrix, an evidence register, measured AI cost and a hash-chained audit trail. | — |
 
-**Confidential mode:** `ATTEST_BACKEND=local` runs the same agent on **Muse Glimmer** served inside the bank
-(llama.cpp, vLLM, SGLang). For a bank this is not a nice-to-have: sending audit evidence to an external model API makes
-that API an ICT third-party provider under DORA. See [docs/BUSINESS_CASE.md](docs/BUSINESS_CASE.md).
+**Confidential mode:** `ATTEST_BACKEND=local` points the same agent at **Muse Glimmer** served inside the bank
+(llama.cpp, vLLM, SGLang). This is a supported backend, **not yet benchmarked on real hardware**: every measured result
+in this README comes from the Meta Model API. For a bank it is not a nice-to-have: sending audit evidence to an external
+model API makes that API an ICT third-party provider under DORA. See [docs/BUSINESS_CASE.md](docs/BUSINESS_CASE.md).
 
 ![A finding with sealed before/after evidence and an approved change](docs/img/finding.png)
 
@@ -93,8 +107,9 @@ python -m attest verify runs/<run-folder>              # integrity check
 ```
 
 The report (`runs/<run>/report.html`) refreshes live during the audit; `report.pdf` is written at the end.
-What the first real run with Muse Spark and SAM 3.1 measured and revealed ($0.135 for the whole engagement) is in
-[`examples/README.md`](examples/README.md) and [docs/BUSINESS_CASE.md](docs/BUSINESS_CASE.md).
+A real IAM audit with remediation cost $0.12 of Muse Spark calls (ledger run `20261103-234915-iam-meta`); what the
+first real runs measured and revealed is in [`examples/README.md`](examples/README.md) and
+[docs/BUSINESS_CASE.md](docs/BUSINESS_CASE.md).
 Useful flags: `--lang en`, `--approve-all --approver "IAM owner"` (pre-approved, demo only), `--fresh`
 (rewrite tests instead of replaying the library), `--replan` (redo the work programme).
 
@@ -105,10 +120,16 @@ We do not fine-tune anything: the model is not the judge, and a bank cannot hand
 edge cases, generic accounts, prompt injection, a 56-account directory) and reports accuracy, false findings, missed
 non-compliances, privacy masking and cost. See [docs/EVALUATION.md](docs/EVALUATION.md).
 
-**First real run (Muse Spark 1.3 + SAM 3.1): 56/56 checks correct, 0 false finding, 0 missed non-compliance, the
-injection flagged, 256/256 personal-data items masked (70 % spotted by the model, the rest by the safety net),
-$0.65 and 4 minutes for 8 systems** — [scorecard](examples/evaluation-en/scorecard.md). A small, self-built test set:
-encouraging, not a proof of general accuracy.
+Two real runs of the same benchmark (Muse Spark 1.3 + SAM 3.1):
+
+| Run | Checks correct | False findings / missed | Injection | Personal data spotted by the model / masked | Cost, time |
+|---|---|---|---|---|---|
+| First run, 2 Nov 2026 ([scorecard](examples/evaluation-en/scorecard.md)) | 56/56 | 0 / 0 | flagged | 178/256 (70 %) / 256/256 | $0.65, 240 s |
+| Replay in GitHub Actions, ledger `20261103-232326-bench-meta` | 56/56 | 0 / 0 | flagged | 87/256 (34 %) / 256/256 | $0.53, 300 s |
+
+Verdicts were stable; the model's recall of personal data was not, which is why masking never depends on it (the
+deterministic safety net masked the rest both times). A small, self-built test set: encouraging, not a proof of
+general accuracy.
 
 ## Repository
 
