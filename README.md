@@ -96,6 +96,7 @@ model API makes that API an ICT third-party provider under DORA. See [docs/BUSIN
 - **Not everything is auto-fixed**: a shared admin account is an ownership decision, so it gets an action plan, not a PATCH.
 - **No opinion without evidence**: when no control is conclusive, or more than half are inconclusive with no high or critical finding, the report issues a *Disclaimer of opinion* (ISA 705 §9; ISACA ITAF 1401) instead of a rating.
 - **Per-rule bench metrics**: the benchmark now scores precision and strict recall for each PSI-4.x rule; rescoring ledger `20261104-095918-bench-meta` gives 100 % precision and 100 % strict recall on all 7 rules (15 TP, 41 TN, 0 FP, 0 FN), and PSI-4.7 per account 6 TP, 17 TN, 0 FP, 0 FN over 23 admin accounts.
+- **Known limitation, measured**: on the stress scenario `09` (721 accounts, 100 per page, one generic admin on page 7) the reused PSI-4.7 library script written by Muse Spark read only page 1 and missed the planted admin on both real runs (`20261104-134329-bench-meta`, `20261104-204107-bench-meta`: 13/14 correct, 1 missed); the near-miss twin `10` was cleared with 0 false findings. Planned fix: require full pagination and make a partial population inconclusive.
 
 ## Quickstart
 

@@ -14,6 +14,39 @@ suite prévue. Les chiffres cités viennent tous de `ledger.jsonl` (branche `rea
 - Gel du code le 4 novembre 2026 à 18:00 (Paris) : ensuite, documentation, texte de soumission et vérifications
   seulement. Soumission : 5 novembre 2026, 03:00 (Paris) = 4 novembre 21:00 (ET).
 
+## Cycle 10 de l'équipe d'agents — 4 novembre 2026, 21:33–21:50 (Paris) — GEL
+
+Rattrapage du cycle 9 (14:14, sans entrée au journal) : il a poussé 1802c0c (scénarios de stress 09/10 : annuaire
+paginé de 721 comptes, 100 par page, jumeau « presque fautif » de 720 comptes, hors banc par défaut), cac04a8
+(limite « test ponctuel », étape 5 sans correctif, intitulés du mock en EN, `ATTEST_RUN_ID` = id du registre en CI)
+et a7f8f08 (docs), puis lancé `20261104-134329-bench-meta` sur 09/10 : **1 faux négatif** (PSI-4.7, scénario 09).
+`demo-stable` est resté à 91b45c7.
+
+Mode GEL : pas de revue d'équipe ni de code ; vérifications et exécution réelle de contrôle seulement. 230 tests verts.
+
+Constat (faux négatif confirmé, cause établie) : le script PSI-4.7 de la bibliothèque (`library/PSI-4.7-aa0ebeef6afc.py`,
+écrit par Muse Spark le 2 novembre et réutilisé) ne lit que la première page de l'annuaire : 3 administrateurs observés
+sur 12, `support-n2` (page 7) manqué. Le jumeau 10 est jugé conforme (0 faux positif). Banc principal 01–08 non concerné.
+Correctif non appliqué (gel, défaut non bloquant pour la démo) : exiger la pagination complète dans le prompt des
+scripts, régénérer le script de bibliothèque, verdict non concluant si la population observée est inférieure au
+total déclaré (`X-Total-Count`).
+
+Exécution réelle :
+- `20261104-204107-bench-meta` (a7f8f08, `only=09,10`) : même résultat (13/14, 0 FP, 1 FN, même script réutilisé),
+  0,21 $ mesurés, 222 s.
+- Dépense cumulée au registre (estimation prudente) : 22,46 $ / 130 $.
+
+Commit : docs (README, EVALUATION, SUBMISSION) — limite connue documentée et sourcée ; vérificateur indépendant :
+REFUSÉ (script réutilisé présenté comme deux générations, formulation de la preuve) puis APPROUVÉ.
+
+Pour Ethan : décider s'il faut corriger le faux négatif avant 03:00 (dérogation au gel) ou le laisser documenté ;
+inchangé : EUR-Lex RTS 21 lignes 9 et 11 ; LICENSE ; `<VIDEO_URL>`.
+
+Durée du cycle : 17 min. Cycle suivant programmé : 4 novembre 22:50 (Paris).
+
+Suite prévue (gel) : relecture finale des docs de soumission (« 0 false finding » → « findings » dans SUBMISSION.md),
+vérification d'un clone neuf ; après le 5 novembre 03:00 : clôture et désactivation de la tâche.
+
 ## Cycle 8 de l'équipe d'agents — 4 novembre 2026, 12:59–13:31 (Paris)
 
 Déclenché juste après le cycle 7 (lancement manuel). Les cinq revues du cycle 7, vieilles de moins d'une heure,

@@ -61,7 +61,7 @@ the ground truth of scenarios 01–08 is unchanged.
 (`support-n2`) on page 7, so a test that reads only the first page wrongly concludes "compliant".
 `10-oceane-annuaire-presque` is its compliant twin: 720 accounts, no finding expected, admin names containing
 function words as substrings (`opsomer`, `teamson`, `rootsaert`, `kit`), and settings exactly at the limits (12, 5, 15).
-Real-model result: pending.
+Real-model result (ledger `20261104-134329-bench-meta` and `20261104-204107-bench-meta`): on `10` the twin is judged compliant on all 7 rules (0 false findings); on `09` the PSI-4.7 test read **only the first page** and missed `support-n2` on page 7: **1 missed non-compliance out of 1**, 13/14 checks correct, $0.21 per run. Both runs executed the same reused library script (`library/PSI-4.7-…py`, written by Muse Spark 1.3 on 2 Nov 2026), so this is one defective script observed twice, not two independent generations. The verdict is still deterministic and its evidence lists only 3 admin accounts from a single request, but the planted failure was missed. Known limitation, not fixed before submission (code freeze): the fix is to require full pagination in the script prompt, re-generate the library script, and make the verdict inconclusive when the observed population is smaller than the declared total (`X-Total-Count: 721`). The headline bench (scenarios 01–08) is not affected.
 
 ## Results
 
