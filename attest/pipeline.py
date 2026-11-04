@@ -335,6 +335,8 @@ def collect_evidence(e: dict, result: dict, phase: str, ctx: Ctx, reqlog: list |
     c = e["control"]
     raw = ctx.out / "evidence" / f"{c['id']}_{phase}_raw.png"
     page = evidence_page(c, result, reqlog)
+    # page de dépôt jamais lue avec succès par le script : la capture illustre, elle ne prouve pas
+    verified = None if not reqlog or _repo_file(page) is None else _repo_file(page) in _read_ok(reqlog)
     dom = evidence.capture(ctx.mission.lab_url + page, raw, config.AUDIT_TOKEN)
     net = [tuple(p["box"]) for p in dom.get("pii", [])]
     masked = config.PREMASK
@@ -351,9 +353,9 @@ def collect_evidence(e: dict, result: dict, phase: str, ctx: Ctx, reqlog: list |
     sha = sha256_file(final)
     metrics = measure(masks, dom)
     ctx.trail.log("evidence_sealed", control=c["id"], phase=phase, file=ctx.rel(final), sha256=sha,
-                  page=page, premask=masked, corroborates=insp.get("corroborates"),
+                  page=page, page_verified=verified, premask=masked, corroborates=insp.get("corroborates"),
                   injection_detected=bool(insp.get("injection_detected")), **metrics)
-    return {"image": ctx.rel(final), "sha256": sha, "inspection": insp, "metrics": metrics, "page": page,
+    return {"image": ctx.rel(final), "sha256": sha, "inspection": insp, "metrics": metrics, "page": page, "page_verified": verified,
             "ts": time.strftime("%Y-%m-%d %H:%M:%S")}
 
 

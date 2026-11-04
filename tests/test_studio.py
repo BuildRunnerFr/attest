@@ -137,3 +137,20 @@ def test_studio_requires_reviewer_and_known_target(tmp_path, monkeypatch):
     assert sid not in studio.JOBS
     r = c.post("/interpret", data={"lang": "fr", "lib": ["politique-psi-4-acces"], "target": "../../etc"})
     assert r.status_code == 400 and "Cible inconnue" in r.get_data(as_text=True)
+
+
+def test_studio_sans_operateur_n_est_pas_une_relecture(lab, tmp_path, monkeypatch):
+    """ops/studio_flow.py (CI) n'est pas un auditeur : le programme reste « non relu » dans le catalogue."""
+    import json
+    from attest import studio
+    monkeypatch.setattr(studio, "WORK", tmp_path / "studio")
+    monkeypatch.setattr(studio, "job", lambda *a: None)
+    c = studio.app.test_client()
+    r = c.post("/interpret", data={"lang": "en", "lib": ["politique-psi-4-acces"], "target": "iam-console"})
+    sid = r.location.split("/review/")[1].split("?")[0]
+    it = json.loads((tmp_path / "studio" / sid / "interpretation.json").read_text())
+    ctrl = [k["id"] for q in it["requirements"] if q["quote_verified"] for k in q["controls"]][:1]
+    c.post(f"/run/{sid}", data={"reviewer": "Attest CI", "ctrl": ctrl, "unattended": "1"})
+    cat = json.loads((tmp_path / "studio" / sid / "catalogue.json").read_text())
+    assert cat["reviewed"] is False and cat["reviewer"] is None
+    studio.JOBS.clear()

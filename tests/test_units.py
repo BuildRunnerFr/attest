@@ -164,3 +164,14 @@ def test_ledger_counts_only_real_runs(tmp_path):
                       '{"backend": "meta", "budget_spent_usd": 0.30}\n')
     assert budget.spent(ledger) == pytest.approx(0.95)
     assert budget.spent(tmp_path / "absent.jsonl") == 0.0
+
+
+def test_constat_cause_et_corroboration_inconnue():
+    """Cause probable affichée comme hypothèse ; corroboration absente ≠ « corrobore » ; page non lue signalée."""
+    from attest import report
+    ev = {"image": "x.png", "sha256": "0" * 64, "inspection": {}, "metrics": {}, "page": "/p", "page_verified": False,
+          "ts": "2026-11-04 09:00:00"}
+    page = report.figure(ev, "label")
+    esc = lambda k: report.e(report.t(k))
+    assert esc("f.corro_yes") not in page
+    assert esc("f.corro_none") in page and esc("f.page_unread") in page

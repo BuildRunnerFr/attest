@@ -27,6 +27,7 @@ read-only API. Keys:
 - "references": list of regulatory references exactly as in the framework (e.g. ["DORA 9(4)(d)", "RTS 21(1)(f)(ii)"])
 - "risk": the concrete risk if the control fails, one sentence ({lang})
 - "recommendation": the expected corrective action, one sentence ({lang})
+- "cause": the most likely root cause if the control fails (process, design or configuration), one sentence ({lang}); a hypothesis, not a fact
 - "evidence_page": the HTML page path that shows the tested data to a human
 - "remediation": "config" if fixable by changing a setting via the admin API, otherwise "manual"
 Do not invent rules that are not in the policy."""
@@ -130,5 +131,6 @@ Return:
                    "threshold_source": "<policy rule id | '<standard> (proposal)' | 'text'>",
                    "severity": "critique" | "elevee" | "moyenne" | "faible",
                    "references": ["<regulatory references>"], "risk": "<{lang}>", "recommendation": "<{lang}>",
+                   "cause": "<most likely root cause if the control fails, a hypothesis, {lang}>",
                    "evidence_page": "<HTML page path of the target>", "remediation": "config" | "manual"}}]}}
 ]}}"""

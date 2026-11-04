@@ -15,7 +15,7 @@ CSS = """
 :root{--ink:#14171c;--mute:#5d6470;--line:#dfe2e7;--paper:#fff;--bg:#eef0f3;--navy:#0f2747;
 --crit:#8a1c1c;--high:#c2410c;--med:#a16207;--low:#4b5563;--ok:#166534;--ko:#b91c1c;--rev:#a16207}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:14.5px/1.55 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+body{margin:0;background:var(--bg);color:var(--ink);font:14.5px/1.55 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Inter,"Liberation Sans",Arial,sans-serif}
 .doc{max-width:1060px;margin:0 auto;background:var(--paper);box-shadow:0 1px 4px #0001}
 .band{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;background:var(--navy);color:#dbe3ef;
  padding:8px 40px;font-size:12px;letter-spacing:.03em}
@@ -68,6 +68,7 @@ code,.mono{font:12.5px ui-monospace,Menlo,monospace}
 td.mono,td.nw{white-space:nowrap}
 .obs{background:#f6f7f9;border-radius:6px;padding:2px 6px}
 .ev{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.ev figure:only-child{grid-column:1/-1}
 figure{margin:0}figure img{width:100%;border:1px solid var(--line);border-radius:8px;display:block}
 figcaption{font-size:12px;color:var(--mute);margin-top:6px}
 .chg{margin-top:14px;border-left:3px solid var(--navy);background:#f4f6fa;border-radius:0 8px 8px 0;padding:10px 14px;font-size:13px}
@@ -148,7 +149,10 @@ def figure(ev, label):
     if not ev:
         return ""
     i, m = ev["inspection"], ev["metrics"]
-    corro = t("f.corro_yes") if i.get("corroborates") is not False else t("f.corro_no")
+    cv = i.get("corroborates")
+    corro = t("f.corro_yes") if cv is True else t("f.corro_no") if cv is False else t("f.corro_none")
+    if ev.get("page_verified") is False:              # page jamais lue par le script : illustration seulement
+        corro = "⚠ " + t("f.page_unread") + " " + corro
     pii = ""
     if m.get("pii_total"):
         pii = f" · {m['pii_masked']}/{m['pii_total']} {t('f.pii')}"
@@ -212,8 +216,10 @@ def card(en):
             f'<div><h4>{e(t("f.condition"))}</h4><p>{e(t("f.observed"))}{colon()}<code class="obs">{e(compact(before.get("observed", "")))}</code><br>'
             f'{e(t("f.expected"))}{colon()}<code class="obs">{e(compact(before.get("expected", c.get("expected", ""))))}</code><br>'
             f'<span class="small">{e(detail)}</span></p></div>'
+            f'<div><h4>{e(t("f.cause"))}</h4><p>{e(c["cause"]) if c.get("cause") else ""}'
+            f'<span class="small">{e(t("f.cause_ai") if c.get("cause") else t("f.cause_none"))}</span></p></div>'
             f'<div><h4>{e(t("f.risk"))}</h4><p>{e(c.get("risk", ""))}</p></div>'
-            f'<div><h4>{e(t("f.reco"))}</h4><p>{e(c.get("recommendation", ""))}'
+            f'<div style="grid-column:1/-1"><h4>{e(t("f.reco"))}</h4><p>{e(c.get("recommendation", ""))}'
             + (f'<br><span class="small">{e(t("t.due"))}{colon()}{e(f["due"])} · {e(t("t.owner"))}{colon()}{e(f["owner"])}</span>' if f else "")
             + f'</p></div></div>'
             f'<p class="small">{e(t("f.test"))}{colon()}{e(c.get("test_procedure", ""))}</p>'

@@ -43,7 +43,7 @@ def main():
     if not ctrl:
         sys.exit("aucun contrôle automatisable proposé")
 
-    form = {"reviewer": a.reviewer, "approver": a.approver, "ctrl": ctrl}
+    form = {"reviewer": a.reviewer, "approver": a.approver, "ctrl": ctrl, "unattended": "1"}
     if a.remediate:
         form["remediate"] = "on"
     r = c.post(f"/run/{sid}", data=form)

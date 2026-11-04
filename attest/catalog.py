@@ -48,6 +48,7 @@ def normalize(controls: list, default_page: str = "/admin/security") -> list:
         c["evidence_page"] = page if page.startswith("/") else "/" + page
         for k in ("title", "objective", "test_procedure", "expected", "risk", "recommendation", "rule"):
             c[k] = str(c.get(k, "")).strip()
+        c["cause"] = str(c.get("cause") or "").strip()
         out.append(c)
     return out
 

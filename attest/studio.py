@@ -369,7 +369,9 @@ def run(sid):
             return redirect(f"/audit/{sid}")
         JOBS[sid] = {"state": "running"}
     try:
-        cat_meta = {"source": "studio", "reviewed": True, "reviewer": reviewer,
+        # Exécution sans opérateur (CI, ops/studio_flow.py) : aucun humain n'a relu le programme.
+        unattended = bool(request.form.get("unattended"))
+        cat_meta = {"source": "studio", "reviewed": not unattended, "reviewer": None if unattended else reviewer,
                     "path": f"runs/studio/{sid}/catalogue.json", "validated_at": time.strftime("%Y-%m-%d %H:%M")}
         (d / "catalogue.json").write_text(json.dumps({**cat_meta, "controls": controls}, ensure_ascii=False, indent=2))
         os.environ["ATTEST_LANG"] = lang

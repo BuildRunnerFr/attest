@@ -58,6 +58,7 @@ FORBIDDEN_ATTRS = {
     "lchmod", "chown", "fchown", "lchown", "chflags", "lchflags", "utime", "chdir", "fchdir", "umask",
     "listdir", "scandir", "walk", "fwalk", "putenv", "unsetenv", "add_dll_directory",
     # sys et introspection
+    "format", "format_map",   # str.format("{0.__globals__}") parcourt les dunders hors de l'AST
     "modules", "meta_path", "path_hooks", "settrace", "setprofile", "addaudithook", "monitoring",
     "remote_exec", "exc_info", "tb_frame", "tb_next", "f_back", "f_globals", "f_locals", "f_builtins",
     "f_code", "gi_frame", "gi_code", "cr_frame", "ag_frame",
@@ -272,8 +273,11 @@ def _run(code: str, lab_url: str, token: str, timeout: int) -> dict:
             f.write(RUNNER)
         env = {"LAB_URL": lab_url, "LAB_TOKEN": token, "PATH": os.environ.get("PATH", ""),
                "NO_PROXY": "127.0.0.1,localhost", "SB_LIMITS": _limits(timeout)}
-        p = subprocess.run([sys.executable, "-I", runner, path, rlog], capture_output=True, text=True,
-                           timeout=timeout, cwd=d, env=env, stdin=subprocess.DEVNULL)
+        so, se = os.path.join(d, "stdout.txt"), os.path.join(d, "stderr.txt")
+        with open(so, "wb") as fo, open(se, "wb") as fe:     # fichiers : RLIMIT_FSIZE borne la sortie
+            rc = subprocess.run([sys.executable, "-I", runner, path, rlog], stdout=fo, stderr=fe,
+                                timeout=timeout, cwd=d, env=env, stdin=subprocess.DEVNULL).returncode
+        p = subprocess.CompletedProcess([], rc, _tail(so), _tail(se))
         reqs = _read_log(rlog)
     res = _verdict(p)
     res["requests"] = {"count": len(reqs), "log": reqs[:MAX_LOG]}
@@ -315,6 +319,13 @@ def _missing_file(res: dict, reqs: list) -> str | None:
     if st and all(isinstance(x, int) and 400 <= x < 500 for x in st):
         return f"{path} (HTTP {st[-1]})"
     return None
+
+
+def _tail(path: str, n: int = 64 << 10) -> str:
+    """Fin de la sortie du script (64 Kio) : le parent ne charge jamais une sortie massive en mémoire."""
+    with open(path, "rb") as f:
+        f.seek(max(0, os.path.getsize(path) - n))
+        return f.read().decode("utf-8", "replace")
 
 
 MAX_LOG = 50              # requêtes conservées dans le résultat (le nombre total reste exact)

@@ -208,3 +208,23 @@ def test_trail_is_scrubbed(tmp_path, monkeypatch):
     monkeypatch.setenv("LAB_AUDIT_TOKEN", "vrai-jeton-audit-99")
     Trail(tmp_path / "trail.jsonl").log("test_executed", result={"detail": "token=vrai-jeton-audit-99"})
     assert "vrai-jeton-audit-99" not in (tmp_path / "trail.jsonl").read_text()
+
+
+def test_format_refuse():
+    """str.format parcourt les attributs hors de l'AST : "{0.__globals__}".format(f) contournait l'interdiction des dunders."""
+    with pytest.raises(sandbox.UnsafeCode):
+        sandbox.check('import requests\nprint("{0.__globals__}".format(requests.get))')
+    with pytest.raises(sandbox.UnsafeCode):
+        sandbox.check('print("{a}".format_map({"a": 1}))')
+
+
+def test_sortie_massive_bornee(lab):
+    """Un script qui inonde stdout échoue (limite de taille de fichier) sans faire gonfler l'orchestrateur."""
+    import resource
+    code = FICHIER.replace("__PATH__", "app/config.py").replace(
+        "print(json", "while True:\n    print('x' * 65536)\nprint(json")
+    before = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+    res = sandbox.run(code, lab, "audit-ro-demo")
+    assert res["status"] == "error", res
+    grown_mb = (resource.getrusage(resource.RUSAGE_SELF).ru_maxrss - before) / 1024
+    assert grown_mb < 100, f"l'orchestrateur a pris {grown_mb:.0f} Mo"

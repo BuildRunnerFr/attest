@@ -89,7 +89,8 @@ def _call_sam(image: Path, boxes, size) -> list[dict]:
         f"{i + 1}<|box;x1={x1};y1={y1};x2={x2};y2={y2};w={W};h={H}|>"
         for i, (x1, y1, x2, y2) in enumerate(boxes))
 
-    if llm.BACKEND == "mock" or not os.getenv("MODEL_API_KEY"):
+    # Seul le backend meta appelle l'API : en mode local (confidentiel), la capture ne quitte jamais la machine.
+    if llm.BACKEND != "meta" or not os.getenv("MODEL_API_KEY"):
         from . import mock
         llm.USAGE.add("sam-3.1 (mock)", "segment", images=1)
         return parse(mock.sam_output(boxes, size))

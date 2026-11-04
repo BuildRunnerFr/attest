@@ -29,3 +29,16 @@ def test_segment_boxes_mock_reel(tmp_path, monkeypatch):
     boxes = [(10 * i, 5, 10 * i + 8, 20) for i in range(20)]
     masks = sam.segment_boxes(img, boxes)
     assert len(masks) == 20 and all(m.any() for m in masks)
+
+
+def test_backend_local_n_appelle_pas_l_api(tmp_path, monkeypatch):
+    """Mode confidentiel : même avec une clé dans .env, la capture ne part pas vers l'API Meta."""
+    monkeypatch.setattr(sam.llm, "BACKEND", "local")
+    monkeypatch.setenv("MODEL_API_KEY", "x")
+    def boom(*a, **k):
+        raise AssertionError("client de l'API Meta créé en mode local")
+    monkeypatch.setattr(sam.llm, "meta_client", boom)
+    img = tmp_path / "shot.png"
+    Image.new("RGB", (400, 300), "white").save(img)
+    masks = sam.segment_boxes(img, [(10, 10, 50, 30)])
+    assert len(masks) == 1
