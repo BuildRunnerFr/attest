@@ -84,7 +84,7 @@ def pricing() -> dict:
 
 # Pré-masquage : la capture envoyée au modèle a déjà ses données personnelles (filet déterministe) noircies.
 # Désactivé seulement par le banc d'essai, qui mesure ce que le modèle repère seul sur des données synthétiques.
-PREMASK = os.getenv("ATTEST_PREMASK", "1").strip().lower() not in ("0", "false", "no", "non", "")
+PREMASK = os.getenv("ATTEST_PREMASK", "1").strip().lower() not in ("0", "false", "no", "non")   # vide → activé
 
 # Comptes de service de la console auditée
 AUDIT_TOKEN = os.getenv("LAB_AUDIT_TOKEN", "audit-ro-demo")     # lecture seule : tests et captures

@@ -321,7 +321,8 @@ def evidence_page(control: dict, result: dict, reqlog: list | None = None) -> st
 
 def premask(shot: Path, boxes, out: Path) -> Path:
     """Copie de la capture où les données personnelles du filet déterministe sont noircies :
-    c'est elle, et non la capture brute, qui part vers le modèle (résidence des données)."""
+    c'est elle, et non la capture brute, qui part vers le modèle de vision
+    (minimisation des données ; SAM 3.1 reçoit encore la capture brute pour la segmentation)."""
     img = Image.open(shot).convert("RGB")
     draw = ImageDraw.Draw(img)
     for x1, y1, x2, y2 in boxes:

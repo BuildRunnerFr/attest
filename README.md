@@ -120,7 +120,7 @@ We do not fine-tune anything: the model is not the judge, and a bank cannot hand
 edge cases, generic accounts, prompt injection, a 56-account directory) and reports accuracy, false findings, missed
 non-compliances, privacy masking and cost. See [docs/EVALUATION.md](docs/EVALUATION.md).
 
-Four real runs of the same benchmark (Muse Spark 1.3 + SAM 3.1):
+Four real runs of the same benchmark (Muse Spark 1.3 + SAM 3.1; the first from `examples/`, the other three from the run ledger):
 
 | Run | Checks correct | False findings / missed | Injection | Personal data spotted by the model / masked | Cost, time |
 |---|---|---|---|---|---|

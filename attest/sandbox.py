@@ -120,6 +120,17 @@ def check(code: str) -> None:
 RUNNER = r'''
 import sys, os
 
+try:                                    # limites posées avant la garde (qui interdit ensuite setrlimit)
+    import resource
+    for _n, _v in zip(("RLIMIT_AS", "RLIMIT_CPU", "RLIMIT_FSIZE"), os.environ.pop("SB_LIMITS", "").split(",")):
+        if _v:
+            try:
+                resource.setrlimit(getattr(resource, _n), (int(_v), int(_v)))
+            except (ValueError, OSError):
+                pass
+except ImportError:
+    pass
+
 
 def _boot(path, logpath):
     import hashlib, json, re, socket, http.client, requests, requests.sessions
@@ -246,19 +257,10 @@ MEM_LIMIT = 1 << 30           # 1 Gio d'espace d'adressage (Python + requests : 
 FSIZE_LIMIT = 10 << 20        # 10 Mo par fichier écrit (seul le journal des requêtes l'est)
 
 
-def _limits(timeout: int):
-    """preexec_fn : plafonne mémoire, CPU et taille de fichier du processus enfant (POSIX)."""
-    if resource is None:
-        return None
-
-    def apply():
-        for lim, val in ((resource.RLIMIT_AS, MEM_LIMIT), (resource.RLIMIT_CPU, timeout + 5),
-                         (resource.RLIMIT_FSIZE, FSIZE_LIMIT)):
-            try:
-                resource.setrlimit(lim, (val, val))
-            except (ValueError, OSError):
-                pass
-    return apply
+def _limits(timeout: int) -> str:
+    """Mémoire, CPU et taille de fichier du processus enfant, appliquées par le lanceur lui-même au démarrage
+    (pas de preexec_fn : il n'est pas sûr quand l'audit tourne sur plusieurs fils d'exécution)."""
+    return f"{MEM_LIMIT},{timeout + 5},{FSIZE_LIMIT}"
 
 
 def _run(code: str, lab_url: str, token: str, timeout: int) -> dict:
@@ -269,10 +271,9 @@ def _run(code: str, lab_url: str, token: str, timeout: int) -> dict:
         with open(runner, "w") as f:
             f.write(RUNNER)
         env = {"LAB_URL": lab_url, "LAB_TOKEN": token, "PATH": os.environ.get("PATH", ""),
-               "NO_PROXY": "127.0.0.1,localhost"}
+               "NO_PROXY": "127.0.0.1,localhost", "SB_LIMITS": _limits(timeout)}
         p = subprocess.run([sys.executable, "-I", runner, path, rlog], capture_output=True, text=True,
-                           timeout=timeout, cwd=d, env=env, stdin=subprocess.DEVNULL,
-                           preexec_fn=_limits(timeout))
+                           timeout=timeout, cwd=d, env=env, stdin=subprocess.DEVNULL)
         reqs = _read_log(rlog)
     res = _verdict(p)
     res["requests"] = {"count": len(reqs), "log": reqs[:MAX_LOG]}
@@ -312,7 +313,7 @@ def _missing_file(res: dict, reqs: list) -> str | None:
         return None
     st = [r.get("status") for r in reqs if isinstance(r, dict) and _repo_path(r.get("path")) == path]
     if st and all(isinstance(x, int) and 400 <= x < 500 for x in st):
-        return path
+        return f"{path} (HTTP {st[-1]})"
     return None
 
 
