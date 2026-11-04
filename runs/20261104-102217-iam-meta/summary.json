@@ -1,0 +1,42 @@
+{
+  "id": "20261104-102217-iam-meta",
+  "utc": "20261104-102217",
+  "kind": "iam",
+  "backend": "meta",
+  "note": "cycle 6 : validation b68f0ff (plan pseudonymisé, pied TLP, auditeur CI)",
+  "commit": "b68f0ff",
+  "workflow_run": "41813509522",
+  "status": "success",
+  "budget_spent_usd": 0.3686,
+  "priced_usd": 0.1286,
+  "unpriced": [
+    "sam-3.1"
+  ],
+  "audits": [
+    {
+      "folder": "iam",
+      "controls": 7,
+      "status_before": [
+        "fail",
+        "fail",
+        "fail",
+        "fail",
+        "fail",
+        "pass",
+        "fail"
+      ],
+      "status_after": [
+        "pass",
+        "pass",
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "evidence_errors": 0,
+      "opinion_initial": "insuffisant",
+      "opinion_final": "insuffisant",
+      "injection_detected": false,
+      "cost_usd": 0.1286475
+    }
+  ]
+}
