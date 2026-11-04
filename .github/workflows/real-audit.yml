@@ -50,11 +50,16 @@ jobs:
       BENCH_ONLY: ${{ inputs.only }}
       BUDGET_TOTAL_USD: ${{ vars.ATTEST_BUDGET_TOTAL_USD || '130' }}
     steps:
+      # persist-credentials: false : le jeton GITHUB_TOKEN n'est pas laissé dans .git/config, où la console auditée
+      # et le code exécuté pendant l'audit pourraient le lire ; seule l'étape de publication le reçoit (voir plus bas).
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/checkout@v4
         with:
           ref: real-results
           path: results
+          persist-credentials: false
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -90,6 +95,7 @@ jobs:
         if: always() && steps.audit.outcome != 'skipped'
         env:
           RUN_STATUS: ${{ steps.audit.outcome }}
+          GH_TOKEN: ${{ github.token }}   # jeton passé à cette seule étape, jamais écrit dans .git/config
         run: |
           python ops/publish.py out results "$KIND" "$BACKEND" "$NOTE"
           cd results
@@ -97,7 +103,16 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
           git commit -q -m "$KIND ($BACKEND) : exécution ${{ github.run_id }}"
-          for i in 1 2 3; do git push -q origin HEAD:real-results && break; git pull -q --rebase origin real-results; done
+          # authentification ponctuelle (git -c), le checkout n'ayant pas conservé d'identifiants
+          B64=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)
+          echo "::add-mask::$B64"          # la forme base64 du jeton est masquée elle aussi
+          AUTH="AUTHORIZATION: basic $B64"
+          pushed=no
+          for i in 1 2 3; do
+            if git -c http.extraheader="$AUTH" push -q origin HEAD:real-results; then pushed=yes; break; fi
+            git -c http.extraheader="$AUTH" pull -q --rebase origin real-results
+          done
+          [ "$pushed" = yes ] || { echo "Publication vers real-results impossible"; exit 1; }
 
       - name: Plafond atteint
         if: inputs.backend == 'meta' && steps.budget.outputs.ok != 'true'

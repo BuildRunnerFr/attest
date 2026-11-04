@@ -11,7 +11,8 @@ case "$kind" in bench|iam|code|studio-iam|injection) ;; *) echo "type inconnu : 
 if curl -s -o /dev/null http://127.0.0.1:5050/; then
   echo "le port 5050 répond déjà : arrête la console précédente avant de relancer"; exit 1
 fi
-python -m lab.app > "$out/lab.log" 2>&1 &
+# La console auditée ne doit jamais voir la clé du modèle : elle est retirée de son environnement.
+env -u MODEL_API_KEY python -m lab.app > "$out/lab.log" 2>&1 &
 LAB=$!
 trap 'kill "$LAB" 2>/dev/null' EXIT
 for _ in $(seq 60); do curl -s -o /dev/null http://127.0.0.1:5050/ && break; sleep 0.5; done

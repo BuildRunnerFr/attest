@@ -65,12 +65,43 @@ def verify_quote_in(quote: str, texts: list) -> bool:
     return any(verify_quote(quote, body) for _, body in texts)
 
 
+# Neutralisation des documents importés : un document piégé ne doit pas pouvoir forger un faux en-tête
+# (« === DORA === »), un faux marqueur de fin de document, ni se faire passer pour une consigne.
+_FAKE_HEADER = re.compile(r"(?m)^([ \t]*)={3,}")
+_ANGLES_OPEN = re.compile(r"<{3,}")
+_ANGLES_CLOSE = re.compile(r">{3,}")
+
+
+def neutralize(text: str) -> str:
+    """Rend inoffensifs « === » en début de ligne et toute séquence « <<< » / « >>> ».
+
+    Ne sert QU'À construire le prompt : la vérification des citations se fait toujours sur le texte original.
+    """
+    s = str(text)
+    s = _ANGLES_OPEN.sub(lambda m: "‹" * len(m.group()), s)
+    s = _ANGLES_CLOSE.sub(lambda m: "›" * len(m.group()), s)
+    return _FAKE_HEADER.sub(lambda m: m.group(1) + "[" + "=" * 2 + "]", s)
+
+
+def frame_documents(texts: list) -> str:
+    """Encadre chaque document (titre et contenu neutralisés) par des marqueurs numérotés non forgeables."""
+    out = []
+    for n, (title, body) in enumerate(texts, 1):
+        t = " ".join(neutralize(title).split())       # titre sur une seule ligne
+        out.append(f"<<<BEGIN UNTRUSTED DOCUMENT {n}>>>\nTitle: {t}\n{neutralize(body)}\n"
+                   f"<<<END UNTRUSTED DOCUMENT {n}>>>")
+    return "\n\n".join(out)
+
+
 def interpret(texts: list, target_id: str) -> dict:
     """texts : liste de (titre, contenu). Renvoie exigences, contrôles proposés et couverture."""
+    # format historique : sert à l'empreinte (text_sha256, inchangée) et au simulateur (mock), qui découpe les lignes
+    # et ignore les en-têtes « === » ; il n'est JAMAIS envoyé à un modèle réel.
     joined = "\n\n".join(f"=== {title} ===\n{body}" for title, body in texts)
+    framed = frame_documents(texts)                   # ce que voit le modèle
     target = targets.get(target_id)
     raw = llm.ask("interpret", prompts.INTERPRET_SYSTEM,
-                  prompts.INTERPRET_USER.format(texts=joined, target_label=targets.label(target_id),
+                  prompts.INTERPRET_USER.format(texts=framed, target_label=targets.label(target_id),
                                                 api_doc=targets.api_doc(target_id), lang=config.lang_name()),
                   mock_ctx={"texts": joined, "kind": target["kind"], "repo": target.get("repo", "")})
     data = llm.extract_json(raw)
@@ -80,6 +111,7 @@ def interpret(texts: list, target_id: str) -> dict:
         if not isinstance(r, dict):
             continue
         quote = str(r.get("quote", "")).strip()
+        # vérification sur les textes ORIGINAUX (jamais sur la version neutralisée envoyée au modèle)
         verified = verify_quote_in(quote, texts)
         testability = str(r.get("testability", "document")).lower()
         testability = testability if testability in TESTABILITY else "document"
