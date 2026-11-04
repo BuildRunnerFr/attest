@@ -38,7 +38,10 @@ L = {
             "Toute correction passe par une demande de changement approuvée par le propriétaire du système, appliquée avec un compte dédié, journalisée, puis vérifiée par le même test (DORA 9(4)(e)).",
             "Chaque événement et chaque preuve sont scellés dans une piste d'audit chaînée (SHA-256).",
         ],
+        "method.noremediation": "Aucune remédiation n'a été appliquée pendant cette mission : chaque constat est remis au propriétaire du système pour un plan d'action, et sa clôture exigera un nouveau test une fois l'écart traité.",
         "limits.title": "Limites",
+        "limits.pit": "Test ponctuel : la configuration a été observée le {date} ; les tests évaluent la conception et la mise en œuvre des contrôles à cette date, pas leur efficacité opérationnelle sur une période.",
+        "limits.pit.code": "Test ponctuel : le dépôt a été examiné le {date} ; les tests évaluent la conception et la mise en œuvre des contrôles à cette date, pas leur efficacité opérationnelle sur une période.",
         "limits.scope.code": "Les tests portent sur le contenu du dépôt à la révision auditée, pas sur l'application déployée ni sur son comportement en production.",
         "limits.scope.generic": "Les tests portent sur la configuration exposée par le système au moment du test, pas sur son efficacité réelle en exploitation.",
         "limits": [
@@ -152,7 +155,10 @@ L = {
             "Every fix goes through a change request approved by the system owner, applied with a dedicated account, logged, then verified by the same test (DORA 9(4)(e)).",
             "Every event and piece of evidence is sealed in a hash-chained audit trail (SHA-256).",
         ],
+        "method.noremediation": "No remediation was applied during this engagement: each finding is handed to the system owner for an action plan, and closing it will require a new test once the gap has been addressed.",
         "limits.title": "Limitations",
+        "limits.pit": "Point-in-time test: the configuration was observed on {date}; the tests assess the design and implementation of the controls at that date, not their operating effectiveness over a period.",
+        "limits.pit.code": "Point-in-time test: the repository was examined on {date}; the tests assess the design and implementation of the controls at that date, not their operating effectiveness over a period.",
         "limits.scope.code": "Tests cover the repository content at the audited revision, not the deployed application or its behaviour in production.",
         "limits.scope.generic": "Tests cover the configuration exposed by the system at the time of testing, not its actual effectiveness in operation.",
         "limits": [

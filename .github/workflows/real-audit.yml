@@ -82,11 +82,17 @@ jobs:
             echo "::error::Secret MODEL_API_KEY absent : Settings > Secrets and variables > Actions"; exit 1
           fi
 
+      # id du registre (ledger.jsonl), calculé une fois par ops/publish.py : le rapport l'affiche, la publication le reprend
+      - name: Identifiant d'exécution
+        id: runid
+        run: echo "id=$(python ops/publish.py --run-id "$KIND" "$BACKEND")" >> "$GITHUB_OUTPUT"
+
       - name: Audit
         id: audit
         if: inputs.backend != 'meta' || steps.budget.outputs.ok == 'true'
         continue-on-error: true
         env:
+          ATTEST_RUN_ID: ${{ steps.runid.outputs.id }}
           ATTEST_BUDGET_USD: ${{ inputs.backend == 'meta' && steps.budget.outputs.remaining || '' }}
           MODEL_API_KEY: ${{ secrets.MODEL_API_KEY }}   # seule l'étape d'audit reçoit la clé
         run: bash ops/real_run.sh "$KIND" out
@@ -95,6 +101,7 @@ jobs:
         if: always() && steps.audit.outcome != 'skipped'
         env:
           RUN_STATUS: ${{ steps.audit.outcome }}
+          ATTEST_RUN_ID: ${{ steps.runid.outputs.id }}
           GH_TOKEN: ${{ github.token }}   # jeton passé à cette seule étape, jamais écrit dans .git/config
         run: |
           python ops/publish.py out results "$KIND" "$BACKEND" "$NOTE"

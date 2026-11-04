@@ -2,9 +2,11 @@
 et ajoute une ligne au registre (ledger.jsonl) : dépense, résultat, commit testé.
 
   python ops/publish.py <sorties> <branche real-results extraite> <type> <backend> [note]
+  python ops/publish.py --run-id <type> <backend>   # affiche l'id du registre (posé avant l'audit : ATTEST_RUN_ID)
 """
 import json
 import os
+import re
 import shutil
 import sys
 import time
@@ -47,11 +49,22 @@ def summarize(src: Path) -> dict:
     return s
 
 
+def run_id(kind: str, backend: str, stamp: str | None = None) -> str:
+    """Id du registre : <AAAAMMJJ-HHMMSS UTC>-<type>-<backend> (ex. 20261104-123009-studio-iam-meta)."""
+    return f"{stamp or time.strftime('%Y%m%d-%H%M%S', time.gmtime())}-{kind}-{backend}"
+
+
 def main():
+    if sys.argv[1] == "--run-id":
+        print(run_id(sys.argv[2], sys.argv[3]))
+        return
     src, root, kind, backend = Path(sys.argv[1]), Path(sys.argv[2]), sys.argv[3], sys.argv[4]
     note = sys.argv[5] if len(sys.argv) > 5 else ""
-    stamp = time.strftime("%Y%m%d-%H%M%S", time.gmtime())
-    dest = root / "runs" / f"{stamp}-{kind}-{backend}"
+    # id posé avant l'audit (ATTEST_RUN_ID, lu par le rapport) : réutilisé s'il a le format du registre
+    rid = os.getenv("ATTEST_RUN_ID", "")
+    m = re.fullmatch(rf"(\d{{8}}-\d{{6}})-{re.escape(kind)}-{re.escape(backend)}", rid)
+    stamp = m.group(1) if m else time.strftime("%Y%m%d-%H%M%S", time.gmtime())
+    dest = root / "runs" / run_id(kind, backend, stamp)
     dest.mkdir(parents=True, exist_ok=True)
     if src.exists():
         for p in src.rglob("*"):

@@ -62,6 +62,23 @@ FIXES = {
     "C4": {"lockout_threshold": 5}, "C5": {"session_timeout_minutes": 15}, "C6": {"admin_audit_log": True},
 }
 
+# Intitulés en anglais (ATTEST_LANG=en) ; le français reste celui de CONTROLS et CODE
+TITLES_EN = {
+    "C1": "MFA for privileged accounts", "C2": "MFA for users", "C3": "Password strength",
+    "C4": "Account lockout", "C5": "Session timeout", "C6": "Administration logging",
+    "C7": "Named privileged accounts",
+    "secrets": "No plaintext secrets in code", "tls": "TLS verification of outbound calls",
+    "hash": "Strong password hashing", "sast": "Static security analysis in CI",
+    "deps": "Pinned and audited dependencies", "testdata": "Synthetic test data",
+    "authlog": "Authentication logging",
+}
+
+
+def _title(key: str, fr: str) -> str:
+    from . import config
+    return TITLES_EN.get(key, fr) if config.lang() == "en" else fr
+
+
 _rng = random.Random(7)
 
 
@@ -108,7 +125,7 @@ print(json.dumps({{"status": "pass" if ok else "fail", "observed": {observed},
 def answer(task: str, user: str, ctx: dict) -> str:
     if task == "plan":
         return json.dumps([
-            {"id": i, "rule": r, "title": t, "objective": o, "expected": e, "severity": sev,
+            {"id": i, "rule": r, "title": _title(i, t), "objective": o, "expected": e, "severity": sev,
              "test_procedure": f"Lecture de la configuration via l'API en lecture seule et comparaison à {r}.",
              "references": REFS[r], "risk": risk, "recommendation": reco, "evidence_page": p,
              "remediation": rem, "_field": f}
@@ -250,7 +267,7 @@ def _clause(line: str) -> str:
 
 def _app_control(cid, source):
     i, r, t, o, e, sev, p, f, rem, risk, reco = next(x for x in CONTROLS if x[0] == cid)
-    return {"rule": r, "title": t, "objective": o, "expected": e, "severity": sev, "references": REFS[r],
+    return {"rule": r, "title": _title(cid, t), "objective": o, "expected": e, "severity": sev, "references": REFS[r],
             "test_procedure": f"Lecture de la configuration via l'API en lecture seule et comparaison à {r}.",
             "risk": risk, "recommendation": reco, "evidence_page": p, "remediation": rem, "_field": f,
             "threshold_source": source}
@@ -258,7 +275,7 @@ def _app_control(cid, source):
 
 def _code_control(key, repo, source):
     rule, t, o, e, sev, refs, risk, reco = CODE[key]
-    return {"rule": rule, "title": t, "objective": o, "expected": e, "severity": sev, "references": refs,
+    return {"rule": rule, "title": _title(key, t), "objective": o, "expected": e, "severity": sev, "references": refs,
             "test_procedure": "Analyse du dépôt via la passerelle en lecture seule (arborescence, fichiers, recherche).",
             "risk": risk, "recommendation": reco, "evidence_page": f"/repo/{repo}/view?path=README.md",
             "remediation": "manual", "_check": key, "threshold_source": source}

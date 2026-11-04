@@ -117,7 +117,18 @@ def limits(state: dict) -> list:
         lim[0] = t("limits.scope.generic")
     if not state.get("remediation_requested", True):
         lim.pop(2)
+    # test ponctuel (conception et mise en œuvre à une date), pas efficacité opérationnelle sur une période
+    date = (state.get("started") or "")[:10]
+    lim.insert(1, t("limits.pit.code" if kind == "code" else "limits.pit").format(date=date))
     return lim
+
+
+def method(state: dict) -> list:
+    """Étapes de la méthode ; sans remédiation demandée, l'étape 5 ne décrit pas de correctif appliqué."""
+    steps = list(t("method"))                     # [référentiel, script, verdict, SAM, correctifs, piste d'audit]
+    if not state.get("remediation_requested", True):
+        steps[4] = t("method.noremediation")
+    return steps
 
 
 def e(x) -> str:
@@ -400,7 +411,7 @@ def write(state: dict, out: Path):
           + "".join(f"<dt>{e(t(k))}</dt><dd>{e(v)}</dd>" for k, v in kv) + "</dl>"
           f'<div class="two"><div><h3>{e(t("m.in"))}</h3><ul>' + "".join(f"<li>{e(x)}</li>" for x in m["scope_in"]) + "</ul></div>"
           f'<div><h3>{e(t("m.out"))}</h3><ul>' + "".join(f"<li>{e(x)}</li>" for x in m["scope_out"]) + "</ul></div></div>"
-          f'<h3>{e(t("method.title"))}</h3><ol>' + "".join(f"<li>{e(x)}</li>" for x in t("method")) + "</ol>"
+          f'<h3>{e(t("method.title"))}</h3><ol>' + "".join(f"<li>{e(x)}</li>" for x in method(state)) + "</ol>"
           f'<h3>{e(t("limits.title"))}</h3><ul>' + "".join(f"<li>{e(x)}</li>" for x in limits(state)) + "</ul></section>")
 
     # ---- 3. tableau des constats
