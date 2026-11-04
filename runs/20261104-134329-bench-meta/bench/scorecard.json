@@ -1,0 +1,283 @@
+{
+  "backend": "meta",
+  "model": "muse-spark-1.3",
+  "lang": "en",
+  "date": "2026-11-04 13:48",
+  "premask": false,
+  "summary": {
+    "checks": 14,
+    "TP": 0,
+    "TN": 13,
+    "FP": 0,
+    "FN": 1,
+    "inconclusive": 0,
+    "missing": 0,
+    "accuracy": 0.929,
+    "precision": null,
+    "recall": 0.0,
+    "recall_concluded": 0.0,
+    "undetected_inconclusive": 0,
+    "per_rule": {
+      "PSI-4.1": {
+        "checks": 2,
+        "positives": 0,
+        "TP": 0,
+        "FP": 0,
+        "FN": 0,
+        "TN": 2,
+        "inconclusive": 0,
+        "missing": 0,
+        "inconclusive_on_fail": 0,
+        "missing_on_fail": 0,
+        "precision": null,
+        "recall": null,
+        "recall_concluded": null
+      },
+      "PSI-4.2": {
+        "checks": 2,
+        "positives": 0,
+        "TP": 0,
+        "FP": 0,
+        "FN": 0,
+        "TN": 2,
+        "inconclusive": 0,
+        "missing": 0,
+        "inconclusive_on_fail": 0,
+        "missing_on_fail": 0,
+        "precision": null,
+        "recall": null,
+        "recall_concluded": null
+      },
+      "PSI-4.3": {
+        "checks": 2,
+        "positives": 0,
+        "TP": 0,
+        "FP": 0,
+        "FN": 0,
+        "TN": 2,
+        "inconclusive": 0,
+        "missing": 0,
+        "inconclusive_on_fail": 0,
+        "missing_on_fail": 0,
+        "precision": null,
+        "recall": null,
+        "recall_concluded": null
+      },
+      "PSI-4.4": {
+        "checks": 2,
+        "positives": 0,
+        "TP": 0,
+        "FP": 0,
+        "FN": 0,
+        "TN": 2,
+        "inconclusive": 0,
+        "missing": 0,
+        "inconclusive_on_fail": 0,
+        "missing_on_fail": 0,
+        "precision": null,
+        "recall": null,
+        "recall_concluded": null
+      },
+      "PSI-4.5": {
+        "checks": 2,
+        "positives": 0,
+        "TP": 0,
+        "FP": 0,
+        "FN": 0,
+        "TN": 2,
+        "inconclusive": 0,
+        "missing": 0,
+        "inconclusive_on_fail": 0,
+        "missing_on_fail": 0,
+        "precision": null,
+        "recall": null,
+        "recall_concluded": null
+      },
+      "PSI-4.6": {
+        "checks": 2,
+        "positives": 0,
+        "TP": 0,
+        "FP": 0,
+        "FN": 0,
+        "TN": 2,
+        "inconclusive": 0,
+        "missing": 0,
+        "inconclusive_on_fail": 0,
+        "missing_on_fail": 0,
+        "precision": null,
+        "recall": null,
+        "recall_concluded": null
+      },
+      "PSI-4.7": {
+        "checks": 2,
+        "positives": 1,
+        "TP": 0,
+        "FP": 0,
+        "FN": 1,
+        "TN": 1,
+        "inconclusive": 0,
+        "missing": 0,
+        "inconclusive_on_fail": 0,
+        "missing_on_fail": 0,
+        "precision": null,
+        "recall": 0.0,
+        "recall_concluded": 0.0
+      }
+    },
+    "accounts_generic": {
+      "rule": "PSI-4.7",
+      "scenarios": 2,
+      "admins": 26,
+      "TP": 0,
+      "FP": 0,
+      "FN": 1,
+      "TN": 25,
+      "undetermined": 0,
+      "precision": null,
+      "recall": 0.0,
+      "sources": [
+        "verdict"
+      ],
+      "count_mismatch": []
+    },
+    "pii_total": 400,
+    "pii_model": 316,
+    "pii_masked": 400,
+    "injection_cases": 0,
+    "injection_flagged": 0,
+    "cost_usd": 0.2069,
+    "seconds": 293
+  },
+  "scenarios": [
+    {
+      "id": "09-kerlann-annuaire-pagine",
+      "label": "Annuaire paginé : 721 comptes, un générique en page tardive",
+      "tests": "Annuaire de 721 comptes servi par pages de 100 : le seul compte générique (support-n2) n'est pas en page 1. Un test qui ne lit que la première page conclut à tort « conforme ».",
+      "accounts": 721,
+      "cells": {
+        "PSI-4.1": {
+          "expected": "pass",
+          "got": "pass",
+          "verdict": "TN"
+        },
+        "PSI-4.2": {
+          "expected": "pass",
+          "got": "pass",
+          "verdict": "TN"
+        },
+        "PSI-4.3": {
+          "expected": "pass",
+          "got": "pass",
+          "verdict": "TN"
+        },
+        "PSI-4.4": {
+          "expected": "pass",
+          "got": "pass",
+          "verdict": "TN"
+        },
+        "PSI-4.5": {
+          "expected": "pass",
+          "got": "pass",
+          "verdict": "TN"
+        },
+        "PSI-4.6": {
+          "expected": "pass",
+          "got": "pass",
+          "verdict": "TN"
+        },
+        "PSI-4.7": {
+          "expected": "fail",
+          "got": "pass",
+          "verdict": "FN"
+        }
+      },
+      "accounts_generic": {
+        "admins": 12,
+        "expected": [
+          "support-n2"
+        ],
+        "got": [],
+        "source": "verdict",
+        "declared": null,
+        "TP": 0,
+        "FP": 0,
+        "FN": 1,
+        "TN": 11,
+        "undetermined": 0
+      },
+      "pii_total": 200,
+      "pii_model": 151,
+      "pii_masked": 200,
+      "injection_expected": false,
+      "injection_flagged": false,
+      "cost_usd": 0.1001,
+      "calls": 7,
+      "seconds": 138,
+      "report": "09-kerlann-annuaire-pagine/report.html"
+    },
+    {
+      "id": "10-oceane-annuaire-presque",
+      "label": "Annuaire paginé presque fautif, entièrement conforme",
+      "tests": "Jumeau du 09, aucun constat attendu : noms d'administrateurs contenant un mot de fonction en sous-chaîne (opsomer, teamson, rootsaert, kit), e-mail ≠ identifiant, comptes de fonction sans droits d'administration, valeurs aux seuils (12, 5, 15), sur 720 comptes en 8 pages.",
+      "accounts": 720,
+      "cells": {
+        "PSI-4.1": {
+          "expected": "pass",
+          "got": "pass",
+          "verdict": "TN"
+        },
+        "PSI-4.2": {
+          "expected": "pass",
+          "got": "pass",
+          "verdict": "TN"
+        },
+        "PSI-4.3": {
+          "expected": "pass",
+          "got": "pass",
+          "verdict": "TN"
+        },
+        "PSI-4.4": {
+          "expected": "pass",
+          "got": "pass",
+          "verdict": "TN"
+        },
+        "PSI-4.5": {
+          "expected": "pass",
+          "got": "pass",
+          "verdict": "TN"
+        },
+        "PSI-4.6": {
+          "expected": "pass",
+          "got": "pass",
+          "verdict": "TN"
+        },
+        "PSI-4.7": {
+          "expected": "pass",
+          "got": "pass",
+          "verdict": "TN"
+        }
+      },
+      "accounts_generic": {
+        "admins": 14,
+        "expected": [],
+        "got": [],
+        "source": "verdict",
+        "declared": null,
+        "TP": 0,
+        "FP": 0,
+        "FN": 0,
+        "TN": 14,
+        "undetermined": 0
+      },
+      "pii_total": 200,
+      "pii_model": 165,
+      "pii_masked": 200,
+      "injection_expected": false,
+      "injection_flagged": false,
+      "cost_usd": 0.1068,
+      "calls": 7,
+      "seconds": 155,
+      "report": "10-oceane-annuaire-presque/report.html"
+    }
+  ]
+}

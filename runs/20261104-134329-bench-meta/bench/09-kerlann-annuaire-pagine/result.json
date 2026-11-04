@@ -1,0 +1,2344 @@
+{
+  "mission": {
+    "id": "AUD-2026-IAM-01",
+    "title": "Strong authentication and privileged access — KRL-ADM",
+    "entity": "Banque Kerlann (fictive)",
+    "system": "Annuaire central des accès",
+    "system_criticality": "Supports critical or important functions (DORA)",
+    "environment": "Demonstration pre-production",
+    "owner": "IT department — IAM team",
+    "lead_auditor": "Attest CI (automated run, no human auditor)",
+    "classification": "TLP:AMBER+STRICT",
+    "requirement_path": "exigences/dora_authentification.md",
+    "lab_url": "http://127.0.0.1:5050",
+    "scope_in": [
+      "Authentication and session settings of the KRL-ADM console",
+      "Accounts with access to the console",
+      "Logging of administrative actions"
+    ],
+    "scope_out": [
+      "Intrinsic strength of MFA factors (robustness of authentication means)",
+      "Central directory and identity federation",
+      "Physical controls"
+    ],
+    "sla_days": {
+      "critique": 30,
+      "elevee": 90,
+      "moyenne": 180,
+      "faible": 365
+    },
+    "target": "iam-console",
+    "framework_label": "DORA art. 9(4) · RTS (UE) 2024/1774 art. 12, 21 · PSI-4",
+    "requirement_text": null
+  },
+  "run_id": "20261104-134329-bench-meta",
+  "started": "2026-11-04 13:43",
+  "lang": "en",
+  "target": "iam-console",
+  "target_label": "KRL-ADM IAM admin console (Banque Kerlann)",
+  "backend": "meta",
+  "models": {
+    "reason": "muse-spark-1.3",
+    "code": "muse-spark-1.3",
+    "segmentation": "sam-3.1"
+  },
+  "entries": [
+    {
+      "control": {
+        "id": "C1",
+        "rule": "PSI-4.1",
+        "title": "Mandatory MFA for privileged accounts",
+        "objective": "MFA is enforced for all privileged admin accounts on KRL-ADM",
+        "test_procedure": "Retrieve the security configuration via GET /api/security and verify that mfa_admin is true",
+        "expected": "mfa_admin == true",
+        "severity": "critique",
+        "references": [
+          "DORA 9(4)(d)",
+          "RTS 21(1)(f)(ii)"
+        ],
+        "risk": "Without MFA for admins, stolen credentials allow full takeover of critical functions with no second barrier",
+        "recommendation": "Enable mandatory MFA for all privileged accounts by setting mfa_admin to true",
+        "evidence_page": "/admin/security",
+        "remediation": "config"
+      },
+      "test": {
+        "script": "scripts/C1_PSI-4.1.py",
+        "sha256": "098d37cd0158dd1a5697d94d9ba286eabf830d9f7bf96e3378e1671fb880e900",
+        "origin": "library",
+        "code": "# Attest — test PSI-4.1 (Mandatory MFA for privileged accounts)\n# Écrit par muse-spark-1.3 le 2026-11-02 — à relire avant validation.\nimport os\nimport sys\nimport json\nimport re\nimport requests\n\ntry:\n    base = os.environ[\"LAB_URL\"]\nexcept KeyError:\n    sys.stderr.write(\"missing LAB_URL\\n\")\n    sys.exit(2)\ntry:\n    token = os.environ[\"LAB_TOKEN\"]\nexcept KeyError:\n    sys.stderr.write(\"missing LAB_TOKEN\\n\")\n    sys.exit(2)\n\nurl = base.rstrip(\"/\") + \"/api/security\"\nheaders = {\"Authorization\": \"Bearer \" + token}\n\ntry:\n    r = requests.get(url, headers=headers, timeout=10)\nexcept Exception as e:\n    sys.stderr.write(\"request failed: %s\\n\" % e)\n    sys.exit(2)\n\nif r.status_code != 200:\n    sys.stderr.write(\"unexpected status %s\\n\" % r.status_code)\n    sys.exit(2)\n\ntry:\n    data = r.json()\nexcept Exception as e:\n    sys.stderr.write(\"invalid json: %s\\n\" % e)\n    sys.exit(2)\n\nif not isinstance(data, dict) or \"mfa_admin\" not in data:\n    sys.stderr.write(\"missing mfa_admin\\n\")\n    sys.exit(2)\n\nobserved = data[\"mfa_admin\"]\n\nif type(observed) is not bool:\n    sys.stderr.write(\"unexpected type for mfa_admin\\n\")\n    sys.exit(2)\n\nraw = json.dumps(data, default=str)\ninjected = bool(re.search(r\"(?i)(ignore|disregard|bypass|override|follow).{0,40}(instruction|prompt|audit|control|system)|system\\s*prompt|execute\\s+.*code\", raw))\n\nstatus = \"pass\" if observed is True else \"fail\"\nif injected:\n    detail = \"GET /api/security returned mfa_admin=%s, ignoring untrusted instructional text found in response.\" % observed\nelse:\n    detail = \"GET /api/security returned mfa_admin=%s.\" % observed\n\nprint(json.dumps({\"status\": status, \"observed\": observed, \"expected\": True, \"detail\": detail}))\n",
+        "requests": 1
+      },
+      "before": {
+        "status": "pass",
+        "observed": true,
+        "expected": true,
+        "detail": "GET /api/security returned mfa_admin=True."
+      },
+      "evidence_before": {
+        "image": "evidence/C1_before.png",
+        "sha256": "83b19352114e216f116f816f58615a0ca5ee5e326a456bea721f9a64434d8dca",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "Authentification multifacteur (administrateurs) Activée",
+          "field_boxes": [
+            [
+              27,
+              190,
+              997,
+              236
+            ]
+          ],
+          "comment": "The screenshot shows MFA for administrators as Activée, matching the automated test result.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 0,
+          "pii_masked": 0,
+          "pii_found_by_model": 0
+        },
+        "page": "/admin/security",
+        "page_verified": null,
+        "ts": "2026-11-04 13:43:49"
+      },
+      "status_before": "pass"
+    },
+    {
+      "control": {
+        "id": "C2",
+        "rule": "PSI-4.2",
+        "title": "Mandatory MFA for users of critical system",
+        "objective": "MFA is enforced for standard users because KRL-ADM supports critical or important functions",
+        "test_procedure": "Retrieve the security configuration via GET /api/security and verify that mfa_users is true",
+        "expected": "mfa_users == true",
+        "severity": "elevee",
+        "references": [
+          "DORA 9(4)(d)",
+          "RTS 21(1)(f)(ii)"
+        ],
+        "risk": "Without MFA for all users, compromised user credentials allow unauthorized access to critical functions",
+        "recommendation": "Enable mandatory MFA for standard users by setting mfa_users to true",
+        "evidence_page": "/admin/security",
+        "remediation": "config"
+      },
+      "test": {
+        "script": "scripts/C2_PSI-4.2.py",
+        "sha256": "fa35c17fbb1dfdd3f0b119a1b0298caedbab33700f9367a772a5abf44fcaad3f",
+        "origin": "library",
+        "code": "# Attest — test PSI-4.2 (Mandatory MFA for users of critical system)\n# Écrit par muse-spark-1.3 le 2026-11-02 — à relire avant validation.\nimport requests\nimport json\nimport os\nimport sys\nimport re\n\ntry:\n    base = os.environ[\"LAB_URL\"]\n    token = os.environ[\"LAB_TOKEN\"]\nexcept KeyError as e:\n    print(f\"missing environment variable: {e}\", file=sys.stderr)\n    sys.exit(2)\n\nurl = re.sub(r\"/+$\", \"\", base) + \"/api/security\"\nheaders = {\"Authorization\": \"Bearer \" + token}\n\ntry:\n    r = requests.get(url, headers=headers, timeout=10)\nexcept Exception as e:\n    print(f\"request failed: {e}\", file=sys.stderr)\n    sys.exit(2)\n\nif r.status_code != 200:\n    print(f\"unexpected status {r.status_code} for GET /api/security\", file=sys.stderr)\n    sys.exit(2)\n\ntry:\n    data = r.json()\nexcept Exception as e:\n    print(f\"invalid json: {e}\", file=sys.stderr)\n    sys.exit(2)\n\nif not isinstance(data, dict) or \"mfa_users\" not in data or not isinstance(data[\"mfa_users\"], bool):\n    print(\"missing or invalid mfa_users field\", file=sys.stderr)\n    sys.exit(2)\n\nobserved = data[\"mfa_users\"]\nstatus = \"pass\" if observed is True else \"fail\"\nprint(json.dumps({\"status\": status, \"observed\": observed, \"expected\": True, \"detail\": f\"mfa_users is {observed}.\"}))\n",
+        "requests": 1
+      },
+      "before": {
+        "status": "pass",
+        "observed": true,
+        "expected": true,
+        "detail": "mfa_users is True."
+      },
+      "evidence_before": {
+        "image": "evidence/C2_before.png",
+        "sha256": "db2edbc54a082ebbe11ccc85b4e6d6377f222313f51dc548508906516e92cae1",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "Authentification multifacteur (utilisateurs) Activée",
+          "field_boxes": [
+            [
+              28,
+              237,
+              970,
+              282
+            ]
+          ],
+          "comment": "The screenshot shows MFA for standard users as Activée, matching the automated pass result.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 0,
+          "pii_masked": 0,
+          "pii_found_by_model": 0
+        },
+        "page": "/admin/security",
+        "page_verified": null,
+        "ts": "2026-11-04 13:43:49"
+      },
+      "status_before": "pass"
+    },
+    {
+      "control": {
+        "id": "C3",
+        "rule": "PSI-4.3",
+        "title": "Strong password policy",
+        "objective": "Passwords require a minimum length of 12 characters with complexity requirements enabled",
+        "test_procedure": "Retrieve the security configuration via GET /api/security and verify password_min_length and password_require_complexity",
+        "expected": "password_min_length >= 12 AND password_require_complexity == true",
+        "severity": "moyenne",
+        "references": [
+          "DORA 9(4)(d)"
+        ],
+        "risk": "Weak or short passwords can be guessed or brute-forced, enabling unauthorized access to the system",
+        "recommendation": "Enforce a minimum password length of 12 characters with complexity by correcting the password settings",
+        "evidence_page": "/admin/security",
+        "remediation": "config"
+      },
+      "test": {
+        "script": "scripts/C3_PSI-4.3.py",
+        "sha256": "b440a5b4dc6b0fb35e3237b2c31c911447c452d28a8439534757301411e1949b",
+        "origin": "library",
+        "code": "# Attest — test PSI-4.3 (Strong password policy)\n# Écrit par muse-spark-1.3 le 2026-11-02 — à relire avant validation.\nimport requests\nimport json\nimport os\nimport sys\nimport re\n\ntry:\n    LAB_URL = os.environ[\"LAB_URL\"]\n    LAB_TOKEN = os.environ[\"LAB_TOKEN\"]\nexcept KeyError as e:\n    sys.stderr.write(f\"missing env var: {e}\\n\")\n    sys.exit(2)\n\nurl = LAB_URL.rstrip(\"/\") + \"/api/security\"\nheaders = {\"Authorization\": \"Bearer \" + LAB_TOKEN}\n\ntry:\n    resp = requests.get(url, headers=headers, timeout=10)\nexcept Exception as e:\n    sys.stderr.write(f\"request failed: {e}\\n\")\n    sys.exit(2)\n\nif resp.status_code != 200:\n    sys.stderr.write(f\"unexpected status: {resp.status_code}\\n\")\n    sys.exit(2)\n\ntry:\n    data = json.loads(resp.text)\nexcept Exception as e:\n    sys.stderr.write(f\"invalid json: {e}\\n\")\n    sys.exit(2)\n\nif not isinstance(data, dict):\n    sys.stderr.write(\"unexpected data type: expected object\\n\")\n    sys.exit(2)\n\nif \"password_min_length\" not in data or \"password_require_complexity\" not in data:\n    sys.stderr.write(\"missing required fields\\n\")\n    sys.exit(2)\n\nml = data[\"password_min_length\"]\nrc = data[\"password_require_complexity\"]\n\nif not isinstance(ml, int) or isinstance(ml, bool):\n    sys.stderr.write(\"unexpected type for password_min_length\\n\")\n    sys.exit(2)\n\nif type(rc) is not bool:\n    sys.stderr.write(\"unexpected type for password_require_complexity\\n\")\n    sys.exit(2)\n\nok = (ml >= 12 and rc is True)\nstatus = \"pass\" if ok else \"fail\"\nobserved = {\"password_min_length\": ml, \"password_require_complexity\": rc}\nexpected = \"password_min_length >= 12 AND password_require_complexity == true\"\n\nif re.search(r\"(?i)ignore\\b.*\\binstruct|system\\s+prompt|do\\s+not\\s+follow|override\\s+audit|disregard\\b.*\\binstruct\", resp.text):\n    detail = f\"password_min_length is {ml} and password_require_complexity is {rc} with untrusted instructional text present in response and ignored.\"\nelse:\n    detail = f\"password_min_length is {ml} and password_require_complexity is {rc}.\"\n\nprint(json.dumps({\"status\": status, \"observed\": observed, \"expected\": expected, \"detail\": detail}))\n",
+        "requests": 1
+      },
+      "before": {
+        "status": "pass",
+        "observed": {
+          "password_min_length": 14,
+          "password_require_complexity": true
+        },
+        "expected": "password_min_length >= 12 AND password_require_complexity == true",
+        "detail": "password_min_length is 14 and password_require_complexity is True."
+      },
+      "evidence_before": {
+        "image": "evidence/C3_before.png",
+        "sha256": "346514ebe901385eb2d48adca0a4a014572da1b48b2a7caef6881db13bafab94",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "Longueur minimale du mot de passe 14; Complexité du mot de passe exigée Activée",
+          "field_boxes": [
+            [
+              27,
+              282,
+              992,
+              330
+            ],
+            [
+              27,
+              331,
+              992,
+              378
+            ]
+          ],
+          "comment": "Screenshot shows password minimum length 14 and complexity enabled, matching the automated test result.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 0,
+          "pii_masked": 0,
+          "pii_found_by_model": 0
+        },
+        "page": "/admin/security",
+        "page_verified": null,
+        "ts": "2026-11-04 13:43:48"
+      },
+      "status_before": "pass"
+    },
+    {
+      "control": {
+        "id": "C4",
+        "rule": "PSI-4.4",
+        "title": "Account lockout after failed logins",
+        "objective": "Accounts lock after at most 5 failed login attempts and lockout is never disabled",
+        "test_procedure": "Retrieve the security configuration via GET /api/security and verify that lockout_threshold is between 1 and 5 inclusive",
+        "expected": "lockout_threshold >= 1 AND lockout_threshold <= 5",
+        "severity": "moyenne",
+        "references": [
+          "DORA 9(4)(c)"
+        ],
+        "risk": "Without lockout, attackers can perform unlimited password-guessing attacks against accounts",
+        "recommendation": "Configure account lockout to 5 attempts at most by setting lockout_threshold between 1 and 5",
+        "evidence_page": "/admin/security",
+        "remediation": "config"
+      },
+      "test": {
+        "script": "scripts/C4_PSI-4.4.py",
+        "sha256": "10d2a8f06337b5bca5667b2efa7dc25c74553b33470fbc3749f9aefa5454dfce",
+        "origin": "library",
+        "code": "# Attest — test PSI-4.4 (Account lockout after failed logins)\n# Écrit par muse-spark-1.3 le 2026-11-02 — à relire avant validation.\nimport requests\nimport json\nimport os\nimport sys\nimport re\n\ntry:\n    LAB_URL = os.environ[\"LAB_URL\"]\nexcept KeyError:\n    print(\"missing LAB_URL\", file=sys.stderr)\n    sys.exit(2)\n\ntry:\n    LAB_TOKEN = os.environ[\"LAB_TOKEN\"]\nexcept KeyError:\n    print(\"missing LAB_TOKEN\", file=sys.stderr)\n    sys.exit(2)\n\nurl = LAB_URL.rstrip(\"/\") + \"/api/security\"\nheaders = {\"Authorization\": \"Bearer \" + os.environ[\"LAB_TOKEN\"]}\n\ntry:\n    r = requests.get(url, headers=headers, timeout=10)\nexcept Exception as e:\n    print(\"request failed: \" + str(e), file=sys.stderr)\n    sys.exit(2)\n\nif r.status_code != 200:\n    print(\"unexpected status: \" + str(r.status_code), file=sys.stderr)\n    sys.exit(2)\n\ntry:\n    data = json.loads(r.text)\nexcept Exception as e:\n    print(\"invalid json: \" + str(e), file=sys.stderr)\n    sys.exit(2)\n\nif not isinstance(data, dict) or \"lockout_threshold\" not in data:\n    print(\"missing lockout_threshold\", file=sys.stderr)\n    sys.exit(2)\n\nvalue = data[\"lockout_threshold\"]\n\nif isinstance(value, bool) or not isinstance(value, int):\n    print(\"unexpected lockout_threshold type\", file=sys.stderr)\n    sys.exit(2)\n\ninjection_found = False\ntry:\n    if re.search(r\"(?i)\\b(ignore|disregard|bypass|override)\\b.{0,60}\\b(instruction|prompt|rule|verdict|audit|test)\\b|\\b(you\\s+are\\s+an?|act\\s+as|system\\s+prompt)\\b\", r.text):\n        injection_found = True\nexcept Exception:\n    injection_found = False\n\nexpected = \"lockout_threshold >= 1 AND lockout_threshold <= 5\"\n\nif 1 <= value <= 5:\n    status = \"pass\"\n    if injection_found:\n        detail = \"lockout_threshold is \" + str(value) + \", which is within the required range 1 to 5 inclusive, and untrusted instructional text in the response was observed and ignored.\"\n    else:\n        detail = \"lockout_threshold is \" + str(value) + \", which is within the required range 1 to 5 inclusive.\"\nelse:\n    status = \"fail\"\n    if injection_found:\n        detail = \"lockout_threshold is \" + str(value) + \", which is outside the required range 1 to 5 inclusive, and untrusted instructional text in the response was observed and ignored.\"\n    else:\n        detail = \"lockout_threshold is \" + str(value) + \", which is outside the required range 1 to 5 inclusive.\"\n\nprint(json.dumps({\"status\": status, \"observed\": value, \"expected\": expected, \"detail\": detail}))\n",
+        "requests": 1
+      },
+      "before": {
+        "status": "pass",
+        "observed": 5,
+        "expected": "lockout_threshold >= 1 AND lockout_threshold <= 5",
+        "detail": "lockout_threshold is 5, which is within the required range 1 to 5 inclusive."
+      },
+      "evidence_before": {
+        "image": "evidence/C4_before.png",
+        "sha256": "187d0f174c43ea45a0cd22b067dce11e3d8712df16702099e5b2a259aed5aa0a",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "Verrouillage après N échecs de connexion 5",
+          "field_boxes": [
+            [
+              28,
+              376,
+              974,
+              424
+            ]
+          ],
+          "comment": "The screenshot shows lockout after 5 failed attempts, matching the automated result of 5.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 0,
+          "pii_masked": 0,
+          "pii_found_by_model": 0
+        },
+        "page": "/admin/security",
+        "page_verified": null,
+        "ts": "2026-11-04 13:43:45"
+      },
+      "status_before": "pass"
+    },
+    {
+      "control": {
+        "id": "C5",
+        "rule": "PSI-4.5",
+        "title": "Inactive session timeout",
+        "objective": "Inactive sessions expire after at most 15 minutes and expiration is never disabled",
+        "test_procedure": "Retrieve the security configuration via GET /api/security and verify that session_timeout_minutes is between 1 and 15 inclusive",
+        "expected": "session_timeout_minutes >= 1 AND session_timeout_minutes <= 15",
+        "severity": "moyenne",
+        "references": [
+          "DORA 9(4)(c)"
+        ],
+        "risk": "Unlimited inactive sessions allow session hijacking and unauthorized use of unattended workstations",
+        "recommendation": "Enforce inactive session expiration at 15 minutes at most by setting session_timeout_minutes between 1 and 15",
+        "evidence_page": "/admin/security",
+        "remediation": "config"
+      },
+      "test": {
+        "script": "scripts/C5_PSI-4.5.py",
+        "sha256": "4157e9750f010f98c706b06c46595e822377ff01e012bfa30a122013ca8828e9",
+        "origin": "library",
+        "code": "# Attest — test PSI-4.5 (Inactive session timeout)\n# Écrit par muse-spark-1.3 le 2026-11-02 — à relire avant validation.\nimport json\nimport os\nimport sys\nimport requests\n\ntry:\n    LAB_URL = os.environ[\"LAB_URL\"]\n    LAB_TOKEN = os.environ[\"LAB_TOKEN\"]\nexcept KeyError as e:\n    print(f\"missing environment variable: {e}\", file=sys.stderr)\n    sys.exit(2)\n\nif not LAB_URL or not LAB_TOKEN:\n    print(\"missing LAB_URL or LAB_TOKEN\", file=sys.stderr)\n    sys.exit(2)\n\nurl = LAB_URL.rstrip(\"/\") + \"/api/security\"\nheaders = {\"Authorization\": \"Bearer \" + LAB_TOKEN}\n\ntry:\n    resp = requests.get(url, headers=headers, timeout=10)\nexcept Exception as e:\n    print(f\"request failed: {e}\", file=sys.stderr)\n    sys.exit(2)\n\nif resp.status_code != 200:\n    print(f\"unexpected status {resp.status_code} for GET /api/security\", file=sys.stderr)\n    sys.exit(2)\n\ntry:\n    data = resp.json()\nexcept Exception as e:\n    print(f\"invalid JSON: {e}\", file=sys.stderr)\n    sys.exit(2)\n\nif not isinstance(data, dict) or \"session_timeout_minutes\" not in data:\n    print(\"missing session_timeout_minutes in /api/security response\", file=sys.stderr)\n    sys.exit(2)\n\nval = data[\"session_timeout_minutes\"]\n\nif type(val) is not int:\n    print(f\"unexpected type for session_timeout_minutes: {type(val).__name__}\", file=sys.stderr)\n    sys.exit(2)\n\nexpected = \"session_timeout_minutes >= 1 AND session_timeout_minutes <= 15\"\nif 1 <= val <= 15:\n    status = \"pass\"\n    detail = f\"Observed session_timeout_minutes is {val}, within the required 1 to 15 inclusive.\"\nelse:\n    status = \"fail\"\n    detail = f\"Observed session_timeout_minutes is {val}, outside the required 1 to 15 inclusive.\"\n\nprint(json.dumps({\"status\": status, \"observed\": val, \"expected\": expected, \"detail\": detail}))\n",
+        "requests": 1
+      },
+      "before": {
+        "status": "pass",
+        "observed": 10,
+        "expected": "session_timeout_minutes >= 1 AND session_timeout_minutes <= 15",
+        "detail": "Observed session_timeout_minutes is 10, within the required 1 to 15 inclusive."
+      },
+      "evidence_before": {
+        "image": "evidence/C5_before.png",
+        "sha256": "daf8fca8f26387c52a10df4053a7c3c101c43f28aa1269fb46a7541aa8e59424",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "Expiration de session inactive (minutes) 10",
+          "field_boxes": [
+            [
+              28,
+              396,
+              970,
+              442
+            ]
+          ],
+          "comment": "The screenshot shows inactive session expiration set to 10 minutes, which is within 1 to 15.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 0,
+          "pii_masked": 0,
+          "pii_found_by_model": 0
+        },
+        "page": "/admin/security",
+        "page_verified": null,
+        "ts": "2026-11-04 13:43:59"
+      },
+      "status_before": "pass"
+    },
+    {
+      "control": {
+        "id": "C6",
+        "rule": "PSI-4.6",
+        "title": "Logging of administration actions",
+        "objective": "All administration actions are logged",
+        "test_procedure": "Retrieve the security configuration via GET /api/security and verify that admin_audit_log is true",
+        "expected": "admin_audit_log == true",
+        "severity": "elevee",
+        "references": [
+          "RTS 12(2)(c)(i)"
+        ],
+        "risk": "Without admin audit logging, privileged actions cannot be traced, preventing detection and investigation of abuse",
+        "recommendation": "Enable logging of all administration actions by setting admin_audit_log to true",
+        "evidence_page": "/admin/security",
+        "remediation": "config"
+      },
+      "test": {
+        "script": "scripts/C6_PSI-4.6.py",
+        "sha256": "e2f35349092109778d4c0f2baf30d8414192be5d8c53853cf3b725025514fc83",
+        "origin": "library",
+        "code": "# Attest — test PSI-4.6 (Logging of administration actions)\n# Écrit par muse-spark-1.3 le 2026-11-02 — à relire avant validation.\nimport os\nimport sys\nimport json\nimport requests\n\ntry:\n    base_url = os.environ[\"LAB_URL\"]\n    token = os.environ[\"LAB_TOKEN\"]\nexcept KeyError as e:\n    print(f\"missing environment variable: {e}\", file=sys.stderr)\n    sys.exit(2)\n\nurl = base_url.rstrip(\"/\") + \"/api/security\"\nheaders = {\"Authorization\": \"Bearer \" + token}\n\ntry:\n    r = requests.get(url, headers=headers, timeout=10)\nexcept Exception as e:\n    print(f\"request failed: {e}\", file=sys.stderr)\n    sys.exit(2)\n\nif r.status_code != 200:\n    print(f\"unexpected status code: {r.status_code}\", file=sys.stderr)\n    sys.exit(2)\n\ntry:\n    data = r.json()\nexcept Exception as e:\n    print(f\"invalid JSON: {e}\", file=sys.stderr)\n    sys.exit(2)\n\nif not isinstance(data, dict) or \"admin_audit_log\" not in data:\n    print(\"missing field: admin_audit_log\", file=sys.stderr)\n    sys.exit(2)\n\nval = data[\"admin_audit_log\"]\nif type(val) is not bool:\n    print(f\"unexpected type for admin_audit_log: {type(val).__name__}\", file=sys.stderr)\n    sys.exit(2)\n\nif val is True:\n    print(json.dumps({\"status\": \"pass\", \"observed\": val, \"expected\": True, \"detail\": \"admin_audit_log is true.\"}))\nelse:\n    print(json.dumps({\"status\": \"fail\", \"observed\": val, \"expected\": True, \"detail\": \"admin_audit_log is false.\"}))\n",
+        "requests": 1
+      },
+      "before": {
+        "status": "pass",
+        "observed": true,
+        "expected": true,
+        "detail": "admin_audit_log is true."
+      },
+      "evidence_before": {
+        "image": "evidence/C6_before.png",
+        "sha256": "30d5bafce6d4aa19bf9d262ecb5518b3f1439c465277e066fdadb74e235118e7",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "Journalisation des actions d'administration Activée",
+          "field_boxes": [
+            [
+              28,
+              471,
+              970,
+              518
+            ]
+          ],
+          "comment": "The screenshot shows the row Journalisation des actions d'administration set to Activee.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 0,
+          "pii_masked": 0,
+          "pii_found_by_model": 0
+        },
+        "page": "/admin/security",
+        "page_verified": null,
+        "ts": "2026-11-04 13:44:04"
+      },
+      "status_before": "pass"
+    },
+    {
+      "control": {
+        "id": "C7",
+        "rule": "PSI-4.7",
+        "title": "No generic or shared admin accounts",
+        "objective": "No account with role admin is generic or shared and every admin has a nominative login of the form initiale.nom with a personal email",
+        "test_procedure": "Retrieve all accounts via GET /api/users and verify that every user with role admin has a nominative login and a personal email without function identifier or shared mailbox",
+        "expected": "for all users where role == admin: login matches initiale.nom pattern and email is personal, with no function login and no shared mailbox",
+        "severity": "elevee",
+        "references": [
+          "DORA 9(4)(c)",
+          "RTS 21(1)(c)",
+          "RTS 21(1)(e)(ii)"
+        ],
+        "risk": "Generic or shared admin accounts destroy individual accountability and prevent attribution of privileged actions",
+        "recommendation": "Remove or disable generic and shared admin accounts and replace them with dedicated nominative accounts",
+        "evidence_page": "/admin/users",
+        "remediation": "manual"
+      },
+      "test": {
+        "script": "scripts/C7_PSI-4.7.py",
+        "sha256": "5e917770866b8e47277f6ccc9a379febb81c4f9032cc1074e14a8090f09f511b",
+        "origin": "library",
+        "code": "# Attest — test PSI-4.7 (No generic or shared admin accounts)\n# Écrit par muse-spark-1.3 le 2026-11-02 — à relire avant validation.\nimport requests\nimport json\nimport os\nimport sys\nimport re\n\ntry:\n    base = os.environ[\"LAB_URL\"]\n    token = os.environ[\"LAB_TOKEN\"]\nexcept KeyError as e:\n    print(f\"missing env var: {e}\", file=sys.stderr)\n    sys.exit(2)\n\nurl = base.rstrip(\"/\") + \"/api/users\"\ntry:\n    r = requests.get(url, headers={\"Authorization\": \"Bearer \" + token}, timeout=10)\nexcept Exception as e:\n    print(f\"GET /api/users failed: {e}\", file=sys.stderr)\n    sys.exit(2)\n\nif r.status_code != 200:\n    print(f\"GET /api/users unexpected status: {r.status_code}\", file=sys.stderr)\n    sys.exit(2)\n\ntry:\n    data = r.json()\nexcept Exception as e:\n    print(f\"invalid JSON for /api/users: {e}\", file=sys.stderr)\n    sys.exit(2)\n\nif not isinstance(data, list):\n    print(\"unexpected data: /api/users is not a list\", file=sys.stderr)\n    sys.exit(2)\n\nfor u in data:\n    if not isinstance(u, dict):\n        print(\"unexpected data: user entry is not an object\", file=sys.stderr)\n        sys.exit(2)\n    for k in (\"login\", \"email\", \"role\"):\n        if k not in u:\n            print(f\"unexpected data: missing key {k}\", file=sys.stderr)\n            sys.exit(2)\n    if not isinstance(u[\"login\"], str) or not isinstance(u[\"email\"], str) or not isinstance(u[\"role\"], str):\n        print(\"unexpected data: login/email/role wrong type\", file=sys.stderr)\n        sys.exit(2)\n    if u[\"role\"] not in (\"admin\", \"conseiller\"):\n        print(f\"unexpected data: unknown role {u['role']}\", file=sys.stderr)\n        sys.exit(2)\n\nadmins = [u for u in data if u[\"role\"] == \"admin\"]\nlogin_re = re.compile(r\"^[A-Za-z]\\.[A-Za-z][A-Za-z\\-]*$\")\ngeneric = {\"admin\", \"administrator\", \"administrateur\", \"root\", \"superuser\", \"superadmin\", \"sysadmin\", \"support\", \"helpdesk\", \"service\", \"services\", \"contact\", \"info\", \"infos\", \"accueil\", \"generic\", \"generique\", \"team\", \"equipe\", \"shared\", \"partage\", \"fonction\", \"function\", \"fonctionnel\", \"bureau\", \"office\", \"test\", \"demo\", \"backup\", \"system\", \"systeme\", \"securite\", \"security\", \"compta\", \"direction\", \"caisse\", \"guichet\", \"agence\", \"standard\", \"commun\", \"gen\"}\n\ndef is_generic(s):\n    parts = re.split(r\"[._\\-+]+\", s.lower())\n    for p in parts:\n        if p in generic:\n            return True\n        for g in generic:\n            if p == g:\n                return True\n            if len(p) > len(g) and p.startswith(g) and p[len(g):].isdigit():\n                return True\n    return False\n\nviolations = []\nobserved = []\nfor u in admins:\n    login = u[\"login\"]\n    email = u[\"email\"]\n    observed.append({\"login\": login, \"email\": email, \"role\": \"admin\"})\n    local = email.split(\"@\")[0] if \"@\" in email else email\n    login_ok = bool(login_re.match(login))\n    login_gen = is_generic(login)\n    email_gen = is_generic(local) if local else True\n    email_valid = \"@\" in email and \".\" in email.split(\"@\")[-1]\n    if (not login_ok) or login_gen or email_gen or (not email_valid):\n        violations.append({\"login\": login, \"email\": email, \"login_ok\": login_ok, \"login_generic\": login_gen, \"email_generic\": email_gen})\n\nexpected = \"for all users where role == admin: login matches initiale.nom pattern and email is personal, with no function login and no shared mailbox\"\n\nif not violations:\n    status = \"pass\"\n    detail = f\"All {len(admins)} admin account(s) have nominative initiale.nom logins and personal emails with no shared mailbox.\"\nelse:\n    status = \"fail\"\n    detail = f\"{len(violations)} of {len(admins)} admin account(s) violate nominative login or personal email requirements.\"\n\nprint(json.dumps({\"status\": status, \"observed\": observed, \"expected\": expected, \"detail\": detail}))\n",
+        "requests": 1
+      },
+      "before": {
+        "status": "pass",
+        "observed": [
+          {
+            "login": "a.abgrall",
+            "email": "adele.abgrall@kerlann-banque.example",
+            "role": "admin"
+          },
+          {
+            "login": "a.bonnet",
+            "email": "anne.bonnet@kerlann-banque.example",
+            "role": "admin"
+          },
+          {
+            "login": "b.cariou",
+            "email": "bastien.cariou@kerlann-banque.example",
+            "role": "admin"
+          }
+        ],
+        "expected": "for all users where role == admin: login matches initiale.nom pattern and email is personal, with no function login and no shared mailbox",
+        "detail": "All 3 admin account(s) have nominative initiale.nom logins and personal emails with no shared mailbox."
+      },
+      "evidence_before": {
+        "image": "evidence/C7_before.png",
+        "sha256": "7ad84089417a21ce8599958dc74262bdfd1d19b3e83a3c6b95a4f3b7f4194072",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "a.abgrall adele.abgrall@kerlann-banque.example admin 10.11.242.138 Oui; a.bonnet anne.bonnet@kerlann-banque.example admin 10.23.104.245 Oui; b.cariou bastien.cariou@kerlann-banque.example admin 10.34.228.124 Oui",
+          "field_boxes": [
+            [
+              18,
+              162,
+              1082,
+              210
+            ],
+            [
+              18,
+              306,
+              1082,
+              354
+            ],
+            [
+              18,
+              2322,
+              1082,
+              2370
+            ]
+          ],
+          "comment": "Screenshot shows three admin rows with initiale.nom logins and personal emails matching the automated result.",
+          "pii": [
+            {
+              "text": "adele.abgrall@kerlann-banque.example",
+              "box": [
+                204,
+                176,
+                580,
+                194
+              ]
+            },
+            {
+              "text": "10.11.242.138",
+              "box": [
+                735,
+                176,
+                860,
+                194
+              ]
+            },
+            {
+              "text": "adele.abgrall2@kerlann-banque.example",
+              "box": [
+                204,
+                224,
+                580,
+                242
+              ]
+            },
+            {
+              "text": "10.33.215.178",
+              "box": [
+                735,
+                224,
+                860,
+                242
+              ]
+            },
+            {
+              "text": "arthur.allain@kerlann-banque.example",
+              "box": [
+                204,
+                272,
+                580,
+                290
+              ]
+            },
+            {
+              "text": "10.38.177.30",
+              "box": [
+                735,
+                272,
+                860,
+                290
+              ]
+            },
+            {
+              "text": "anne.bonnet@kerlann-banque.example",
+              "box": [
+                204,
+                320,
+                580,
+                338
+              ]
+            },
+            {
+              "text": "10.23.104.245",
+              "box": [
+                735,
+                320,
+                860,
+                338
+              ]
+            },
+            {
+              "text": "adele.bonnet2@kerlann-banque.example",
+              "box": [
+                204,
+                368,
+                580,
+                386
+              ]
+            },
+            {
+              "text": "10.39.1.147",
+              "box": [
+                735,
+                368,
+                860,
+                386
+              ]
+            },
+            {
+              "text": "alexandre.dubois@kerlann-banque.example",
+              "box": [
+                204,
+                416,
+                580,
+                434
+              ]
+            },
+            {
+              "text": "10.25.231.213",
+              "box": [
+                735,
+                416,
+                860,
+                434
+              ]
+            },
+            {
+              "text": "arthur.dupont@kerlann-banque.example",
+              "box": [
+                204,
+                464,
+                580,
+                482
+              ]
+            },
+            {
+              "text": "10.11.225.200",
+              "box": [
+                735,
+                464,
+                860,
+                482
+              ]
+            },
+            {
+              "text": "antoine.dupont2@kerlann-banque.example",
+              "box": [
+                204,
+                512,
+                580,
+                530
+              ]
+            },
+            {
+              "text": "10.18.103.132",
+              "box": [
+                735,
+                512,
+                860,
+                530
+              ]
+            },
+            {
+              "text": "arthur.floch@kerlann-banque.example",
+              "box": [
+                204,
+                560,
+                580,
+                578
+              ]
+            },
+            {
+              "text": "10.23.48.63",
+              "box": [
+                735,
+                560,
+                860,
+                578
+              ]
+            },
+            {
+              "text": "antoine.floch2@kerlann-banque.example",
+              "box": [
+                204,
+                608,
+                580,
+                626
+              ]
+            },
+            {
+              "text": "10.31.57.66",
+              "box": [
+                735,
+                608,
+                860,
+                626
+              ]
+            },
+            {
+              "text": "adele.fournier@kerlann-banque.example",
+              "box": [
+                204,
+                656,
+                580,
+                674
+              ]
+            },
+            {
+              "text": "10.18.215.19",
+              "box": [
+                735,
+                656,
+                860,
+                674
+              ]
+            },
+            {
+              "text": "arthur.garcia@kerlann-banque.example",
+              "box": [
+                204,
+                704,
+                580,
+                722
+              ]
+            },
+            {
+              "text": "10.18.229.108",
+              "box": [
+                735,
+                704,
+                860,
+                722
+              ]
+            },
+            {
+              "text": "antoine.guillou@kerlann-banque.example",
+              "box": [
+                204,
+                752,
+                580,
+                770
+              ]
+            },
+            {
+              "text": "10.38.101.77",
+              "box": [
+                735,
+                752,
+                860,
+                770
+              ]
+            },
+            {
+              "text": "arthur.hamon@kerlann-banque.example",
+              "box": [
+                204,
+                800,
+                580,
+                818
+              ]
+            },
+            {
+              "text": "10.27.225.254",
+              "box": [
+                735,
+                800,
+                860,
+                818
+              ]
+            },
+            {
+              "text": "alexandre.henaff@kerlann-banque.example",
+              "box": [
+                204,
+                848,
+                580,
+                866
+              ]
+            },
+            {
+              "text": "10.36.232.135",
+              "box": [
+                735,
+                848,
+                860,
+                866
+              ]
+            },
+            {
+              "text": "adele.kerbrat@kerlann-banque.example",
+              "box": [
+                204,
+                896,
+                580,
+                914
+              ]
+            },
+            {
+              "text": "10.20.152.226",
+              "box": [
+                735,
+                896,
+                860,
+                914
+              ]
+            },
+            {
+              "text": "arthur.kervella@kerlann-banque.example",
+              "box": [
+                204,
+                944,
+                580,
+                962
+              ]
+            },
+            {
+              "text": "10.18.209.227",
+              "box": [
+                735,
+                944,
+                860,
+                962
+              ]
+            },
+            {
+              "text": "arthur.lambert@kerlann-banque.example",
+              "box": [
+                204,
+                992,
+                580,
+                1010
+              ]
+            },
+            {
+              "text": "10.29.246.199",
+              "box": [
+                735,
+                992,
+                860,
+                1010
+              ]
+            },
+            {
+              "text": "anne.le-gall@kerlann-banque.example",
+              "box": [
+                204,
+                1040,
+                580,
+                1058
+              ]
+            },
+            {
+              "text": "10.37.136.171",
+              "box": [
+                735,
+                1040,
+                860,
+                1058
+              ]
+            },
+            {
+              "text": "adele.le-goff@kerlann-banque.example",
+              "box": [
+                204,
+                1088,
+                580,
+                1106
+              ]
+            },
+            {
+              "text": "10.23.165.11",
+              "box": [
+                735,
+                1088,
+                860,
+                1106
+              ]
+            },
+            {
+              "text": "alexandre.le-roux@kerlann-banque.example",
+              "box": [
+                204,
+                1136,
+                580,
+                1154
+              ]
+            },
+            {
+              "text": "10.20.112.206",
+              "box": [
+                735,
+                1136,
+                860,
+                1154
+              ]
+            },
+            {
+              "text": "arthur.le-roux2@kerlann-banque.example",
+              "box": [
+                204,
+                1184,
+                580,
+                1202
+              ]
+            },
+            {
+              "text": "10.17.248.177",
+              "box": [
+                735,
+                1184,
+                860,
+                1202
+              ]
+            },
+            {
+              "text": "adele.leroy@kerlann-banque.example",
+              "box": [
+                204,
+                1232,
+                580,
+                1250
+              ]
+            },
+            {
+              "text": "10.35.172.54",
+              "box": [
+                735,
+                1232,
+                860,
+                1250
+              ]
+            },
+            {
+              "text": "arthur.martin@kerlann-banque.example",
+              "box": [
+                204,
+                1280,
+                580,
+                1298
+              ]
+            },
+            {
+              "text": "10.14.144.81",
+              "box": [
+                735,
+                1280,
+                860,
+                1298
+              ]
+            },
+            {
+              "text": "antoine.martin2@kerlann-banque.example",
+              "box": [
+                204,
+                1328,
+                580,
+                1346
+              ]
+            },
+            {
+              "text": "10.33.254.14",
+              "box": [
+                735,
+                1328,
+                860,
+                1346
+              ]
+            },
+            {
+              "text": "arthur.mercier@kerlann-banque.example",
+              "box": [
+                204,
+                1376,
+                580,
+                1394
+              ]
+            },
+            {
+              "text": "10.35.45.21",
+              "box": [
+                735,
+                1376,
+                860,
+                1394
+              ]
+            },
+            {
+              "text": "anne.michel@kerlann-banque.example",
+              "box": [
+                204,
+                1424,
+                580,
+                1442
+              ]
+            },
+            {
+              "text": "10.18.193.107",
+              "box": [
+                735,
+                1424,
+                860,
+                1442
+              ]
+            },
+            {
+              "text": "arthur.moreau@kerlann-banque.example",
+              "box": [
+                204,
+                1472,
+                580,
+                1490
+              ]
+            },
+            {
+              "text": "10.29.45.98",
+              "box": [
+                735,
+                1472,
+                860,
+                1490
+              ]
+            },
+            {
+              "text": "alexandre.moreau2@kerlann-banque.example",
+              "box": [
+                204,
+                1520,
+                580,
+                1538
+              ]
+            },
+            {
+              "text": "10.29.198.148",
+              "box": [
+                735,
+                1520,
+                860,
+                1538
+              ]
+            },
+            {
+              "text": "anne.morel@kerlann-banque.example",
+              "box": [
+                204,
+                1568,
+                580,
+                1586
+              ]
+            },
+            {
+              "text": "10.18.89.13",
+              "box": [
+                735,
+                1568,
+                860,
+                1586
+              ]
+            },
+            {
+              "text": "antoine.olier@kerlann-banque.example",
+              "box": [
+                204,
+                1616,
+                580,
+                1634
+              ]
+            },
+            {
+              "text": "10.25.11.112",
+              "box": [
+                735,
+                1616,
+                860,
+                1634
+              ]
+            },
+            {
+              "text": "antoine.olier2@kerlann-banque.example",
+              "box": [
+                204,
+                1664,
+                580,
+                1682
+              ]
+            },
+            {
+              "text": "10.27.225.240",
+              "box": [
+                735,
+                1664,
+                860,
+                1682
+              ]
+            },
+            {
+              "text": "arthur.petit@kerlann-banque.example",
+              "box": [
+                204,
+                1712,
+                580,
+                1730
+              ]
+            },
+            {
+              "text": "10.33.155.221",
+              "box": [
+                735,
+                1712,
+                860,
+                1730
+              ]
+            },
+            {
+              "text": "arthur.petit2@kerlann-banque.example",
+              "box": [
+                204,
+                1760,
+                580,
+                1778
+              ]
+            },
+            {
+              "text": "10.31.196.207",
+              "box": [
+                735,
+                1760,
+                860,
+                1778
+              ]
+            },
+            {
+              "text": "arthur.quillien@kerlann-banque.example",
+              "box": [
+                204,
+                1808,
+                580,
+                1826
+              ]
+            },
+            {
+              "text": "10.19.17.129",
+              "box": [
+                735,
+                1808,
+                860,
+                1826
+              ]
+            },
+            {
+              "text": "antoine.raoul@kerlann-banque.example",
+              "box": [
+                204,
+                1856,
+                580,
+                1874
+              ]
+            },
+            {
+              "text": "10.38.156.126",
+              "box": [
+                735,
+                1856,
+                860,
+                1874
+              ]
+            },
+            {
+              "text": "alexandre.richard@kerlann-banque.example",
+              "box": [
+                204,
+                1904,
+                580,
+                1922
+              ]
+            },
+            {
+              "text": "10.25.170.134",
+              "box": [
+                735,
+                1904,
+                860,
+                1922
+              ]
+            },
+            {
+              "text": "anne.richard2@kerlann-banque.example",
+              "box": [
+                204,
+                1952,
+                580,
+                1970
+              ]
+            },
+            {
+              "text": "10.18.172.109",
+              "box": [
+                735,
+                1952,
+                860,
+                1970
+              ]
+            },
+            {
+              "text": "anne.simon@kerlann-banque.example",
+              "box": [
+                204,
+                2000,
+                580,
+                2018
+              ]
+            },
+            {
+              "text": "10.35.94.176",
+              "box": [
+                735,
+                2000,
+                860,
+                2018
+              ]
+            },
+            {
+              "text": "alexandre.tanguy@kerlann-banque.example",
+              "box": [
+                204,
+                2048,
+                580,
+                2066
+              ]
+            },
+            {
+              "text": "10.20.228.92",
+              "box": [
+                735,
+                2048,
+                860,
+                2066
+              ]
+            },
+            {
+              "text": "arthur.toullec@kerlann-banque.example",
+              "box": [
+                204,
+                2096,
+                580,
+                2114
+              ]
+            },
+            {
+              "text": "10.35.247.15",
+              "box": [
+                735,
+                2096,
+                860,
+                2114
+              ]
+            },
+            {
+              "text": "anne.vigouroux@kerlann-banque.example",
+              "box": [
+                204,
+                2144,
+                580,
+                2162
+              ]
+            },
+            {
+              "text": "10.24.203.68",
+              "box": [
+                735,
+                2144,
+                860,
+                2162
+              ]
+            },
+            {
+              "text": "arthur.vincent@kerlann-banque.example",
+              "box": [
+                204,
+                2192,
+                580,
+                2210
+              ]
+            },
+            {
+              "text": "10.12.184.19",
+              "box": [
+                735,
+                2192,
+                860,
+                2210
+              ]
+            },
+            {
+              "text": "bleuenn.bernard@kerlann-banque.example",
+              "box": [
+                204,
+                2240,
+                580,
+                2258
+              ]
+            },
+            {
+              "text": "10.32.255.105",
+              "box": [
+                735,
+                2240,
+                860,
+                2258
+              ]
+            },
+            {
+              "text": "bleuenn.bonnet@kerlann-banque.example",
+              "box": [
+                204,
+                2288,
+                580,
+                2306
+              ]
+            },
+            {
+              "text": "10.30.144.98",
+              "box": [
+                735,
+                2288,
+                860,
+                2306
+              ]
+            },
+            {
+              "text": "bastien.cariou@kerlann-banque.example",
+              "box": [
+                204,
+                2336,
+                580,
+                2354
+              ]
+            },
+            {
+              "text": "10.34.228.124",
+              "box": [
+                735,
+                2336,
+                860,
+                2354
+              ]
+            },
+            {
+              "text": "bleuenn.even@kerlann-banque.example",
+              "box": [
+                204,
+                2384,
+                580,
+                2402
+              ]
+            },
+            {
+              "text": "10.33.122.37",
+              "box": [
+                735,
+                2384,
+                860,
+                2402
+              ]
+            },
+            {
+              "text": "bastien.gourmelen@kerlann-banque.example",
+              "box": [
+                204,
+                2432,
+                580,
+                2450
+              ]
+            },
+            {
+              "text": "10.27.208.152",
+              "box": [
+                735,
+                2432,
+                860,
+                2450
+              ]
+            },
+            {
+              "text": "bastien.jacq@kerlann-banque.example",
+              "box": [
+                204,
+                2480,
+                580,
+                2498
+              ]
+            },
+            {
+              "text": "10.40.253.28",
+              "box": [
+                735,
+                2480,
+                860,
+                2498
+              ]
+            },
+            {
+              "text": "bleuenn.jegou@kerlann-banque.example",
+              "box": [
+                204,
+                2528,
+                580,
+                2546
+              ]
+            },
+            {
+              "text": "10.13.224.209",
+              "box": [
+                735,
+                2528,
+                860,
+                2546
+              ]
+            },
+            {
+              "text": "bleuenn.le-corre@kerlann-banque.example",
+              "box": [
+                204,
+                2576,
+                580,
+                2594
+              ]
+            },
+            {
+              "text": "10.14.28.151",
+              "box": [
+                735,
+                2576,
+                860,
+                2594
+              ]
+            },
+            {
+              "text": "bleuenn.leroy@kerlann-banque.example",
+              "box": [
+                204,
+                2624,
+                580,
+                2642
+              ]
+            },
+            {
+              "text": "10.39.251.135",
+              "box": [
+                735,
+                2624,
+                860,
+                2642
+              ]
+            },
+            {
+              "text": "bastien.madec@kerlann-banque.example",
+              "box": [
+                204,
+                2672,
+                580,
+                2690
+              ]
+            },
+            {
+              "text": "10.27.7.43",
+              "box": [
+                735,
+                2672,
+                860,
+                2690
+              ]
+            },
+            {
+              "text": "bleuenn.mercier@kerlann-banque.example",
+              "box": [
+                204,
+                2720,
+                580,
+                2738
+              ]
+            },
+            {
+              "text": "10.12.79.34",
+              "box": [
+                735,
+                2720,
+                860,
+                2738
+              ]
+            },
+            {
+              "text": "bastien.prigent@kerlann-banque.example",
+              "box": [
+                204,
+                2768,
+                580,
+                2786
+              ]
+            },
+            {
+              "text": "10.16.234.246",
+              "box": [
+                735,
+                2768,
+                860,
+                2786
+              ]
+            },
+            {
+              "text": "bleuenn.raoul@kerlann-banque.example",
+              "box": [
+                204,
+                2816,
+                580,
+                2834
+              ]
+            },
+            {
+              "text": "10.39.217.48",
+              "box": [
+                735,
+                2816,
+                860,
+                2834
+              ]
+            },
+            {
+              "text": "bastien.thepaut@kerlann-banque.example",
+              "box": [
+                204,
+                2864,
+                580,
+                2882
+              ]
+            },
+            {
+              "text": "10.10.151.241",
+              "box": [
+                735,
+                2864,
+                860,
+                2882
+              ]
+            },
+            {
+              "text": "bastien.vincent@kerlann-banque.example",
+              "box": [
+                204,
+                2912,
+                580,
+                2930
+              ]
+            },
+            {
+              "text": "10.36.94.93",
+              "box": [
+                735,
+                2912,
+                860,
+                2930
+              ]
+            },
+            {
+              "text": "bastien.vincent2@kerlann-banque.example",
+              "box": [
+                204,
+                2960,
+                580,
+                2978
+              ]
+            },
+            {
+              "text": "10.14.62.118",
+              "box": [
+                735,
+                2960,
+                860,
+                2978
+              ]
+            },
+            {
+              "text": "bastien.yvinec@kerlann-banque.example",
+              "box": [
+                204,
+                3008,
+                580,
+                3026
+              ]
+            },
+            {
+              "text": "10.32.82.9",
+              "box": [
+                735,
+                3008,
+                860,
+                3026
+              ]
+            },
+            {
+              "text": "claire.allain@kerlann-banque.example",
+              "box": [
+                204,
+                3056,
+                580,
+                3074
+              ]
+            },
+            {
+              "text": "10.38.95.13",
+              "box": [
+                735,
+                3056,
+                860,
+                3074
+              ]
+            },
+            {
+              "text": "claire.bernard@kerlann-banque.example",
+              "box": [
+                204,
+                3104,
+                580,
+                3122
+              ]
+            },
+            {
+              "text": "10.19.58.173",
+              "box": [
+                735,
+                3104,
+                860,
+                3122
+              ]
+            },
+            {
+              "text": "celine.bertrand@kerlann-banque.example",
+              "box": [
+                204,
+                3152,
+                580,
+                3170
+              ]
+            },
+            {
+              "text": "10.29.89.219",
+              "box": [
+                735,
+                3152,
+                860,
+                3170
+              ]
+            },
+            {
+              "text": "claire.bertrand2@kerlann-banque.example",
+              "box": [
+                204,
+                3200,
+                580,
+                3218
+              ]
+            },
+            {
+              "text": "10.17.108.241",
+              "box": [
+                735,
+                3200,
+                860,
+                3218
+              ]
+            },
+            {
+              "text": "corentin.bertrand3@kerlann-banque.example",
+              "box": [
+                204,
+                3248,
+                580,
+                3266
+              ]
+            },
+            {
+              "text": "10.11.131.189",
+              "box": [
+                735,
+                3248,
+                860,
+                3266
+              ]
+            },
+            {
+              "text": "chloe.bihan@kerlann-banque.example",
+              "box": [
+                204,
+                3296,
+                580,
+                3314
+              ]
+            },
+            {
+              "text": "10.16.7.168",
+              "box": [
+                735,
+                3296,
+                860,
+                3314
+              ]
+            },
+            {
+              "text": "camille.bihan2@kerlann-banque.example",
+              "box": [
+                204,
+                3344,
+                580,
+                3362
+              ]
+            },
+            {
+              "text": "10.32.237.122",
+              "box": [
+                735,
+                3344,
+                860,
+                3362
+              ]
+            },
+            {
+              "text": "camille.cloarec@kerlann-banque.example",
+              "box": [
+                204,
+                3392,
+                580,
+                3410
+              ]
+            },
+            {
+              "text": "10.26.40.112",
+              "box": [
+                735,
+                3392,
+                860,
+                3410
+              ]
+            },
+            {
+              "text": "chloe.daniel@kerlann-banque.example",
+              "box": [
+                204,
+                3440,
+                580,
+                3458
+              ]
+            },
+            {
+              "text": "10.18.226.102",
+              "box": [
+                735,
+                3440,
+                860,
+                3458
+              ]
+            },
+            {
+              "text": "camille.daniel2@kerlann-banque.example",
+              "box": [
+                204,
+                3488,
+                580,
+                3506
+              ]
+            },
+            {
+              "text": "10.17.248.12",
+              "box": [
+                735,
+                3488,
+                860,
+                3506
+              ]
+            },
+            {
+              "text": "camille.daniel3@kerlann-banque.example",
+              "box": [
+                204,
+                3536,
+                580,
+                3554
+              ]
+            },
+            {
+              "text": "10.13.213.146",
+              "box": [
+                735,
+                3536,
+                860,
+                3554
+              ]
+            },
+            {
+              "text": "claire.dupont@kerlann-banque.example",
+              "box": [
+                204,
+                3584,
+                580,
+                3602
+              ]
+            },
+            {
+              "text": "10.16.145.160",
+              "box": [
+                735,
+                3584,
+                860,
+                3602
+              ]
+            },
+            {
+              "text": "celine.even@kerlann-banque.example",
+              "box": [
+                204,
+                3632,
+                580,
+                3650
+              ]
+            },
+            {
+              "text": "10.14.48.181",
+              "box": [
+                735,
+                3632,
+                860,
+                3650
+              ]
+            },
+            {
+              "text": "celine.fournier@kerlann-banque.example",
+              "box": [
+                204,
+                3680,
+                580,
+                3698
+              ]
+            },
+            {
+              "text": "10.14.41.60",
+              "box": [
+                735,
+                3680,
+                860,
+                3698
+              ]
+            },
+            {
+              "text": "claire.guillou@kerlann-banque.example",
+              "box": [
+                204,
+                3728,
+                580,
+                3746
+              ]
+            },
+            {
+              "text": "10.38.3.201",
+              "box": [
+                735,
+                3728,
+                860,
+                3746
+              ]
+            },
+            {
+              "text": "celine.guillou2@kerlann-banque.example",
+              "box": [
+                204,
+                3776,
+                580,
+                3794
+              ]
+            },
+            {
+              "text": "10.34.231.117",
+              "box": [
+                735,
+                3776,
+                860,
+                3794
+              ]
+            },
+            {
+              "text": "claire.hamon@kerlann-banque.example",
+              "box": [
+                204,
+                3824,
+                580,
+                3842
+              ]
+            },
+            {
+              "text": "10.39.125.230",
+              "box": [
+                735,
+                3824,
+                860,
+                3842
+              ]
+            },
+            {
+              "text": "corentin.jegou@kerlann-banque.example",
+              "box": [
+                204,
+                3872,
+                580,
+                3890
+              ]
+            },
+            {
+              "text": "10.17.92.132",
+              "box": [
+                735,
+                3872,
+                860,
+                3890
+              ]
+            },
+            {
+              "text": "claire.kerbrat@kerlann-banque.example",
+              "box": [
+                204,
+                3920,
+                580,
+                3938
+              ]
+            },
+            {
+              "text": "10.21.201.36",
+              "box": [
+                735,
+                3920,
+                860,
+                3938
+              ]
+            },
+            {
+              "text": "celine.kerjean@kerlann-banque.example",
+              "box": [
+                204,
+                3968,
+                580,
+                3986
+              ]
+            },
+            {
+              "text": "10.16.149.83",
+              "box": [
+                735,
+                3968,
+                860,
+                3986
+              ]
+            },
+            {
+              "text": "celine.lagadec@kerlann-banque.example",
+              "box": [
+                204,
+                4016,
+                580,
+                4034
+              ]
+            },
+            {
+              "text": "10.28.82.249",
+              "box": [
+                735,
+                4016,
+                860,
+                4034
+              ]
+            },
+            {
+              "text": "corentin.lagadec2@kerlann-banque.example",
+              "box": [
+                204,
+                4064,
+                580,
+                4082
+              ]
+            },
+            {
+              "text": "10.13.130.90",
+              "box": [
+                735,
+                4064,
+                860,
+                4082
+              ]
+            },
+            {
+              "text": "claire.lambert@kerlann-banque.example",
+              "box": [
+                204,
+                4112,
+                580,
+                4130
+              ]
+            },
+            {
+              "text": "10.14.157.82",
+              "box": [
+                735,
+                4112,
+                860,
+                4130
+              ]
+            },
+            {
+              "text": "corentin.lambert2@kerlann-banque.example",
+              "box": [
+                204,
+                4160,
+                580,
+                4178
+              ]
+            },
+            {
+              "text": "10.26.92.226",
+              "box": [
+                735,
+                4160,
+                860,
+                4178
+              ]
+            },
+            {
+              "text": "corentin.lambert3@kerlann-banque.example",
+              "box": [
+                204,
+                4208,
+                580,
+                4226
+              ]
+            },
+            {
+              "text": "10.39.13.98",
+              "box": [
+                735,
+                4208,
+                860,
+                4226
+              ]
+            },
+            {
+              "text": "celine.laurent@kerlann-banque.example",
+              "box": [
+                204,
+                4256,
+                580,
+                4274
+              ]
+            },
+            {
+              "text": "10.40.38.57",
+              "box": [
+                735,
+                4256,
+                860,
+                4274
+              ]
+            },
+            {
+              "text": "celine.laurent2@kerlann-banque.example",
+              "box": [
+                204,
+                4304,
+                580,
+                4322
+              ]
+            },
+            {
+              "text": "10.35.220.76",
+              "box": [
+                735,
+                4304,
+                860,
+                4322
+              ]
+            },
+            {
+              "text": "corentin.le-bihan@kerlann-banque.example",
+              "box": [
+                204,
+                4352,
+                580,
+                4370
+              ]
+            },
+            {
+              "text": "10.19.59.116",
+              "box": [
+                735,
+                4352,
+                860,
+                4370
+              ]
+            },
+            {
+              "text": "celine.le-bihan2@kerlann-banque.example",
+              "box": [
+                204,
+                4400,
+                580,
+                4418
+              ]
+            },
+            {
+              "text": "10.39.27.22",
+              "box": [
+                735,
+                4400,
+                860,
+                4418
+              ]
+            },
+            {
+              "text": "claire.le-corre@kerlann-banque.example",
+              "box": [
+                204,
+                4448,
+                580,
+                4466
+              ]
+            },
+            {
+              "text": "10.25.204.35",
+              "box": [
+                735,
+                4448,
+                860,
+                4466
+              ]
+            },
+            {
+              "text": "chloe.leroy@kerlann-banque.example",
+              "box": [
+                204,
+                4496,
+                580,
+                4514
+              ]
+            },
+            {
+              "text": "10.18.104.131",
+              "box": [
+                735,
+                4496,
+                860,
+                4514
+              ]
+            },
+            {
+              "text": "claire.madec@kerlann-banque.example",
+              "box": [
+                204,
+                4544,
+                580,
+                4562
+              ]
+            },
+            {
+              "text": "10.15.29.11",
+              "box": [
+                735,
+                4544,
+                860,
+                4562
+              ]
+            },
+            {
+              "text": "celine.martin@kerlann-banque.example",
+              "box": [
+                204,
+                4592,
+                580,
+                4610
+              ]
+            },
+            {
+              "text": "10.15.211.199",
+              "box": [
+                735,
+                4592,
+                860,
+                4610
+              ]
+            },
+            {
+              "text": "chloe.martin2@kerlann-banque.example",
+              "box": [
+                204,
+                4640,
+                580,
+                4658
+              ]
+            },
+            {
+              "text": "10.16.19.55",
+              "box": [
+                735,
+                4640,
+                860,
+                4658
+              ]
+            },
+            {
+              "text": "celine.martin3@kerlann-banque.example",
+              "box": [
+                204,
+                4688,
+                580,
+                4706
+              ]
+            },
+            {
+              "text": "10.39.135.37",
+              "box": [
+                735,
+                4688,
+                860,
+                4706
+              ]
+            },
+            {
+              "text": "camille.martin4@kerlann-banque.example",
+              "box": [
+                204,
+                4736,
+                580,
+                4754
+              ]
+            },
+            {
+              "text": "10.16.15.36",
+              "box": [
+                735,
+                4736,
+                860,
+                4754
+              ]
+            },
+            {
+              "text": "celine.mercier@kerlann-banque.example",
+              "box": [
+                204,
+                4784,
+                580,
+                4802
+              ]
+            },
+            {
+              "text": "10.37.221.244",
+              "box": [
+                735,
+                4784,
+                860,
+                4802
+              ]
+            },
+            {
+              "text": "celine.moreau@kerlann-banque.example",
+              "box": [
+                204,
+                4832,
+                580,
+                4850
+              ]
+            },
+            {
+              "text": "10.11.47.2",
+              "box": [
+                735,
+                4832,
+                860,
+                4850
+              ]
+            },
+            {
+              "text": "chloe.morel@kerlann-banque.example",
+              "box": [
+                204,
+                4880,
+                580,
+                4898
+              ]
+            },
+            {
+              "text": "10.26.160.119",
+              "box": [
+                735,
+                4880,
+                860,
+                4898
+              ]
+            },
+            {
+              "text": "claire.nedelec@kerlann-banque.example",
+              "box": [
+                204,
+                4928,
+                580,
+                4946
+              ]
+            },
+            {
+              "text": "10.33.176.2",
+              "box": [
+                735,
+                4928,
+                860,
+                4946
+              ]
+            }
+          ],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 200,
+          "pii_masked": 200,
+          "pii_found_by_model": 151
+        },
+        "page": "/admin/users",
+        "page_verified": null,
+        "ts": "2026-11-04 13:45:48"
+      },
+      "status_before": "pass"
+    }
+  ],
+  "running": false,
+  "decisions": [],
+  "remediation_requested": false,
+  "usage": {
+    "rows": [
+      {
+        "model": "muse-spark-1.3",
+        "calls": 7,
+        "input": 13764,
+        "output": 19500,
+        "seconds": 156.46096348762512,
+        "images": 0,
+        "cost_usd": 0.10008
+      },
+      {
+        "model": "sam-3.1",
+        "calls": 19,
+        "input": 0,
+        "output": 0,
+        "seconds": 35.59453225135803,
+        "images": 19,
+        "cost_usd": null
+      }
+    ],
+    "total_usd": 0.10008,
+    "unpriced": [
+      "sam-3.1"
+    ],
+    "estimated": false
+  },
+  "duration_s": 138,
+  "catalogue": {
+    "source": "catalogue",
+    "reviewed": false,
+    "path": "controls/AUD-2026-IAM-01.en.json"
+  },
+  "interpretation": null,
+  "inconclusive": 0,
+  "opinion_initial": "satisfaisant",
+  "opinion_final": "satisfaisant",
+  "injection_detected": false,
+  "trail_head": "123f45c7fc842b4acdacf41b2f355d34839a35a39dfd6e525873b0f200432ee7"
+}
