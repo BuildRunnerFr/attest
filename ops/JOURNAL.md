@@ -14,6 +14,55 @@ suite prévue. Les chiffres cités viennent tous de `ledger.jsonl` (branche `rea
 - Gel du code le 4 novembre 2026 à 18:00 (Paris) : ensuite, documentation, texte de soumission et vérifications
   seulement. Soumission : 5 novembre 2026, 03:00 (Paris) = 4 novembre 21:00 (ET).
 
+## Cycle 2 de l'équipe d'agents — 4 novembre 2026, 00:50–01:45
+
+Constats principaux :
+- Directeur d'audit : constats « clos — vérifiés » sans aucune approbation humaine valable (5 pré-approbations de démo) ;
+  opinion sans fondement ni limitation de périmètre ; « RTS 21(3) » inexistant dans la bibliothèque (4 endroits + mock) ;
+  pas de cause dans les constats ; `covered_by` présenté comme couverture totale ; français dans le rapport EN.
+- RSSI : un script qui ne lit jamais la cible et imprime « pass » était accepté ; bibliothèque de scripts promue sans
+  relecture ; captures non masquées envoyées à l'API (transfert de données) ; piste non ancrée hors du dossier ;
+  pas de limites de ressources dans le bac à sable ; clé visible du `pip install` dans le workflow.
+- QA : `ATTEST_BACKEND=mock bash scripts/start.sh` échouait sans clé ; LAB_URL non exporté ; backend meta sans clé →
+  rapport « meta » et code 0 ; double clic sur « Auditer » dans le Studio cassait la piste scellée ; cible forgée → SystemExit.
+- Coach : chiffres non sourcés (DEMO, EVALUATION, BUSINESS_CASE, README) ; Glimmer présenté comme testé ; pas de texte de
+  soumission ni de script vidéo final ; pas de LICENSE.
+- Designer : champs de mission en français dans le rapport EN ; en-tête d'audit du Studio peu lisible ; page 1 du PDF
+  à transformer en page d'opinion ; tailles de police inversées à l'impression.
+
+Commits poussés sur main (132 tests verts, mock IAM et code OK, vérificateur indépendant : APPROUVÉ) :
+- f3020e4 : verdict sans requête à la cible → non concluant (journal des requêtes dans la piste) ; pas de clôture sans
+  approbation humaine réelle (`retested_unapproved`, compté dans l'opinion) ; fondement de l'opinion et limitation de
+  périmètre ; « Préparé par Attest (assisté par IA) · visa de l'auditeur : en attente » ; échec immédiat sans clé.
+- fb6bd12 : lanceur robuste (.env créé, shell prioritaire, repli mock, LAB_URL/LAB_PORT, pid, `--check`) ; Studio : un
+  seul audit par dossier, auditeur obligatoire, cible validée, /interpret refusé pendant un audit ; en-tête lisible ;
+  mission localisée en anglais.
+- 00725c4, 78db850, 99e03dc : RTS 21(3) → RTS 21(1)(e)(ii) (texte verbatim de la bibliothèque), paraphrases
+  remplacées par des citations exactes, test des références ; chiffres sourcés au registre ; premier écran du README ;
+  docs/SUBMISSION.md (texte de soumission, script vidéo 3 min, prix bonus).
+- `demo-stable` = 99e03dc (créée en avance rapide ; le push forcé reste refusé par les garde-fous).
+
+Exécutions réelles :
+- `20261103-235819-bench-meta` (49f4070) : 56/56, 0 FP, 0 FN, injection 1/1, 256/256 masquées dont 183 repérées par le
+  modèle, 0,50 $ mesuré, 334 s. Stabilité du banc sur 2 exécutions du registre : 56/56 les deux fois ; rappel du
+  modèle sur les données personnelles 87 et 183/256 (instable), masquage 256/256 les deux fois.
+- `20261104-001606-iam-meta` (99e03dc, EN) : 6 non-conformités, 5 re-testées conformes (clôture en attente
+  d'approbation), opinion finale insuffisant (nouvelle règle), 0 erreur de preuve, aucun verdict rejeté pour absence de
+  requête, 0,13 $ mesuré.
+- `20261104-002236-code-meta` (99e03dc) : 6 non conformes + 1 « à revoir » (C1 : secret trouvé dans app/config.py mais
+  page de preuve choisie app/auth.py → capture non corroborante), 1 erreur de preuve (C6 : le script a cherché
+  `tests/fixtures.json`, inexistant, et a conclu « non conforme » au lieu d'une erreur technique). Variance du programme
+  de travail re-planifié par le modèle ; pas une régression des changements du cycle. 0,51 $ mesuré.
+- Dépense cumulée au registre (estimation prudente) : 5,81 $ / 130 $.
+
+Pour Ethan : choisir une LICENSE ; vérifier sur EUR-Lex la numérotation de l'article 21 du RTS 2024/1774
+(21(1)(c), 21(1)(e)(ii)) et l'affirmation « Apache 2.0 » de Muse Glimmer dans docs/ARCHITECTURE.md:87.
+
+Suite prévue : (1) audit de code — un fichier attendu absent doit être une erreur technique, et la page de preuve doit
+être une page lue avec succès (journal des requêtes) et contenir l'observation ; (2) piste ancrée (tête de chaîne au
+registre, `attest verify --head`) ; (3) bibliothèque de scripts relus par empreinte ; (4) page 1 du PDF = opinion,
+polices d'impression, titres de bibliothèque en EN ; (5) images du README en anglais depuis `20261104-001606-iam-meta`.
+
 ## Cycle 1 de l'équipe d'agents — 4 novembre 2026, 00:15–01:00
 
 Constats principaux (directeur d'audit, RSSI acheteur, coach de pitch, QA, designer) :
