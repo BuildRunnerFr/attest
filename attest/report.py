@@ -65,6 +65,7 @@ dl.kv dt{color:var(--mute)}dl.kv dd{margin:0}
 .c4 h4{margin:0 0 4px;font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--mute)}
 .c4 p{margin:0}
 code,.mono{font:12.5px ui-monospace,Menlo,monospace}
+td.mono,td.nw{white-space:nowrap}
 .obs{background:#f6f7f9;border-radius:6px;padding:2px 6px}
 .ev{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
 figure{margin:0}figure img{width:100%;border:1px solid var(--line);border-radius:8px;display:block}
@@ -91,8 +92,11 @@ footer{padding:16px 40px;font-size:12px;color:var(--mute);display:flex;justify-c
 @media print{body{background:#fff;font-size:11px}.doc{box-shadow:none;max-width:none}.band{display:none}
  section{padding:14px 0;border:0}.cover{padding:0 0 14px}footer{display:none}h1{font-size:24px}
  h2{font-size:17px;break-after:avoid}.kpi b{font-size:18px}.card{break-inside:auto}figure{break-inside:avoid}
- #annexes{break-before:page}details{display:none}.live{display:none}figcaption{font-size:10px}
- table{font-size:10.5px}.pill{font-size:9.5px}}
+ #annexes{break-before:page}details{display:none}.live{display:none}
+ table{font-size:10.5px}.pill{font-size:9.5px}
+ .meta,dl.kv,.basis,.basis h3,.chg,.alert{font-size:10.5px}.small,.fs,figcaption,.legend,blockquote,summary{font-size:9.5px}
+ th,.c4 h4,.op span,.eyebrow,.tb{font-size:9px}code,.mono{font-size:10px}.hash{font-size:9px}.kpi span{font-size:10px}
+ .card .hd{break-after:avoid}.card .ref{font-size:10px}}
 """
 
 
@@ -256,6 +260,15 @@ def key_messages(lang, total, n, sev, closed, still_open, review) -> list:
 
 
 FRAMEWORK_DEFAULT = "DORA art. 9(4) · RTS (UE) 2024/1774 art. 12, 21 · PSI-4"
+FRAMEWORK_DEFAULT_EN = "DORA Art. 9(4) · RTS (EU) 2024/1774 Art. 12, 21 · PSI-4"
+
+
+def framework(m: dict) -> str:
+    """Référentiel de la mission ; le libellé par défaut (config.py, en français) est traduit en anglais."""
+    fw = m.get("framework_label") or FRAMEWORK_DEFAULT
+    if config.lang() == "en":
+        return FRAMEWORK_DEFAULT_EN if fw == FRAMEWORK_DEFAULT else fw.replace("(UE)", "(EU)")
+    return fw
 
 
 def basis(state: dict) -> str:
@@ -263,7 +276,7 @@ def basis(state: dict) -> str:
     avec la limitation de périmètre tant que le programme ou les scripts n'ont pas été relus."""
     m, entries = state["mission"], state.get("entries", [])
     conclusive = sum(1 for x in entries if x.get("status_before") in ("pass", "fail"))
-    txt = t("basis.text").format(n=len(entries), k=conclusive, fw=m.get("framework_label") or FRAMEWORK_DEFAULT,
+    txt = t("basis.text").format(n=len(entries), k=conclusive, fw=framework(m),
                                  date=state.get("started", ""), env=m.get("environment") or "—")
     # non concluants et « à revoir » : la réserve est dite, même quand l'opinion vient des constats
     unsure = sum(1 for x in entries if x.get("status_before") in ("error", "review"))
@@ -358,7 +371,7 @@ def write(state: dict, out: Path):
     kv = [("m.mission", m["id"]), ("m.entity", m["entity"]), ("m.system", m["system"]),
           ("m.crit", m["system_criticality"]), ("m.env", m["environment"]), ("m.owner", m["owner"]),
           ("m.auditor", m["lead_auditor"]), ("m.date", state["started"]),
-          ("m.framework", m.get("framework_label") or FRAMEWORK_DEFAULT),
+          ("m.framework", framework(m)),
           ("m.target", state.get("target_label", "")), ("m.catalogue", cat_txt)]
     s2 = (f'<section id="s2"><h2>{e(t("s2"))}</h2><dl class="kv">'
           + "".join(f"<dt>{e(t(k))}</dt><dd>{e(v)}</dd>" for k, v in kv) + "</dl>"
@@ -396,7 +409,7 @@ def write(state: dict, out: Path):
             ev = x.get(k)
             if ev:
                 evid.append(f'<tr><td class="mono">{e(ev["image"])}</td><td>{e(x["control"]["id"])} · {e(lab)}</td>'
-                            f'<td>{e(ev["ts"])}</td><td class="hash">{e(ev["sha256"])}</td></tr>')
+                            f'<td class="nw">{e(ev["ts"])}</td><td class="hash">{e(ev["sha256"])}</td></tr>')
     je = state.get("journal_evidence")
     if je:
         evid.append(f'<tr><td class="mono">{e(je["image"])}</td><td>{e(t("f.journal"))}</td><td></td><td class="hash">{e(je["sha256"])}</td></tr>')

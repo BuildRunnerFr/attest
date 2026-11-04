@@ -117,7 +117,7 @@ label.ctrl small{color:var(--mute)}code{font:12.5px ui-monospace,Menlo,monospace
 em.prop{font-style:normal;font-size:11px;font-weight:600;color:var(--warn);background:#fdf3e1;border-radius:4px;padding:1px 6px;margin-left:4px}
 .sign{position:sticky;bottom:0;background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;gap:14px;align-items:center;flex-wrap:wrap;box-shadow:0 -4px 16px #0000000f}
 .bar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:0 0 12px}.bar .sp{flex:1}
-.status{font:600 22px/1.25 Georgia,serif;margin:0}.status.error{color:var(--ko)}
+.status{font:600 22px/1.25 Georgia,serif;margin:0}.status.error{color:var(--ko);font:600 15px/1.4 system-ui,sans-serif;background:#fdecec;border:1px solid #e5a3a3;border-radius:8px;padding:10px 14px}
 a.btn{display:inline-flex;align-items:center;border-radius:8px;padding:9px 16px;font-weight:600;font-size:14px;text-decoration:none;
 background:var(--navy);color:#fff;border:1px solid var(--navy)}a.btn:hover{background:#1b3b66}
 a.btn.ghost{background:transparent;color:var(--navy)}a.btn.ghost:hover{background:#fff}a.btn[hidden]{display:none}
@@ -160,7 +160,7 @@ REVIEW = HEAD + """<main><h1>{{ s.review }}</h1><p class="sub">{{ it.texts|join(
 {% if r.covered_by %}<p class="hint">↳ {{ s.covered }} {{ r.covered_by|join(', ') }}</p>{% endif %}
 {% if r.why %}<p class="hint">{{ r.why }}</p>{% endif %}
 {% for c in r.controls %}<label class="ctrl"><input type="checkbox" name="ctrl" value="{{ c.id }}" checked>
-<span><b>{{ c.id }} · {{ c.title }}</b><br>{{ c.objective }}<br><small>{{ s.expected }} : <code>{{ c.expected }}</code> · {{ s.threshold }} : {{ c.threshold_source }}
+<span><b>{{ c.id }} · {{ c.title }}</b><br>{{ c.objective }}<br><small>{{ s.expected }}{{ colon }}<code>{{ c.expected }}</code> · {{ s.threshold }}{{ colon }}{{ c.threshold_source }}
 {% if 'proposal' in (c.threshold_source or '')|lower %}<em class="prop">{{ s.proposal }}</em>{% endif %}</small></span>
 <select name="sev_{{ c.id }}">{% for sv in sevs %}<option value="{{ sv }}" {% if sv == c.severity %}selected{% endif %}>{{ s.sev[sv] }}</option>{% endfor %}</select></label>{% endfor %}
 </div>{% endfor %}
@@ -178,7 +178,7 @@ const st=document.getElementById('st'),rep=document.getElementById('rep'),pdf=do
 async function poll(){const r=await fetch('/status/{{ sid }}');const j=await r.json();
  if(j.report&&!shown){rep.src='/files/{{ sid }}/audit/report.html';shown=true}
  if(j.state==='done'){st.textContent='{{ s.done }}';pdf.hidden=!j.pdf;rep.src='/files/{{ sid }}/audit/report.html?'+Date.now();return}
- if(j.state==='error'){st.textContent='{{ s.error }} : '+j.message;st.className='status error';return}
+ if(j.state==='error'){st.textContent={{ (s.error ~ colon)|tojson }}+j.message;st.className='status error';return}
  setTimeout(poll,2500)}
 poll();</script></body></html>"""
 
@@ -188,11 +188,32 @@ def lang_of(value=None) -> str:
     return "en" if v.startswith("en") else "fr"
 
 
-def library() -> list:
+# Titres anglais des extraits de la bibliothèque (le corps envoyé au modèle reste inchangé)
+LIB_EN = {
+    "dora-9-3-donnees": "DORA — Article 9(3): data security",
+    "dora-9-4-acces-changements": "DORA — Article 9(4): access, strong authentication, change management",
+    "politique-pds-2-developpement": "Internal policy PDS-2 (Banque Kerlann, fictitious) — secure development",
+    "politique-psi-4-acces": "Internal policy PSI-4 (Banque Kerlann, fictitious) — authentication and access",
+    "rts-12-journalisation": "RTS 2024/1774 — Article 12: logging",
+    "rts-16-developpement": "RTS 2024/1774 — Article 16: ICT systems acquisition, development and maintenance",
+    "rts-21-controle-acces": "RTS 2024/1774 — Article 21: access control",
+    "rts-6-7-cryptographie": "RTS 2024/1774 — Articles 6 and 7: encryption and key management",
+}
+
+
+def colon(lang: str) -> str:
+    return " : " if lang == "fr" else ": "
+
+
+def lib_title(stem: str, body: str, lang: str) -> str:
+    fr = body.splitlines()[0].lstrip("# ").strip()
+    return LIB_EN.get(stem, fr) if lang == "en" else fr
+
+
+def library(lang: str = "fr") -> list:
     out = []
     for p in sorted(LIB.glob("*.md")):
-        first = p.read_text().splitlines()[0]
-        out.append({"id": p.stem, "title": first.lstrip("# ").strip(),
+        out.append({"id": p.stem, "title": lib_title(p.stem, p.read_text(), lang),
                     "kind": "policy" if p.stem.startswith("politique") else "regulation"})
     return sorted(out, key=lambda x: (x["kind"] == "policy", x["title"]))
 
@@ -206,13 +227,13 @@ def read_upload(f) -> str:
 
 
 def render(tpl: str, lang: str, **kw):
-    return render_template_string(tpl, css=CSS, s=S[lang], lang=lang, **kw)
+    return render_template_string(tpl, css=CSS, s=S[lang], lang=lang, colon=colon(lang), **kw)
 
 
 @app.get("/")
 def index():
     lang = lang_of()
-    return render(INDEX, lang, library=library(), targets=targets.TARGETS, backend=llm.BACKEND, error=None)
+    return render(INDEX, lang, library=library(lang), targets=targets.TARGETS, backend=llm.BACKEND, error=None)
 
 
 def running() -> bool:
@@ -220,7 +241,7 @@ def running() -> bool:
 
 
 def index_error(lang: str, error: str):
-    return render(INDEX, lang, library=library(), targets=targets.TARGETS, backend=llm.BACKEND, error=error)
+    return render(INDEX, lang, library=library(lang), targets=targets.TARGETS, backend=llm.BACKEND, error=error)
 
 
 @app.post("/interpret")
@@ -237,7 +258,7 @@ def do_interpret():
         p = LIB / f"{lib_id}.md"
         if p.exists() and p.parent == LIB:
             body = p.read_text()
-            texts.append((body.splitlines()[0].lstrip("# ").strip(), body))
+            texts.append((lib_title(lib_id, body, lang), body))
     if request.form.get("pasted", "").strip():
         texts.append(("Texte fourni" if lang == "fr" else "Provided text", request.form["pasted"]))
     up = request.files.get("upload")
@@ -245,17 +266,17 @@ def do_interpret():
         try:
             texts.append((up.filename, read_upload(up)))
         except Exception as ex:
-            return render(INDEX, lang, library=library(), targets=targets.TARGETS, backend=llm.BACKEND,
-                          error=f"{up.filename} : {ex}")
+            return render(INDEX, lang, library=library(lang), targets=targets.TARGETS, backend=llm.BACKEND,
+                          error=f"{up.filename}{colon(lang)}{ex}")
     if not texts:
-        return render(INDEX, lang, library=library(), targets=targets.TARGETS, backend=llm.BACKEND, error=S[lang]["none"])
+        return render(INDEX, lang, library=library(lang), targets=targets.TARGETS, backend=llm.BACKEND, error=S[lang]["none"])
     llm.USAGE.reset()                                   # coût de cette mission : interprétation + audit
     try:
         result = interpret.interpret(texts, target_id)
     except Exception as ex:
         traceback.print_exc()
-        return render(INDEX, lang, library=library(), targets=targets.TARGETS, backend=llm.BACKEND,
-                      error=f"{type(ex).__name__} : {ex}")
+        return render(INDEX, lang, library=library(lang), targets=targets.TARGETS, backend=llm.BACKEND,
+                      error=f"{type(ex).__name__}{colon(lang)}{ex}")
     sid = time.strftime("%Y%m%d-%H%M%S-") + uuid.uuid4().hex[:4]
     d = WORK / sid
     d.mkdir(parents=True, exist_ok=True)
