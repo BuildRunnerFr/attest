@@ -84,7 +84,7 @@ proves its result (e.g. the faulty file); SAM 3.1 then outlines the faulty lines
 | Auditor approving own fix | Independence breach | Run aborts if approver equals lead auditor |
 | Evidence tampering | Screenshot edited after the fact | SHA-256 chain + manifest; `attest verify` |
 | Personal data or secrets leaking in reports | E-mails, IPs, IBANs, customer names, passwords in screenshots or test output | Two layers: model + SAM masking, then a deterministic regex safety net on the page text; coverage measured per layer; report text pseudonymised; raw capture deleted |
-| Data leaving the bank | Evidence sent to an external API | Local backend on Muse Glimmer (open weights, Apache 2.0) |
+| Data leaving the bank | Evidence sent to an external API | Local backend on Muse Glimmer (open weights; licence to be confirmed; not yet benchmarked) |
 | Supply-chain / availability of the model API | Rate limits, outages | Retries with backoff; cached work programme and script library keep monitoring runs nearly model-free |
 
 ## How Attest itself lines up with DORA

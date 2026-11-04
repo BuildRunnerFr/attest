@@ -5,17 +5,21 @@ evidence, routes fixes to the system owner for approval, re-tests, and writes th
 Built on **Muse Spark 1.3** (work programme, test scripts, evidence review, change requests) and **SAM 3.1**
 (proving rows outlined, personal data masked). Meta Global AI Developer Hackathon · track "Build for Your World".
 
+**Why it matters:** DORA makes every EU bank prove its ICT controls work. Today that proof is screenshots pasted into
+spreadsheets, re-checked by hand months later. Attest turns it into a sealed, re-playable test.
+
 Measured on real runs with the Meta Model API (ids from our run ledger; Muse Spark cost, SAM 3.1 has no public price):
 
 | Run | Result | Cost |
 |---|---|---|
-| Benchmark, 8 fictitious banks, 4 runs (`20261103-232326`, `20261103-235819`, `20261104-020142`, `20261104-064005` `-bench-meta`) | **56/56 checks correct on every run, 0 false finding, 0 missed, prompt injection flagged 4/4**, 256/256 personal-data items masked each time | $0.50–0.53, 300–417 s per run |
-| IAM console audit with remediation (`20261103-234915-iam-meta`) | **6 non-compliances; 5 fixes applied after (demo) pre-approval and re-tested compliant**, 1 action plan | $0.12, 77 s |
-| Code repository audit, 5 runs (`20261103-230340`, `20261103-234658`, `20261104-002236`, `20261104-060119`, `20261104-062938` `-code-meta`) | **7/7 planted flaws found on 4 of 5 runs**, each with its evidence; on `20261104-002236`, 6 found, 1 sent to human review because the screenshot did not back the script, 1 evidence error (fixed since: a missing file is now a technical error, never a finding) | $0.33–0.74 |
+| Benchmark, 8 fictitious banks, 5 runs (`20261103-232326`, `20261103-235819`, `20261104-020142`, `20261104-064005`, `20261104-080238` `-bench-meta`) | **56/56 checks correct on every run, 0 false finding, 0 missed, prompt injection flagged 5/5**, 256/256 personal-data items masked each time | $0.50–0.53, 300–417 s per run |
+| IAM console audit with remediation, 3 runs (`20261103-234915`, `20261104-001606`, `20261104-063210` `-iam-meta`) | **6 non-compliances on every run; 5 fixes applied after (demo) pre-approval and re-tested compliant**, 1 action plan | $0.12–0.13, 73–87 s per run |
+| Code repository audit, 5 runs (`20261103-230340`, `20261103-234658`, `20261104-002236`, `20261104-060119`, `20261104-062938` `-code-meta`) | **7/7 planted flaws found on 4 of 5 runs**, each with its evidence (the work programme, re-planned on each run, tested them as 7 to 10 controls); on `20261104-002236`, 6 found, 1 sent to human review because the screenshot did not back the script, 1 evidence error (fixed since: a missing file is now a technical error, never a finding) | $0.33–0.74 |
 
 Caveat: the test set is small, fictitious and built by us. Encouraging, not a proof of general accuracy.
 
 ![Executive summary of an Attest report](docs/img/report-summary.png)
+*Executive summary, from real run `20261104-063210-iam-meta` (English PDF report).*
 
 ## Why
 
@@ -32,9 +36,9 @@ with human approval for every change.
 1. **Framework**: tick verified excerpts of DORA (art. 9(3), 9(4)) and of the technical standard RTS 2024/1774
    (art. 6–7 cryptography, 12 logging, 16 development, 21 access control), add an internal policy, or upload your own
    text (.md, .txt, .pdf).
-2. **Target**: the IAM admin console, or a **code repository** (a fictitious SEPA payment microservice with realistic
+2. **Target**: the IAM admin console, or a **code repository** (a fictitious SEPA payment microservice with 7 planted
    flaws: hard-coded secrets, TLS verification disabled, MD5 password hashing, no SAST in CI, unpinned dependencies,
-   a production export in the test fixtures).
+   a production export in the test fixtures, and no logging of authentication successes and failures).
 3. **Grounded interpretation** (Muse Spark): every requirement must quote the text **word for word** — the quote is
    checked by code, and a requirement whose quote cannot be found is rejected. Every threshold says where it comes from
    (your policy, a named public standard marked *proposal*, or the text). Requirements are triaged into *testable
@@ -57,10 +61,10 @@ Quote verification, testability triage and mandatory approval are there because 
 |---|---|---|
 | 1. Work programme | Reads the framework (DORA art. 9(4), RTS 2024/1774 art. 12 and 21, internal policy) and writes a catalogue of testable controls with severity, risk and recommendation. Cached for auditor review. | **Muse Spark 1.3** |
 | 2. Test | Writes one read-only Python test per control, statically checked, executed with a read-only service account. The **verdict comes from the script, never from the model**. Scripts are kept in a reviewable library and replayed on later runs. | **Muse Spark 1.3** |
-| 3. Evidence | Captures the admin page, asks the model whether it corroborates the test (disagreement → *needs review*), and spots prompt-injection attempts. The model only receives the screenshot after the deterministic net has blacked out the personal data found in the page (the benchmark alone sends synthetic data unmasked, to measure the model's own recall). | **Muse Spark 1.3** (vision) |
-| 4. Annotate | Snaps the model's boxes onto what is really on screen: proving rows are outlined, e-mails and IPs are masked before the evidence leaves the system. Masking coverage is measured against the page DOM. | **SAM 3.1** |
+| 3. Evidence | Captures the admin page, asks the model whether it corroborates the test (disagreement → *needs review*), and spots prompt-injection attempts. Muse Spark only receives a copy of the screenshot on which the deterministic net has already blacked out the personal data found in the page (the benchmark alone sends synthetic data unmasked, to measure the model's own recall). | **Muse Spark 1.3** (vision) |
+| 4. Annotate | Snaps the model's boxes onto what is really on screen: proving rows are outlined, e-mails and IPs are masked in every image Attest keeps or puts in a report. SAM 3.1 itself still receives the raw screenshot (through the Meta Model API in our runs) to segment it: a known limit, so in confidential mode it has to run inside the bank too. Masking coverage is measured against the page DOM. | **SAM 3.1** |
 | 5. Remediate (optional) | Drafts a minimal change request per finding. A **human system owner approves it** (the auditor cannot); it is applied with a separate change account, a ticket, and logged by the audited system (DORA 9(4)(e)). Organisational fixes (a shared admin account) become an action plan with an owner and a due date. | **Muse Spark 1.3** |
-| 6. Re-test and report | Replays the same script, seals new evidence, issues an HTML + PDF report with an executive opinion, findings in Criteria / Condition / Risk / Recommendation form, a traceability matrix, an evidence register, measured AI cost and a hash-chained audit trail. | — |
+| 6. Re-test and report | Replays the same script, seals new evidence, issues an HTML + PDF report with an executive opinion, findings in Criteria / Condition / Probable cause / Risk / Recommendation form (the cause is marked as an AI hypothesis to confirm with the owner), a traceability matrix, an evidence register, measured AI cost and a hash-chained audit trail. | — |
 
 **Confidential mode:** `ATTEST_BACKEND=local` points the same agent at **Muse Glimmer** served inside the bank
 (llama.cpp, vLLM, SGLang). This is a supported backend, **not yet benchmarked on real hardware**: every measured result
@@ -68,6 +72,7 @@ in this README comes from the Meta Model API. For a bank it is not a nice-to-hav
 model API makes that API an ICT third-party provider under DORA. See [docs/BUSINESS_CASE.md](docs/BUSINESS_CASE.md).
 
 ![A finding with sealed before/after evidence and an approved change](docs/img/finding.png)
+*A finding with sealed before/after evidence and a (demo) pre-approved change, from real run `20261104-063210-iam-meta`.*
 
 ## Built the way a bank would have to run it
 
@@ -80,7 +85,9 @@ model API makes that API an ICT third-party provider under DORA. See [docs/BUSIN
 - **Privacy that does not depend on a model**: personal data is masked in two layers — what Muse Spark spots, refined by
   SAM 3.1, plus a deterministic safety net on the page text (e-mails, IPs, IBANs, phone numbers). Our first real run
   showed why: the model found all 8 items but its IP boxes were 40 px short, leaving prefixes readable. The report now
-  shows both figures. Personal data in the report text is pseudonymised; unmasked screenshots are never kept.
+  shows both figures. Personal data in the report text is pseudonymised; unmasked screenshots are never kept, and
+  Muse Spark only sees a pre-masked copy. One gap remains: SAM 3.1 receives the raw screenshot to segment it, so in
+  confidential mode it must run inside the bank as well.
 - **Measured cost**: tokens are counted on every call and priced from `pricing.toml` (sources cited).
 - **Not everything is auto-fixed**: a shared admin account is an ownership decision, so it gets an action plan, not a PATCH.
 
@@ -107,7 +114,8 @@ python -m attest verify runs/<run-folder>              # integrity check
 ```
 
 The report (`runs/<run>/report.html`) refreshes live during the audit; `report.pdf` is written at the end.
-A real IAM audit with remediation cost $0.12 of Muse Spark calls (ledger run `20261103-234915-iam-meta`); what the
+A real IAM audit with remediation cost $0.12–0.13 of Muse Spark calls and 73–87 s (ledger runs `20261103-234915`,
+`20261104-001606`, `20261104-063210` `-iam-meta`); what the
 first real runs measured and revealed is in [`examples/README.md`](examples/README.md) and
 [docs/BUSINESS_CASE.md](docs/BUSINESS_CASE.md).
 Useful flags: `--lang en`, `--approve-all --approver "IAM owner"` (pre-approved, demo only), `--fresh`
@@ -120,7 +128,7 @@ We do not fine-tune anything: the model is not the judge, and a bank cannot hand
 edge cases, generic accounts, prompt injection, a 56-account directory) and reports accuracy, false findings, missed
 non-compliances, privacy masking and cost. See [docs/EVALUATION.md](docs/EVALUATION.md).
 
-Five real runs of the same benchmark (Muse Spark 1.3 + SAM 3.1; the first from `examples/`, the other four from the run ledger):
+Six real runs of the same benchmark (Muse Spark 1.3 + SAM 3.1; the first from `examples/`, the other five from the run ledger):
 
 | Run | Checks correct | False findings / missed | Injection | Personal data spotted by the model / masked | Cost, time |
 |---|---|---|---|---|---|
@@ -129,11 +137,11 @@ Five real runs of the same benchmark (Muse Spark 1.3 + SAM 3.1; the first from `
 | Stability run, ledger `20261103-235819-bench-meta` | 56/56 | 0 / 0 | flagged | 183/256 (71 %) / 256/256 | $0.50, 334 s |
 | Stability run, ledger `20261104-020142-bench-meta` | 56/56 | 0 / 0 | flagged | 197/256 (77 %) / 256/256 | $0.50, 370 s |
 | Stability run, ledger `20261104-064005-bench-meta` | 56/56 | 0 / 0 | flagged | 221/256 (86 %) / 256/256 | $0.51, 417 s |
+| Stability run, ledger `20261104-080238-bench-meta` | 56/56 | 0 / 0 | flagged | 191/256 (75 %) / 256/256 | $0.52, 387 s |
 
-Verdicts were identical on all five runs (56/56, 0 false finding, 0 missed). The model's own recall of personal data
-ranged from 34 % to 86 %, which is why masking never depends on it: the deterministic safety net masked 256/256 every
-time. A small, self-built test set: encouraging, not a proof of
-general accuracy.
+Verdicts were identical on all six runs (56/56, 0 false finding, 0 missed, injection flagged). The model's own recall of
+personal data averaged 69 % and ranged from 34 % to 86 %, which is why masking never depends on it: the deterministic
+safety net masked 256/256 every time. A small, self-built test set: encouraging, not a proof of general accuracy.
 
 ## Repository
 

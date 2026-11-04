@@ -33,7 +33,7 @@ policy PSI-4 written as plain, reviewable code. The agent never sees the labels.
 
 ```bash
 python -m lab.app                         # terminal 1
-python -m attest bench --lang en          # terminal 2 — measured: 300 s, $0.53 of Muse Spark 1.3 (ledger 20261103-232326-bench-meta)
+python -m attest bench --lang en          # terminal 2 — measured: 300–417 s, $0.50–0.53 of Muse Spark 1.3 (5 ledger bench runs, below)
 ```
 
 Output in `runs/bench-<date>/`: `scorecard.html` (with a link to each scenario's full audit report), `scorecard.md`,
@@ -47,6 +47,10 @@ personal data spotted by the AI vs masked in the end, injection attempts flagged
 | Mock (pipeline sanity check in CI, `tests/test_bench.py`: 2 scenarios, simulated model — not a measurement) | 14 | 100 % | 0 | 0 | simulated / 100 % | 1/1 | — |
 | **Muse Spark 1.3 + SAM 3.1** (2 Nov 2026, [scorecard](../examples/evaluation-en/scorecard.md)) | 56 | **100 %** | **0** | **0** | 70 % (178/256) / **100 %** | 1/1 | $0.65 for 8 systems, 240 s |
 | **Muse Spark 1.3 + SAM 3.1**, replay in GitHub Actions (3 Nov 2026, ledger `20261103-232326-bench-meta`) | 56 | **100 %** | **0** | **0** | 34 % (87/256) / **100 %** | 1/1 | $0.53 for 8 systems, 300 s |
+| **Muse Spark 1.3 + SAM 3.1**, stability run (3 Nov 2026, ledger `20261103-235819-bench-meta`) | 56 | **100 %** | **0** | **0** | 71 % (183/256) / **100 %** | 1/1 | $0.50 for 8 systems, 334 s |
+| **Muse Spark 1.3 + SAM 3.1**, stability run (4 Nov 2026, ledger `20261104-020142-bench-meta`) | 56 | **100 %** | **0** | **0** | 77 % (197/256) / **100 %** | 1/1 | $0.50 for 8 systems, 370 s |
+| **Muse Spark 1.3 + SAM 3.1**, stability run (4 Nov 2026, ledger `20261104-064005-bench-meta`) | 56 | **100 %** | **0** | **0** | 86 % (221/256) / **100 %** | 1/1 | $0.51 for 8 systems, 417 s |
+| **Muse Spark 1.3 + SAM 3.1**, stability run (4 Nov 2026, ledger `20261104-080238-bench-meta`) | 56 | **100 %** | **0** | **0** | 75 % (191/256) / **100 %** | 1/1 | $0.52 for 8 systems, 387 s |
 
 Costs are the Muse Spark tokens priced from `pricing.toml`; SAM 3.1 has no published price yet, so the spending cap counts it with a conservative estimate instead.
 
@@ -55,7 +59,10 @@ The code-repository target (Attest Studio) is not yet part of this set; the next
 What these numbers do and do not say: 56/56 is the score on a small test set that we designed ourselves, with a
 policy clarified after the first real run. It shows the pipeline holds on thresholds, generic accounts and prompt
 injection; it does not prove general accuracy. Next steps: a blind set written by someone else, and the code target.
-The model alone spotted 70 % of the personal data on the pages on the first run and 34 % on the replay; the deterministic safety net masked the rest both times. Verdicts were stable across the two runs (56/56 twice); the model's recall of personal data was not — which is exactly why masking does not depend on it.
+Across the six real runs, verdicts were identical (56/56, 0 false finding, 0 missed, injection flagged 1/1 every time).
+The model's own recall of personal data was not stable: 69 % on average, from 34 % (`20261103-232326-bench-meta`) to
+86 % (`20261104-064005-bench-meta`). The deterministic safety net masked 256/256 on every run — which is exactly why
+masking does not depend on the model.
 
 Known weaknesses found so far on real runs (see [`examples/README.md`](../examples/README.md)): IP-address boxes drawn
 too short by the model (caught by the deterministic safety net), and an over-strict reading of an ambiguous policy rule

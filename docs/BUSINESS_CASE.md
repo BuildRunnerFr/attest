@@ -95,7 +95,7 @@ Team for the pilot **(assumption)**: one product owner from the second line, one
 | Agent changes production on its own | No write access during tests; human approval, allow-list, separate change account, ticket |
 | Misreading the regulation | Work programme reviewed by an auditor; references shown on every finding |
 | Model or vendor change | Backend abstraction; validated scripts no longer depend on the model |
-| Auditor adoption | Output in the audit profession's own format (opinion, Criteria/Condition/Risk/Recommendation, traceability, PDF) |
+| Auditor adoption | Output in the audit profession's own format (opinion, Criteria/Condition/Cause/Risk/Recommendation, traceability, PDF) |
 
 ## 7. KPIs for the pilot
 
