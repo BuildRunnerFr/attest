@@ -6,15 +6,17 @@ Built on **Muse Spark 1.3** (work programme, test scripts, evidence review, chan
 (proving rows outlined, personal data masked). Meta Global AI Developer Hackathon · track "Build for Your World".
 
 **Why it matters:** DORA makes every EU bank prove its ICT controls work. Today that proof is screenshots pasted into
-spreadsheets, re-checked by hand months later. Attest turns it into a sealed, re-playable test.
+spreadsheets, re-checked by hand months later. Attest turns it into a sealed, re-playable test: in real run
+`20261104-083850-iam-meta`, a full IAM console audit (7 controls tested, 6 non-compliances, 5 fixes applied after a
+demo pre-approval and re-tested compliant, sealed report) took 62 s and $0.13 of Muse Spark calls.
 
 Measured on real runs with the Meta Model API (ids from our run ledger; Muse Spark cost, SAM 3.1 has no public price):
 
 | Run | Result | Cost |
 |---|---|---|
-| Benchmark, 8 fictitious banks, 5 runs (`20261103-232326`, `20261103-235819`, `20261104-020142`, `20261104-064005`, `20261104-080238` `-bench-meta`) | **56/56 checks correct on every run, 0 false finding, 0 missed, prompt injection flagged 5/5**, 256/256 personal-data items masked each time | $0.50–0.53, 300–417 s per run |
-| IAM console audit with remediation, 3 runs (`20261103-234915`, `20261104-001606`, `20261104-063210` `-iam-meta`) | **6 non-compliances on every run; 5 fixes applied after (demo) pre-approval and re-tested compliant**, 1 action plan | $0.12–0.13, 73–87 s per run |
-| Code repository audit, 5 runs (`20261103-230340`, `20261103-234658`, `20261104-002236`, `20261104-060119`, `20261104-062938` `-code-meta`) | **7/7 planted flaws found on 4 of 5 runs**, each with its evidence (the work programme, re-planned on each run, tested them as 7 to 10 controls); on `20261104-002236`, 6 found, 1 sent to human review because the screenshot did not back the script, 1 evidence error (fixed since: a missing file is now a technical error, never a finding) | $0.33–0.74 |
+| Benchmark, 8 fictitious banks, 6 runs (`20261103-232326`, `20261103-235819`, `20261104-020142`, `20261104-064005`, `20261104-080238`, `20261104-095918` `-bench-meta`) | **56/56 checks correct on every run, 0 false finding, 0 missed, prompt injection flagged 6/6**, 256/256 personal-data items masked each time | $0.50–0.53, 300–417 s per run |
+| IAM console audit with remediation, 4 runs (`20261103-234915`, `20261104-001606`, `20261104-063210`, `20261104-083850` `-iam-meta`) | **6 non-compliances on every run; 5 fixes applied after (demo) pre-approval and re-tested compliant**, 1 action plan | $0.12–0.13, 62–87 s per run |
+| Code repository audit, 6 runs (`20261103-230340`, `20261103-234658`, `20261104-002236`, `20261104-060119`, `20261104-062938`, `20261104-083648` `-code-meta`) | **7/7 planted flaws found on 5 of 6 runs**, each with its evidence (the work programme, re-planned on each run, tested them as 7 to 10 controls); on `20261104-002236`, 6 found, 1 sent to human review because the screenshot did not back the script, 1 evidence error (fixed since: a missing file is now a technical error, never a finding) | $0.33–0.78, 190–390 s per run |
 
 Caveat: the test set is small, fictitious and built by us. Encouraging, not a proof of general accuracy.
 
@@ -118,8 +120,8 @@ python -m attest verify runs/<run-folder>              # integrity check
 ```
 
 The report (`runs/<run>/report.html`) refreshes live during the audit; `report.pdf` is written at the end.
-A real IAM audit with remediation cost $0.12–0.13 of Muse Spark calls and 73–87 s (ledger runs `20261103-234915`,
-`20261104-001606`, `20261104-063210` `-iam-meta`); what the
+A real IAM audit with remediation cost $0.12–0.13 of Muse Spark calls and 62–87 s (ledger runs `20261103-234915`,
+`20261104-001606`, `20261104-063210`, `20261104-083850` `-iam-meta`); what the
 first real runs measured and revealed is in [`examples/README.md`](examples/README.md) and
 [docs/BUSINESS_CASE.md](docs/BUSINESS_CASE.md).
 Useful flags: `--lang en`, `--approve-all --approver "IAM owner"` (pre-approved, demo only), `--fresh`
@@ -132,7 +134,7 @@ We do not fine-tune anything: the model is not the judge, and a bank cannot hand
 edge cases, generic accounts, prompt injection, a 56-account directory) and reports accuracy, false findings, missed
 non-compliances, privacy masking and cost. See [docs/EVALUATION.md](docs/EVALUATION.md).
 
-Six real runs of the same benchmark (Muse Spark 1.3 + SAM 3.1; the first from `examples/`, the other five from the run ledger):
+Seven real runs of the same benchmark (Muse Spark 1.3 + SAM 3.1; the first from `examples/`, the other six from the run ledger):
 
 | Run | Checks correct | False findings / missed | Injection | Personal data spotted by the model / masked | Cost, time |
 |---|---|---|---|---|---|
@@ -142,10 +144,11 @@ Six real runs of the same benchmark (Muse Spark 1.3 + SAM 3.1; the first from `e
 | Stability run, ledger `20261104-020142-bench-meta` | 56/56 | 0 / 0 | flagged | 197/256 (77 %) / 256/256 | $0.50, 370 s |
 | Stability run, ledger `20261104-064005-bench-meta` | 56/56 | 0 / 0 | flagged | 221/256 (86 %) / 256/256 | $0.51, 417 s |
 | Stability run, ledger `20261104-080238-bench-meta` | 56/56 | 0 / 0 | flagged | 191/256 (75 %) / 256/256 | $0.52, 387 s |
+| Stability run, ledger `20261104-095918-bench-meta` | 56/56 | 0 / 0 | flagged | 181/256 (71 %) / 256/256 | $0.51, 312 s |
 
-Verdicts were identical on all six runs (56/56, 0 false finding, 0 missed, injection flagged). The model's own recall of
-personal data averaged 69 % and ranged from 34 % to 86 %, which is why masking never depends on it: the deterministic
-safety net masked 256/256 every time. A small, self-built test set: encouraging, not a proof of general accuracy.
+Verdicts were identical on all seven runs (56/56, 0 false finding, 0 missed, injection flagged). On the six ledger runs,
+the model's own recall of personal data averaged 69 % and ranged from 34 % to 86 %, which is why masking never depends on it: the deterministic
+safety net masked 256/256 every time. Each ledger run cost $0.50–0.53 and took 300–417 s. A small, self-built test set: encouraging, not a proof of general accuracy.
 
 ## Repository
 
