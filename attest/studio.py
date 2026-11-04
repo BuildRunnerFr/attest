@@ -27,6 +27,7 @@ app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024
 LIB = config.ROOT / "exigences" / "library"
 WORK = config.ROOT / "runs" / "studio"
 JOBS: dict = {}
+RUN_LOCK = threading.Lock()            # un seul pipeline par dossier : la piste d'audit scellée n'a qu'un auteur
 SEVS = ["critique", "elevee", "moyenne", "faible"]
 
 S = {
@@ -52,6 +53,8 @@ S = {
         "sod": "L'approbateur des changements doit être différent de l'auditeur.", "covered": "testée par le contrôle de la politique", "noctrl": "Aucun contrôle retenu.",
         "testability": {"automated": "testable ici", "document": "revue documentaire", "interview": "entretien"},
         "sev": {"critique": "Critique", "elevee": "Élevée", "moyenne": "Moyenne", "faible": "Faible"},
+        "noreviewer": "Indiquez votre nom : l'auditeur qui valide le programme signe le rapport.",
+        "badtarget": "Cible inconnue.", "jobbusy": "Un audit est en cours : attendez sa fin avant d'en préparer un autre.",
     },
     "en": {
         "tagline": "DORA compliance audits, grounded in the text", "title": "New audit",
@@ -75,6 +78,8 @@ S = {
         "sod": "The change approver must not be the auditor.", "covered": "tested by the policy control", "noctrl": "No control selected.",
         "testability": {"automated": "testable here", "document": "document review", "interview": "interview"},
         "sev": {"critique": "Critical", "elevee": "High", "moyenne": "Medium", "faible": "Low"},
+        "noreviewer": "Enter your name: the auditor who approves the programme signs the report.",
+        "badtarget": "Unknown target.", "jobbusy": "An audit is running: wait for it to finish before preparing another.",
     },
 }
 
@@ -111,9 +116,14 @@ label.ctrl{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items
 label.ctrl small{color:var(--mute)}code{font:12.5px ui-monospace,Menlo,monospace;background:#f3f4f6;border-radius:4px;padding:1px 5px}
 em.prop{font-style:normal;font-size:11px;font-weight:600;color:var(--warn);background:#fdf3e1;border-radius:4px;padding:1px 6px;margin-left:4px}
 .sign{position:sticky;bottom:0;background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;gap:14px;align-items:center;flex-wrap:wrap;box-shadow:0 -4px 16px #0000000f}
-.status{font:600 16px Georgia,serif;margin:0 0 10px}.status.error{color:var(--ko)}
+.bar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:0 0 12px}.bar .sp{flex:1}
+.status{font:600 22px/1.25 Georgia,serif;margin:0}.status.error{color:var(--ko)}
+a.btn{display:inline-flex;align-items:center;border-radius:8px;padding:9px 16px;font-weight:600;font-size:14px;text-decoration:none;
+background:var(--navy);color:#fff;border:1px solid var(--navy)}a.btn:hover{background:#1b3b66}
+a.btn.ghost{background:transparent;color:var(--navy)}a.btn.ghost:hover{background:#fff}a.btn[hidden]{display:none}
 iframe{width:100%;height:calc(100vh - 150px);border:1px solid var(--line);border-radius:10px;background:#fff}
-@media (max-width:640px){label.ctrl{grid-template-columns:auto 1fr}label.ctrl select{grid-column:2}}
+@media (max-width:640px){label.ctrl{grid-template-columns:auto 1fr}label.ctrl select{grid-column:2}
+.bar .status{flex-basis:100%}.bar .sp{display:none}}
 """
 
 HEAD = """<!doctype html><html lang="{{ lang }}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -159,8 +169,9 @@ REVIEW = HEAD + """<main><h1>{{ s.review }}</h1><p class="sub">{{ it.texts|join(
 <label>{{ s.approver }} <input name="approver" value="{{ 'IAM owner (demo)' if lang == 'en' else 'Responsable IAM (démo)' }}"></label>{% endif %}
 <button>{{ s.run }}</button></div></form></main></body></html>"""
 
-AUDIT = HEAD + """<main class="wide"><div class="row"><div class="status" id="st">{{ s.running }}</div><span class="sp"></span>
-<a id="pdf" href="/files/{{ sid }}/audit/report.pdf" hidden>{{ s.pdf }}</a> · <a href="/?lang={{ lang }}">{{ s.new }}</a></div>
+AUDIT = HEAD + """<main class="wide"><div class="bar"><div class="status" id="st">{{ s.running }}</div><span class="sp"></span>
+<a id="pdf" class="btn" href="/files/{{ sid }}/audit/report.pdf" hidden>{{ s.pdf }}</a>
+<a class="btn ghost" href="/?lang={{ lang }}">{{ s.new }}</a></div>
 <iframe id="rep" title="report"></iframe></main>
 <script>
 const st=document.getElementById('st'),rep=document.getElementById('rep'),pdf=document.getElementById('pdf');let shown=false;
@@ -204,9 +215,22 @@ def index():
     return render(INDEX, lang, library=library(), targets=targets.TARGETS, backend=llm.BACKEND, error=None)
 
 
+def running() -> bool:
+    return any(j.get("state") == "running" for j in JOBS.values())
+
+
+def index_error(lang: str, error: str):
+    return render(INDEX, lang, library=library(), targets=targets.TARGETS, backend=llm.BACKEND, error=error)
+
+
 @app.post("/interpret")
 def do_interpret():
     lang = lang_of()
+    if running():                                       # le compteur de coût est partagé avec l'audit en cours
+        return index_error(lang, S[lang]["jobbusy"]), 409
+    target_id = request.form.get("target", "iam-console")
+    if target_id not in targets.TARGETS:               # cible forgée : targets.get lèverait SystemExit
+        return index_error(lang, S[lang]["badtarget"]), 400
     os.environ["ATTEST_LANG"] = lang
     texts = []
     for lib_id in request.form.getlist("lib"):
@@ -223,7 +247,6 @@ def do_interpret():
         except Exception as ex:
             return render(INDEX, lang, library=library(), targets=targets.TARGETS, backend=llm.BACKEND,
                           error=f"{up.filename} : {ex}")
-    target_id = request.form.get("target", "iam-console")
     if not texts:
         return render(INDEX, lang, library=library(), targets=targets.TARGETS, backend=llm.BACKEND, error=S[lang]["none"])
     llm.USAGE.reset()                                   # coût de cette mission : interprétation + audit
@@ -265,20 +288,28 @@ def build_mission(sid: str, meta: dict, reviewer: str):
     t = targets.get(meta["target"])
     titles = [title for title, _ in meta["texts"]]
     short = " · ".join(x.split(" — ")[0] for x in titles)
-    code = t["kind"] == "code"
-    scope_in = (["Code source, configuration et chaîne CI du dépôt", "Jeux de données de test versionnés"] if code
-                else base.scope_in)
-    scope_out = (["Tests dynamiques (DAST) et tests d'intrusion", "Environnements d'exécution et de production",
-                  "Historique git"] if code else base.scope_out)
+    code, en = t["kind"] == "code", meta["lang"] == "en"
+    if code and en:
+        scope_in = ["Source code, configuration and CI pipeline of the repository", "Versioned test datasets"]
+        scope_out = ["Dynamic testing (DAST) and penetration testing", "Runtime and production environments",
+                     "Git history"]
+    elif code:
+        scope_in = ["Code source, configuration et chaîne CI du dépôt", "Jeux de données de test versionnés"]
+        scope_out = ["Tests dynamiques (DAST) et tests d'intrusion", "Environnements d'exécution et de production",
+                     "Historique git"]
+    else:
+        scope_in, scope_out = base.scope_in, base.scope_out
+    system = targets.text(meta["target"], "system", meta["lang"])
     return dataclasses.replace(
-        base, id=f"AUD-{sid[:8]}-{sid[-4:].upper()}", title=f"{t['system']} — {short}", system=t["system"],
-        target=meta["target"], framework_label=" · ".join(titles), lead_auditor=reviewer, owner=t["owner"],
+        base, id=f"AUD-{sid[:8]}-{sid[-4:].upper()}", title=f"{system} — {short}", system=system,
+        target=meta["target"], framework_label=" · ".join(titles), lead_auditor=reviewer,
+        owner=targets.text(meta["target"], "owner", meta["lang"]),
         requirement_text="\n\n".join(body for _, body in meta["texts"]), scope_in=scope_in, scope_out=scope_out)
 
 
 def job(sid: str, mission, controls, cat_meta, it, remediate: bool, approver: str, lang: str):
     from . import pipeline
-    JOBS[sid] = {"state": "running"}
+    JOBS[sid] = {"state": "running"}                   # déjà posé sous verrou par run() ; appel direct possible
     os.environ["ATTEST_LANG"] = lang
     try:
         pipeline.run(mission, WORK / sid / "audit", controls=controls, catalogue_meta=cat_meta, run_id=sid,
@@ -297,6 +328,8 @@ def run(sid):
     lang = meta["lang"]
     reviewer = request.form.get("reviewer", "").strip()
     approver = request.form.get("approver", "").strip()
+    if not reviewer:
+        return review(sid, error=S[lang]["noreviewer"])
     remediate = bool(request.form.get("remediate")) and targets.TARGETS[meta["target"]]["remediable"]
     if remediate and approver.lower() == reviewer.lower():
         return review(sid, error=S[lang]["sod"])
@@ -309,12 +342,22 @@ def run(sid):
                 controls.append(dict(c, severity=sev if sev in SEVS else c.get("severity", "moyenne")))
     if not controls:
         return review(sid, error=S[lang]["noctrl"])
-    cat_meta = {"source": "studio", "reviewed": True, "reviewer": reviewer,
-                "path": f"runs/studio/{sid}/catalogue.json", "validated_at": time.strftime("%Y-%m-%d %H:%M")}
-    (d / "catalogue.json").write_text(json.dumps({**cat_meta, "controls": controls}, ensure_ascii=False, indent=2))
-    mission = build_mission(sid, meta, reviewer)
-    threading.Thread(target=job, args=(sid, mission, controls, cat_meta, it, remediate, approver, lang),
-                     daemon=True).start()
+    # Double clic sur « Lancer l'audit » ou audit déjà fait : pas de second pipeline sur le même dossier.
+    with RUN_LOCK:
+        if sid in JOBS or (d / "audit").exists():
+            return redirect(f"/audit/{sid}")
+        JOBS[sid] = {"state": "running"}
+    try:
+        cat_meta = {"source": "studio", "reviewed": True, "reviewer": reviewer,
+                    "path": f"runs/studio/{sid}/catalogue.json", "validated_at": time.strftime("%Y-%m-%d %H:%M")}
+        (d / "catalogue.json").write_text(json.dumps({**cat_meta, "controls": controls}, ensure_ascii=False, indent=2))
+        os.environ["ATTEST_LANG"] = lang
+        mission = build_mission(sid, meta, reviewer)
+        threading.Thread(target=job, args=(sid, mission, controls, cat_meta, it, remediate, approver, lang),
+                         daemon=True).start()
+    except Exception:
+        JOBS.pop(sid, None)
+        raise
     return redirect(f"/audit/{sid}")
 
 
@@ -338,5 +381,6 @@ def files(sid, path):
 
 
 if __name__ == "__main__":
-    print("Attest Studio : http://127.0.0.1:8000  (la console auditée doit tourner : python -m lab.app)")
-    app.run(host="127.0.0.1", port=int(os.getenv("STUDIO_PORT", "8000")), debug=False, threaded=True)
+    port = int(os.getenv("STUDIO_PORT", "8000"))
+    print(f"Attest Studio : http://127.0.0.1:{port}  (la console auditée doit tourner : python -m lab.app)")
+    app.run(host="127.0.0.1", port=port, debug=False, threaded=True)

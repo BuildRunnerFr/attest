@@ -42,6 +42,20 @@ def lang_name() -> str:
     return "English" if lang() == "en" else "French"
 
 
+def lab_url(default: str = "http://127.0.0.1:5050") -> str:
+    """URL de la console auditée : LAB_URL, sinon LAB_PORT (console locale), sinon la lettre de mission."""
+    if os.getenv("LAB_URL"):
+        return os.environ["LAB_URL"].rstrip("/")
+    if os.getenv("LAB_PORT"):
+        return f"http://127.0.0.1:{os.environ['LAB_PORT']}"
+    return default.rstrip("/")
+
+
+def localized(d: dict, key: str, default=""):
+    """Champ dans la langue du rapport (`key_en`), sinon le champ de base."""
+    return d.get(f"{key}_{lang()}", d.get(key, default))
+
+
 def load_mission(path: Path, requirement_override: Path | None = None) -> Mission:
     data = tomllib.loads(Path(path).read_text())
     m, scope = data["mission"], data.get("scope", {})
@@ -49,13 +63,14 @@ def load_mission(path: Path, requirement_override: Path | None = None) -> Missio
     return Mission(
         id=m["id"],
         title=m.get(f"title_{lang()}", m.get("title_fr", m["id"])),
-        entity=m["entity"], system=m["system"], system_criticality=m.get("system_criticality", ""),
-        environment=m.get("environment", ""), owner=m.get("owner", ""),
+        entity=localized(m, "entity"), system=localized(m, "system"),
+        system_criticality=localized(m, "system_criticality"),
+        environment=localized(m, "environment"), owner=localized(m, "owner"),
         lead_auditor=os.getenv("ATTEST_AUDITOR", m.get("lead_auditor", "")),
         classification=m.get("classification", ""),
         requirement_path=Path(req),
-        lab_url=os.getenv("LAB_URL", m.get("lab_url", "http://127.0.0.1:5050")).rstrip("/"),
-        scope_in=scope.get("in", []), scope_out=scope.get("out", []),
+        lab_url=lab_url(m.get("lab_url", "http://127.0.0.1:5050")),
+        scope_in=localized(scope, "in", []), scope_out=localized(scope, "out", []),
         sla_days={**DEFAULT_SLA, **data.get("sla_days", {})},
         target=m.get("target", "iam-console"),
         framework_label=m.get("framework_label", "DORA art. 9(4) · RTS (UE) 2024/1774 art. 12, 21 · PSI-4"),

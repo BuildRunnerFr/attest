@@ -12,6 +12,8 @@ TARGETS = {
                   "en": "KRL-ADM IAM admin console (Banque Kerlann)"},
         "system": "KRL-ADM — console d'administration IAM",
         "owner": "DSI — équipe IAM",
+        "system_en": "KRL-ADM — IAM administration console",
+        "owner_en": "IT department — IAM team",
         "doc": "lab/API.md",
         "default_page": "/admin/security",
         "remediable": True,                  # correctifs de paramètres via le compte de changement
@@ -22,6 +24,8 @@ TARGETS = {
                   "en": "paiement-api code repository (SEPA transfer microservice)"},
         "system": "paiement-api — microservice de virements SEPA",
         "owner": "DSI — équipe de développement Paiements",
+        "system_en": "paiement-api — SEPA transfer microservice",
+        "owner_en": "IT department — Payments development team",
         "doc": "lab/REPO_API.md",
         "repo": "paiement-api",
         "default_page": "/repo/paiement-api/view?path=README.md",
@@ -44,3 +48,9 @@ def api_doc(target_id: str) -> str:
 
 def label(target_id: str) -> str:
     return get(target_id)["label"][config.lang()]
+
+
+def text(target_id: str, key: str, lang: str | None = None) -> str:
+    """Champ d'une cible dans la langue du rapport (`key_en`), sinon le champ de base."""
+    t = get(target_id)
+    return t.get(f"{key}_{lang or config.lang()}", t[key])

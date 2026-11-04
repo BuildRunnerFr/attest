@@ -1,18 +1,43 @@
 #!/usr/bin/env bash
 # Attest : démarre la console auditée (système fictif) et Attest Studio, puis ouvre le Studio.
 # Usage : bash scripts/start.sh            Ctrl-C arrête les deux.
+#         bash scripts/start.sh --check    affiche la configuration retenue (backend, URL) sans rien lancer.
+# Les variables déjà définies dans le shell l'emportent sur .env : ATTEST_BACKEND=mock bash scripts/start.sh
 # Compatible bash 3.2 (macOS) et Linux.
 set -u
 cd "$(dirname "$0")/.."
+CHECK=""
+[ "${1:-}" = "--check" ] && CHECK=1
 
 if [ ! -f .env ]; then
-  echo "Fichier .env absent : cp .env.example .env, puis renseigne MODEL_API_KEY (ou ATTEST_BACKEND=mock)."
-  exit 1
+  cp .env.example .env || exit 1
+  echo "Fichier .env créé à partir de .env.example (renseigne MODEL_API_KEY pour les modèles Meta)."
 fi
+# Variables non vides déjà présentes dans le shell : on les garde après lecture de .env.
+keep=""
+for name in $(sed -n 's/^[[:space:]]*\([A-Za-z_][A-Za-z0-9_]*\)=.*/\1/p' .env); do
+  if eval "[ -n \"\${$name:-}\" ]"; then keep="$keep$(declare -p "$name")
+"; fi
+done
 set -a; source .env; set +a
+eval "$keep"
+
 if [ "${ATTEST_BACKEND:-meta}" = "meta" ] && [ -z "${MODEL_API_KEY:-}" ]; then
-  echo "MODEL_API_KEY est vide dans .env (ou ATTEST_BACKEND=mock pour une démo sans clé)."
-  exit 1
+  echo "Avertissement : MODEL_API_KEY est vide ; démarrage en mode mock (réponses simulées, sans clé)."
+  echo "  Pour les modèles Meta : renseigne MODEL_API_KEY dans .env, puis relance."
+  ATTEST_BACKEND=mock
+fi
+export ATTEST_BACKEND
+export LAB_PORT="${LAB_PORT:-5050}"
+export STUDIO_PORT="${STUDIO_PORT:-8000}"
+export LAB_URL="http://127.0.0.1:${LAB_PORT}"     # l'auditeur teste la console lancée ici
+STUDIO_URL="http://127.0.0.1:${STUDIO_PORT}"
+
+if [ -n "$CHECK" ]; then
+  echo "ATTEST_BACKEND=$ATTEST_BACKEND"
+  echo "LAB_URL=$LAB_URL"
+  echo "STUDIO_URL=$STUDIO_URL"
+  exit 0
 fi
 
 if [ -z "${VIRTUAL_ENV:-}" ]; then
@@ -26,25 +51,33 @@ if ! python -c "from playwright.sync_api import sync_playwright as s; p = s().st
     || echo "Avertissement : Chromium (Playwright) non installé ; les captures d'écran échoueront."
 fi
 
-# Une instance encore en mémoire (ancienne version du code) fausserait l'audit : on l'arrête.
-pkill -i -f 'python.*-m lab[.]app' 2>/dev/null
-pkill -i -f 'python.*-m attest[.]studio' 2>/dev/null
-sleep 1
-
-LAB_URL="http://127.0.0.1:${LAB_PORT:-5050}"
-STUDIO_URL="http://127.0.0.1:${STUDIO_PORT:-8000}"
+# Une instance lancée par un démarrage précédent (ancienne version du code) fausserait l'audit : on l'arrête.
+# Seuls les processus de ce script (fichiers pid) sont visés, jamais ceux d'un autre dossier.
 mkdir -p runs/_logs
+for name in lab studio; do
+  f="runs/_logs/$name.pid"
+  if [ -f "$f" ]; then
+    pid=$(cat "$f")
+    case "$(ps -p "$pid" -o args= 2>/dev/null)" in
+      *"-m lab.app"*|*"-m attest.studio"*) kill "$pid" 2>/dev/null; sleep 1 ;;
+    esac
+    rm -f "$f"
+  fi
+done
+
 python -m lab.app > runs/_logs/lab.log 2>&1 &
 LAB=$!
 python -m attest.studio > runs/_logs/studio.log 2>&1 &
 STUDIO=$!
-trap 'kill $LAB $STUDIO 2>/dev/null; echo; echo "Console et Studio arrêtés."' EXIT
+echo "$LAB" > runs/_logs/lab.pid
+echo "$STUDIO" > runs/_logs/studio.pid
+trap 'kill $LAB $STUDIO 2>/dev/null; rm -f runs/_logs/lab.pid runs/_logs/studio.pid; echo; echo "Console et Studio arrêtés."' EXIT
 
 up=""
 for _ in $(seq 60); do
   for pid in $LAB $STUDIO; do
     if ! kill -0 "$pid" 2>/dev/null; then
-      echo "Échec au démarrage (journaux ci-dessous) :"
+      echo "Échec au démarrage (journaux ci-dessous ; port $LAB_PORT ou $STUDIO_PORT déjà pris ?) :"
       tail -n 15 runs/_logs/lab.log runs/_logs/studio.log
       exit 1
     fi

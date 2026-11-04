@@ -87,3 +87,53 @@ def test_missing_evidence_is_reported_not_hidden(lab, tmp_path, monkeypatch):
     html = (tmp_path / "run" / "report.html").read_text()
     assert "Preuve visuelle indisponible" in html and "sans preuve visuelle" in html
     assert "evidence_failed" in (tmp_path / "run" / "trail.jsonl").read_text()
+
+
+def _prepared(c, lang="fr"):
+    r = c.post("/interpret", data={"lang": lang, "lib": ["politique-psi-4-acces"], "target": "iam-console"})
+    return r.location.split("/review/")[1].split("?")[0]
+
+
+def test_studio_single_pipeline_per_folder(tmp_path, monkeypatch):
+    """Double clic sur « Lancer l'audit » : un seul pipeline, la piste scellée n'a qu'un auteur."""
+    import threading
+    from attest import studio
+    monkeypatch.setattr(studio, "WORK", tmp_path / "studio")
+    monkeypatch.setattr(studio, "JOBS", {})
+    started, gate = [], threading.Event()
+
+    def fake_job(sid, *a):
+        started.append(sid)
+        gate.wait(10)
+        studio.JOBS[sid] = {"state": "done"}
+    monkeypatch.setattr(studio, "job", fake_job)
+    c = studio.app.test_client()
+    sid = _prepared(c)
+    form = {"reviewer": "A. Auditeur", "ctrl": ["C1"]}
+    r1, r2 = c.post(f"/run/{sid}", data=form), c.post(f"/run/{sid}", data=form)
+    assert r1.status_code == r2.status_code == 302 and r2.location.endswith(f"/audit/{sid}")
+    # Pendant l'audit, pas de nouvelle interprétation (elle remettrait le compteur de coût à zéro)
+    busy = c.post("/interpret", data={"lang": "en", "lib": ["politique-psi-4-acces"], "target": "iam-console"})
+    assert busy.status_code == 409 and "An audit is running" in busy.get_data(as_text=True)
+    gate.set()
+    for _ in range(50):
+        if studio.JOBS[sid]["state"] == "done":
+            break
+        time.sleep(0.05)
+    (tmp_path / "studio" / sid / "audit").mkdir()
+    studio.JOBS.clear()                                  # redémarrage du Studio : le dossier audit/ suffit
+    c.post(f"/run/{sid}", data=form)
+    assert started == [sid]
+
+
+def test_studio_requires_reviewer_and_known_target(tmp_path, monkeypatch):
+    from attest import studio
+    monkeypatch.setattr(studio, "WORK", tmp_path / "studio")
+    monkeypatch.setattr(studio, "JOBS", {})
+    c = studio.app.test_client()
+    sid = _prepared(c, "en")
+    page = c.post(f"/run/{sid}", data={"reviewer": "  ", "ctrl": ["C1"]})
+    assert page.status_code == 200 and "Enter your name" in page.get_data(as_text=True)
+    assert sid not in studio.JOBS
+    r = c.post("/interpret", data={"lang": "fr", "lib": ["politique-psi-4-acces"], "target": "../../etc"})
+    assert r.status_code == 400 and "Cible inconnue" in r.get_data(as_text=True)

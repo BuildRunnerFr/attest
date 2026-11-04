@@ -9,6 +9,12 @@ system = "KRL-ADM — console d'administration IAM"
 system_criticality = "Supporte des fonctions critiques ou importantes (DORA)"
 environment = "Pré-production de démonstration"
 owner = "DSI — équipe IAM"
+# Versions anglaises (rapport en EN) ; à défaut, le champ de base est repris
+entity_en = "Banque Kerlann (fictitious)"
+system_en = "KRL-ADM — IAM administration console"
+system_criticality_en = "Supports critical or important functions (DORA)"
+environment_en = "Demonstration pre-production"
+owner_en = "IT department — IAM team"
 lead_auditor = "A. Auditeur"          # mets ton nom pour la démo
 # Marquage public du FIRST (Traffic Light Protocol 2.0) : diffusion limitée à l'organisation, besoin d'en connaître
 classification = "TLP:AMBER+STRICT"
@@ -25,6 +31,16 @@ out = [
   "Efficacité intrinsèque des facteurs MFA (robustesse des moyens d'authentification)",
   "Annuaire central et fédération d'identité",
   "Contrôles physiques",
+]
+in_en = [
+  "Authentication and session settings of the KRL-ADM console",
+  "Accounts with access to the console",
+  "Logging of administrative actions",
+]
+out_en = [
+  "Intrinsic strength of MFA factors (robustness of authentication means)",
+  "Central directory and identity federation",
+  "Physical controls",
 ]
 
 [sla_days]   # délais de remédiation par criticité (politique interne)
