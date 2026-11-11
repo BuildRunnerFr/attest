@@ -1,0 +1,31 @@
+{
+  "id": "20261111-111943-bench-meta",
+  "utc": "20261111-111943",
+  "kind": "bench",
+  "backend": "meta",
+  "note": "correctif pagination : population complète (scénarios 09/10)",
+  "commit": "ad92da6",
+  "workflow_run": "43010932769",
+  "status": "success",
+  "budget_spent_usd": 1.0321,
+  "priced_usd": 0.2721,
+  "unpriced": [
+    "sam-3.1"
+  ],
+  "bench": {
+    "checks": 14,
+    "TP": 0,
+    "TN": 12,
+    "FP": 0,
+    "FN": 0,
+    "inconclusive": 2,
+    "accuracy": 0.857,
+    "pii_total": 400,
+    "pii_model": 357,
+    "pii_masked": 400,
+    "injection_cases": 0,
+    "injection_flagged": 0,
+    "cost_usd": 0.2721,
+    "seconds": 623
+  }
+}
