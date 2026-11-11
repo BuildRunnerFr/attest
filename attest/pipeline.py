@@ -494,14 +494,16 @@ def preflight(mission) -> None:
     """Avant toute mission : le backend est configuré, le système répond, refuse l'accès anonyme,
     et le compte d'audit fonctionne. Appelé avant l'ouverture de la piste : rien n'est écrit en cas d'échec."""
     llm.check_backend()
-    url = mission.lab_url
+    url, probe = mission.lab_url, targets.get(mission.target)["probe"]
     try:
-        anon = requests.get(url + "/api/security", timeout=5)
+        anon = requests.get(url + probe, timeout=5)
     except requests.RequestException:
         sys.exit(t("pre.unreachable").format(url=url))
+    if anon.status_code == 404:                    # la passerelle qui répond ne sert pas cette cible
+        sys.exit(t("pre.wrongtarget").format(url=url, target=mission.target))
     if anon.status_code != 401:
         sys.exit(t("pre.noauth"))
-    ro = requests.get(url + "/api/journal", timeout=5, headers={"Authorization": f"Bearer {config.AUDIT_TOKEN}"})
+    ro = requests.get(url + probe, timeout=15, headers={"Authorization": f"Bearer {config.AUDIT_TOKEN}"})
     if ro.status_code != 200:
         sys.exit(t("pre.token").format(code=ro.status_code))
 

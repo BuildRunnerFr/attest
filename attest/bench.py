@@ -170,17 +170,24 @@ def _mismatch(a: dict) -> bool:
         and a["declared"] != len(a["got"])
 
 
-def select(only: list | None = None) -> list:
+# Jeux de scénarios par cible : (dossier, lettre de mission). La console fictive reste le jeu de référence.
+SUITES = {
+    "iam-console": (SCEN_DIR, "kerlann-iam.toml"),
+    "keycloak": (config.ROOT / "connectors" / "keycloak" / "scenarios", "keycloak.toml"),
+}
+
+
+def select(only: list | None = None, scen_dir: Path | None = None) -> list:
     """Scénarios à évaluer. Sans sélection : le jeu de référence (01-08, 56 vérifications), sans les scénarios
     marqués « stress » (grands annuaires paginés 09-10), qui ne tournent que si on les nomme (only=09,10)."""
-    paths = sorted(SCEN_DIR.glob("*.json"))
+    paths = sorted((scen_dir or SCEN_DIR).glob("*.json"))
     if only:
         return [p for p in paths if any(p.stem.startswith(o.strip()) for o in only if o.strip())]
     return [p for p in paths if not json.loads(p.read_text()).get("stress")]
 
 
 def run_bench(mission, out_root: Path, only: list | None = None) -> dict:
-    paths = select(only)
+    paths = select(only, SUITES.get(mission.target, SUITES["iam-console"])[0])
     out_root.mkdir(parents=True, exist_ok=True)
     results = []
     for p in paths:
@@ -213,7 +220,7 @@ def run_bench(mission, out_root: Path, only: list | None = None) -> dict:
         })
     _reset(mission)                                   # la console revient au scénario de démonstration
     summary = summarize(results)
-    data = {"backend": llm.BACKEND, "model": llm.model_for(False), "lang": config.lang(),
+    data = {"backend": llm.BACKEND, "model": llm.model_for(False), "lang": config.lang(), "target": mission.target,
             "date": time.strftime("%Y-%m-%d %H:%M"), "premask": False, "summary": summary, "scenarios": results}
     (out_root / "scorecard.json").write_text(json.dumps(data, ensure_ascii=False, indent=2))
     (out_root / "scorecard.md").write_text(to_markdown(data))

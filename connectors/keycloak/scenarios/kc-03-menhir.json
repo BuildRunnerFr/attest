@@ -1,0 +1,1468 @@
+{
+ "id": "kc-03-menhir",
+ "realm": "menhir",
+ "label": "Royaume Keycloak mixte, un administrateur sans MFA",
+ "entity": "Menhir Finance (fictive)",
+ "system": "Keycloak — royaume menhir (fournisseur d'identité)",
+ "tests": "3 non-conformités : un administrateur sur quatre sans MFA (y.tanguy), mot de passe long mais sans complexité, session inactive de 30 minutes. Le reste est conforme.",
+ "settings": {
+  "passwordPolicy": "length(14)",
+  "bruteForceProtected": true,
+  "failureFactor": 3,
+  "ssoSessionIdleTimeout": 1800,
+  "adminEventsEnabled": true
+ },
+ "users": [
+  {
+   "login": "a.allain",
+   "email": "anne.allain@menhir-finance.example",
+   "first": "Anne",
+   "last": "Allain",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "a.bihan",
+   "email": "armelle.bihan@menhir-finance.example",
+   "first": "Armelle",
+   "last": "Bihan",
+   "role": "admin",
+   "totp": true
+  },
+  {
+   "login": "a.bonnet",
+   "email": "anne.bonnet@menhir-finance.example",
+   "first": "Anne",
+   "last": "Bonnet",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "a.cloarec",
+   "email": "arthur.cloarec@menhir-finance.example",
+   "first": "Arthur",
+   "last": "Cloarec",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "a.dupont",
+   "email": "alexandre.dupont@menhir-finance.example",
+   "first": "Alexandre",
+   "last": "Dupont",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "a.even",
+   "email": "adele.even@menhir-finance.example",
+   "first": "Adele",
+   "last": "Even",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "a.guillou",
+   "email": "adele.guillou@menhir-finance.example",
+   "first": "Adele",
+   "last": "Guillou",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "a.mercier",
+   "email": "arthur.mercier@menhir-finance.example",
+   "first": "Arthur",
+   "last": "Mercier",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "a.richard",
+   "email": "antoine.richard@menhir-finance.example",
+   "first": "Antoine",
+   "last": "Richard",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "b.gourmelen",
+   "email": "bastien.gourmelen@menhir-finance.example",
+   "first": "Bastien",
+   "last": "Gourmelen",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "b.le-goff",
+   "email": "bastien.le-goff@menhir-finance.example",
+   "first": "Bastien",
+   "last": "Le-Goff",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "b.madec",
+   "email": "bastien.madec@menhir-finance.example",
+   "first": "Bastien",
+   "last": "Madec",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "b.nedelec",
+   "email": "bastien.nedelec@menhir-finance.example",
+   "first": "Bastien",
+   "last": "Nedelec",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "b.simon",
+   "email": "bleuenn.simon@menhir-finance.example",
+   "first": "Bleuenn",
+   "last": "Simon",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "b.vigouroux",
+   "email": "bastien.vigouroux@menhir-finance.example",
+   "first": "Bastien",
+   "last": "Vigouroux",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "c.abgrall",
+   "email": "camille.abgrall@menhir-finance.example",
+   "first": "Camille",
+   "last": "Abgrall",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "c.allain",
+   "email": "celine.allain@menhir-finance.example",
+   "first": "Celine",
+   "last": "Allain",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "c.bernard",
+   "email": "celine.bernard@menhir-finance.example",
+   "first": "Celine",
+   "last": "Bernard",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "c.bertrand",
+   "email": "claire.bertrand@menhir-finance.example",
+   "first": "Claire",
+   "last": "Bertrand",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "c.bonnet",
+   "email": "chloe.bonnet@menhir-finance.example",
+   "first": "Chloe",
+   "last": "Bonnet",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "c.briand",
+   "email": "celine.briand@menhir-finance.example",
+   "first": "Celine",
+   "last": "Briand",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "c.even",
+   "email": "chloe.even@menhir-finance.example",
+   "first": "Chloe",
+   "last": "Even",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "c.girard",
+   "email": "chloe.girard@menhir-finance.example",
+   "first": "Chloe",
+   "last": "Girard",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "c.gourmelen",
+   "email": "chloe.gourmelen@menhir-finance.example",
+   "first": "Chloe",
+   "last": "Gourmelen",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "c.jacq",
+   "email": "camille.jacq@menhir-finance.example",
+   "first": "Camille",
+   "last": "Jacq",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "c.jacq2",
+   "email": "claire.jacq2@menhir-finance.example",
+   "first": "Claire",
+   "last": "Jacq",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "c.laurent",
+   "email": "corentin.laurent@menhir-finance.example",
+   "first": "Corentin",
+   "last": "Laurent",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "c.laurent2",
+   "email": "chloe.laurent2@menhir-finance.example",
+   "first": "Chloe",
+   "last": "Laurent",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "c.le-corre",
+   "email": "camille.le-corre@menhir-finance.example",
+   "first": "Camille",
+   "last": "Le-Corre",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "c.leroy",
+   "email": "camille.leroy@menhir-finance.example",
+   "first": "Camille",
+   "last": "Leroy",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "c.mercier",
+   "email": "camille.mercier@menhir-finance.example",
+   "first": "Camille",
+   "last": "Mercier",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "c.mercier2",
+   "email": "chloe.mercier2@menhir-finance.example",
+   "first": "Chloe",
+   "last": "Mercier",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "c.prigent",
+   "email": "camille.prigent@menhir-finance.example",
+   "first": "Camille",
+   "last": "Prigent",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "c.toullec",
+   "email": "camille.toullec@menhir-finance.example",
+   "first": "Camille",
+   "last": "Toullec",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "c.vincent",
+   "email": "corentin.vincent@menhir-finance.example",
+   "first": "Corentin",
+   "last": "Vincent",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "d.guillou",
+   "email": "damien.guillou@menhir-finance.example",
+   "first": "Damien",
+   "last": "Guillou",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "d.lagadec",
+   "email": "damien.lagadec@menhir-finance.example",
+   "first": "Damien",
+   "last": "Lagadec",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "d.lagadec2",
+   "email": "denez.lagadec2@menhir-finance.example",
+   "first": "Denez",
+   "last": "Lagadec",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "d.lefloch",
+   "email": "damien.lefloch@menhir-finance.example",
+   "first": "Damien",
+   "last": "Lefloch",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "d.mercier",
+   "email": "denez.mercier@menhir-finance.example",
+   "first": "Denez",
+   "last": "Mercier",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "d.michel",
+   "email": "denez.michel@menhir-finance.example",
+   "first": "Denez",
+   "last": "Michel",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "d.morel",
+   "email": "damien.morel@menhir-finance.example",
+   "first": "Damien",
+   "last": "Morel",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "d.quere",
+   "email": "denez.quere@menhir-finance.example",
+   "first": "Denez",
+   "last": "Quere",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "e.bernard",
+   "email": "elodie.bernard@menhir-finance.example",
+   "first": "Elodie",
+   "last": "Bernard",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "e.daniel",
+   "email": "enora.daniel@menhir-finance.example",
+   "first": "Enora",
+   "last": "Daniel",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "e.gourmelen",
+   "email": "erwan.gourmelen@menhir-finance.example",
+   "first": "Erwan",
+   "last": "Gourmelen",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "e.gourvennec",
+   "email": "erwan.gourvennec@menhir-finance.example",
+   "first": "Erwan",
+   "last": "Gourvennec",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "e.kerbrat",
+   "email": "enora.kerbrat@menhir-finance.example",
+   "first": "Enora",
+   "last": "Kerbrat",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "e.le-corre",
+   "email": "enora.le-corre@menhir-finance.example",
+   "first": "Enora",
+   "last": "Le-Corre",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "e.madec",
+   "email": "elodie.madec@menhir-finance.example",
+   "first": "Elodie",
+   "last": "Madec",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "e.martin",
+   "email": "emma.martin@menhir-finance.example",
+   "first": "Emma",
+   "last": "Martin",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "e.roux",
+   "email": "elodie.roux@menhir-finance.example",
+   "first": "Elodie",
+   "last": "Roux",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "f.kerbrat",
+   "email": "fabien.kerbrat@menhir-finance.example",
+   "first": "Fabien",
+   "last": "Kerbrat",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "f.petit",
+   "email": "fabien.petit@menhir-finance.example",
+   "first": "Fabien",
+   "last": "Petit",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "f.vigouroux",
+   "email": "fabien.vigouroux@menhir-finance.example",
+   "first": "Fabien",
+   "last": "Vigouroux",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "g.cloarec",
+   "email": "gabriel.cloarec@menhir-finance.example",
+   "first": "Gabriel",
+   "last": "Cloarec",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "g.cloarec2",
+   "email": "gaelle.cloarec2@menhir-finance.example",
+   "first": "Gaelle",
+   "last": "Cloarec",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "g.durand",
+   "email": "goulven.durand@menhir-finance.example",
+   "first": "Goulven",
+   "last": "Durand",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "g.le-bihan",
+   "email": "goulven.le-bihan@menhir-finance.example",
+   "first": "Goulven",
+   "last": "Le-Bihan",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "g.le-corre",
+   "email": "gwen.le-corre@menhir-finance.example",
+   "first": "Gwen",
+   "last": "Le-Corre",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "g.lefebvre",
+   "email": "goulven.lefebvre@menhir-finance.example",
+   "first": "Goulven",
+   "last": "Lefebvre",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "g.morvan",
+   "email": "gaelle.morvan@menhir-finance.example",
+   "first": "Gaelle",
+   "last": "Morvan",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "g.olier",
+   "email": "gabriel.olier@menhir-finance.example",
+   "first": "Gabriel",
+   "last": "Olier",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "g.vincent",
+   "email": "gwen.vincent@menhir-finance.example",
+   "first": "Gwen",
+   "last": "Vincent",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "h.bertrand",
+   "email": "herve.bertrand@menhir-finance.example",
+   "first": "Herve",
+   "last": "Bertrand",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "h.bihan",
+   "email": "hugo.bihan@menhir-finance.example",
+   "first": "Hugo",
+   "last": "Bihan",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "h.le-roux",
+   "email": "hugo.le-roux@menhir-finance.example",
+   "first": "Hugo",
+   "last": "Le-Roux",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "h.lefebvre",
+   "email": "herve.lefebvre@menhir-finance.example",
+   "first": "Herve",
+   "last": "Lefebvre",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "h.uguen",
+   "email": "herve.uguen@menhir-finance.example",
+   "first": "Herve",
+   "last": "Uguen",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "h.vigouroux",
+   "email": "herve.vigouroux@menhir-finance.example",
+   "first": "Herve",
+   "last": "Vigouroux",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "i.david",
+   "email": "isabelle.david@menhir-finance.example",
+   "first": "Isabelle",
+   "last": "David",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "i.hamon",
+   "email": "isabelle.hamon@menhir-finance.example",
+   "first": "Isabelle",
+   "last": "Hamon",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "i.kervella",
+   "email": "ivona.kervella@menhir-finance.example",
+   "first": "Ivona",
+   "last": "Kervella",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "i.lagadec",
+   "email": "ivona.lagadec@menhir-finance.example",
+   "first": "Ivona",
+   "last": "Lagadec",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "i.lefebvre",
+   "email": "ivona.lefebvre@menhir-finance.example",
+   "first": "Ivona",
+   "last": "Lefebvre",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "i.michel",
+   "email": "isabelle.michel@menhir-finance.example",
+   "first": "Isabelle",
+   "last": "Michel",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "i.morel",
+   "email": "ivona.morel@menhir-finance.example",
+   "first": "Ivona",
+   "last": "Morel",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "j.bertrand",
+   "email": "jean.bertrand@menhir-finance.example",
+   "first": "Jean",
+   "last": "Bertrand",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "j.durand",
+   "email": "jakez.durand@menhir-finance.example",
+   "first": "Jakez",
+   "last": "Durand",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "j.jacq",
+   "email": "jerome.jacq@menhir-finance.example",
+   "first": "Jerome",
+   "last": "Jacq",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "j.lefloch",
+   "email": "jerome.lefloch@menhir-finance.example",
+   "first": "Jerome",
+   "last": "Lefloch",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "j.leroy",
+   "email": "jean.leroy@menhir-finance.example",
+   "first": "Jean",
+   "last": "Leroy",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "j.morvan",
+   "email": "julie.morvan@menhir-finance.example",
+   "first": "Julie",
+   "last": "Morvan",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "j.yvinec",
+   "email": "jerome.yvinec@menhir-finance.example",
+   "first": "Jerome",
+   "last": "Yvinec",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "k.bihan",
+   "email": "klervi.bihan@menhir-finance.example",
+   "first": "Klervi",
+   "last": "Bihan",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "k.jacq",
+   "email": "klervi.jacq@menhir-finance.example",
+   "first": "Klervi",
+   "last": "Jacq",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "k.lefebvre",
+   "email": "katell.lefebvre@menhir-finance.example",
+   "first": "Katell",
+   "last": "Lefebvre",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "k.michel",
+   "email": "katell.michel@menhir-finance.example",
+   "first": "Katell",
+   "last": "Michel",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "k.morel",
+   "email": "katell.morel@menhir-finance.example",
+   "first": "Katell",
+   "last": "Morel",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "l.cariou",
+   "email": "lucas.cariou@menhir-finance.example",
+   "first": "Lucas",
+   "last": "Cariou",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "l.daniel",
+   "email": "louis.daniel@menhir-finance.example",
+   "first": "Louis",
+   "last": "Daniel",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "l.girard",
+   "email": "laura.girard@menhir-finance.example",
+   "first": "Laura",
+   "last": "Girard",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "l.guivarch",
+   "email": "loic.guivarch@menhir-finance.example",
+   "first": "Loic",
+   "last": "Guivarch",
+   "role": "admin",
+   "totp": true
+  },
+  {
+   "login": "l.jegou",
+   "email": "loic.jegou@menhir-finance.example",
+   "first": "Loic",
+   "last": "Jegou",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "l.kerjean",
+   "email": "louis.kerjean@menhir-finance.example",
+   "first": "Louis",
+   "last": "Kerjean",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "l.le-corre",
+   "email": "loic.le-corre@menhir-finance.example",
+   "first": "Loic",
+   "last": "Le-Corre",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "l.le-goff",
+   "email": "loic.le-goff@menhir-finance.example",
+   "first": "Loic",
+   "last": "Le-Goff",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "l.morel",
+   "email": "lucas.morel@menhir-finance.example",
+   "first": "Lucas",
+   "last": "Morel",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "l.nedelec",
+   "email": "lea.nedelec@menhir-finance.example",
+   "first": "Lea",
+   "last": "Nedelec",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "l.raoul",
+   "email": "louis.raoul@menhir-finance.example",
+   "first": "Louis",
+   "last": "Raoul",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "l.uguen",
+   "email": "louis.uguen@menhir-finance.example",
+   "first": "Louis",
+   "last": "Uguen",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "m.allain",
+   "email": "marie.allain@menhir-finance.example",
+   "first": "Marie",
+   "last": "Allain",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "m.briand",
+   "email": "morgane.briand@menhir-finance.example",
+   "first": "Morgane",
+   "last": "Briand",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "m.dubois",
+   "email": "maxime.dubois@menhir-finance.example",
+   "first": "Maxime",
+   "last": "Dubois",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "m.dupont",
+   "email": "mael.dupont@menhir-finance.example",
+   "first": "Mael",
+   "last": "Dupont",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "m.floch",
+   "email": "maela.floch@menhir-finance.example",
+   "first": "Maela",
+   "last": "Floch",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "m.garcia",
+   "email": "manon.garcia@menhir-finance.example",
+   "first": "Manon",
+   "last": "Garcia",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "m.gourmelen",
+   "email": "maxime.gourmelen@menhir-finance.example",
+   "first": "Maxime",
+   "last": "Gourmelen",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "m.guillou",
+   "email": "maxime.guillou@menhir-finance.example",
+   "first": "Maxime",
+   "last": "Guillou",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "m.hamon",
+   "email": "morgane.hamon@menhir-finance.example",
+   "first": "Morgane",
+   "last": "Hamon",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "m.jaouen",
+   "email": "mael.jaouen@menhir-finance.example",
+   "first": "Mael",
+   "last": "Jaouen",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "m.jaouen2",
+   "email": "manon.jaouen2@menhir-finance.example",
+   "first": "Manon",
+   "last": "Jaouen",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "m.jegou",
+   "email": "manon.jegou@menhir-finance.example",
+   "first": "Manon",
+   "last": "Jegou",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "m.jegou2",
+   "email": "mael.jegou2@menhir-finance.example",
+   "first": "Mael",
+   "last": "Jegou",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "m.kervella",
+   "email": "manon.kervella@menhir-finance.example",
+   "first": "Manon",
+   "last": "Kervella",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "m.lefloch",
+   "email": "mael.lefloch@menhir-finance.example",
+   "first": "Mael",
+   "last": "Lefloch",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "m.pichon",
+   "email": "maiwenn.pichon@menhir-finance.example",
+   "first": "Maiwenn",
+   "last": "Pichon",
+   "role": "admin",
+   "totp": true
+  },
+  {
+   "login": "m.quillien",
+   "email": "maela.quillien@menhir-finance.example",
+   "first": "Maela",
+   "last": "Quillien",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "n.abgrall",
+   "email": "nathalie.abgrall@menhir-finance.example",
+   "first": "Nathalie",
+   "last": "Abgrall",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "n.bonnet",
+   "email": "nathalie.bonnet@menhir-finance.example",
+   "first": "Nathalie",
+   "last": "Bonnet",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "n.dupont",
+   "email": "nicolas.dupont@menhir-finance.example",
+   "first": "Nicolas",
+   "last": "Dupont",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "n.gourmelen",
+   "email": "nolwenn.gourmelen@menhir-finance.example",
+   "first": "Nolwenn",
+   "last": "Gourmelen",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "n.hamon",
+   "email": "nicolas.hamon@menhir-finance.example",
+   "first": "Nicolas",
+   "last": "Hamon",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "n.hamon2",
+   "email": "nicolas.hamon2@menhir-finance.example",
+   "first": "Nicolas",
+   "last": "Hamon",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "n.lambert",
+   "email": "nicolas.lambert@menhir-finance.example",
+   "first": "Nicolas",
+   "last": "Lambert",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "n.prigent",
+   "email": "nathalie.prigent@menhir-finance.example",
+   "first": "Nathalie",
+   "last": "Prigent",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "n.raoul",
+   "email": "nicolas.raoul@menhir-finance.example",
+   "first": "Nicolas",
+   "last": "Raoul",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "n.tanguy",
+   "email": "nolwenn.tanguy@menhir-finance.example",
+   "first": "Nolwenn",
+   "last": "Tanguy",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "n.vincent",
+   "email": "nathalie.vincent@menhir-finance.example",
+   "first": "Nathalie",
+   "last": "Vincent",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "o.tanguy",
+   "email": "olivier.tanguy@menhir-finance.example",
+   "first": "Olivier",
+   "last": "Tanguy",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "p.bertrand",
+   "email": "pierre.bertrand@menhir-finance.example",
+   "first": "Pierre",
+   "last": "Bertrand",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "p.david",
+   "email": "paul.david@menhir-finance.example",
+   "first": "Paul",
+   "last": "David",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "p.gourmelen",
+   "email": "pierre.gourmelen@menhir-finance.example",
+   "first": "Pierre",
+   "last": "Gourmelen",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "p.henaff",
+   "email": "patrick.henaff@menhir-finance.example",
+   "first": "Patrick",
+   "last": "Henaff",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "p.henaff2",
+   "email": "pauline.henaff2@menhir-finance.example",
+   "first": "Pauline",
+   "last": "Henaff",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "p.jaouen",
+   "email": "patrick.jaouen@menhir-finance.example",
+   "first": "Patrick",
+   "last": "Jaouen",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "p.le-roux",
+   "email": "patrick.le-roux@menhir-finance.example",
+   "first": "Patrick",
+   "last": "Le-Roux",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "p.martin",
+   "email": "paul.martin@menhir-finance.example",
+   "first": "Paul",
+   "last": "Martin",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "p.morvan",
+   "email": "pauline.morvan@menhir-finance.example",
+   "first": "Pauline",
+   "last": "Morvan",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "p.petit",
+   "email": "paul.petit@menhir-finance.example",
+   "first": "Paul",
+   "last": "Petit",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "p.quere",
+   "email": "patrick.quere@menhir-finance.example",
+   "first": "Patrick",
+   "last": "Quere",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "q.girard",
+   "email": "quentin.girard@menhir-finance.example",
+   "first": "Quentin",
+   "last": "Girard",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "q.kerbrat",
+   "email": "quentin.kerbrat@menhir-finance.example",
+   "first": "Quentin",
+   "last": "Kerbrat",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "q.kervella",
+   "email": "quentin.kervella@menhir-finance.example",
+   "first": "Quentin",
+   "last": "Kervella",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "q.kervella2",
+   "email": "quentin.kervella2@menhir-finance.example",
+   "first": "Quentin",
+   "last": "Kervella",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "q.vigouroux",
+   "email": "quentin.vigouroux@menhir-finance.example",
+   "first": "Quentin",
+   "last": "Vigouroux",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "q.vigouroux2",
+   "email": "quentin.vigouroux2@menhir-finance.example",
+   "first": "Quentin",
+   "last": "Vigouroux",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "r.fournier",
+   "email": "romain.fournier@menhir-finance.example",
+   "first": "Romain",
+   "last": "Fournier",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "r.girard",
+   "email": "romain.girard@menhir-finance.example",
+   "first": "Romain",
+   "last": "Girard",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "r.gourvennec",
+   "email": "rozenn.gourvennec@menhir-finance.example",
+   "first": "Rozenn",
+   "last": "Gourvennec",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "r.hamon",
+   "email": "rozenn.hamon@menhir-finance.example",
+   "first": "Rozenn",
+   "last": "Hamon",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "r.lambert",
+   "email": "rozenn.lambert@menhir-finance.example",
+   "first": "Rozenn",
+   "last": "Lambert",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "r.michel",
+   "email": "rozenn.michel@menhir-finance.example",
+   "first": "Rozenn",
+   "last": "Michel",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "s.cloarec",
+   "email": "sophie.cloarec@menhir-finance.example",
+   "first": "Sophie",
+   "last": "Cloarec",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "s.floch",
+   "email": "sophie.floch@menhir-finance.example",
+   "first": "Sophie",
+   "last": "Floch",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "s.kerjean",
+   "email": "sarah.kerjean@menhir-finance.example",
+   "first": "Sarah",
+   "last": "Kerjean",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "s.le-goff",
+   "email": "sophie.le-goff@menhir-finance.example",
+   "first": "Sophie",
+   "last": "Le-Goff",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "s.le-meur",
+   "email": "sophie.le-meur@menhir-finance.example",
+   "first": "Sophie",
+   "last": "Le-Meur",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "s.morvan",
+   "email": "sylvain.morvan@menhir-finance.example",
+   "first": "Sylvain",
+   "last": "Morvan",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "s.richard",
+   "email": "sophie.richard@menhir-finance.example",
+   "first": "Sophie",
+   "last": "Richard",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "s.tanguy",
+   "email": "sophie.tanguy@menhir-finance.example",
+   "first": "Sophie",
+   "last": "Tanguy",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "s.uguen",
+   "email": "sarah.uguen@menhir-finance.example",
+   "first": "Sarah",
+   "last": "Uguen",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "t.briand",
+   "email": "thomas.briand@menhir-finance.example",
+   "first": "Thomas",
+   "last": "Briand",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "t.gourmelen",
+   "email": "tifenn.gourmelen@menhir-finance.example",
+   "first": "Tifenn",
+   "last": "Gourmelen",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "t.kerbrat",
+   "email": "tifenn.kerbrat@menhir-finance.example",
+   "first": "Tifenn",
+   "last": "Kerbrat",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "t.le-goff",
+   "email": "thomas.le-goff@menhir-finance.example",
+   "first": "Thomas",
+   "last": "Le-Goff",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "u.le-roux",
+   "email": "ulysse.le-roux@menhir-finance.example",
+   "first": "Ulysse",
+   "last": "Le-Roux",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "u.le-roux2",
+   "email": "ulysse.le-roux2@menhir-finance.example",
+   "first": "Ulysse",
+   "last": "Le-Roux",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "u.nedelec",
+   "email": "ulysse.nedelec@menhir-finance.example",
+   "first": "Ulysse",
+   "last": "Nedelec",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "u.tanguy",
+   "email": "ulysse.tanguy@menhir-finance.example",
+   "first": "Ulysse",
+   "last": "Tanguy",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "v.bertrand",
+   "email": "valerie.bertrand@menhir-finance.example",
+   "first": "Valerie",
+   "last": "Bertrand",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "v.garcia",
+   "email": "valerie.garcia@menhir-finance.example",
+   "first": "Valerie",
+   "last": "Garcia",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "x.gourmelen",
+   "email": "xavier.gourmelen@menhir-finance.example",
+   "first": "Xavier",
+   "last": "Gourmelen",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "x.le-bihan",
+   "email": "xavier.le-bihan@menhir-finance.example",
+   "first": "Xavier",
+   "last": "Le-Bihan",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "x.le-gall",
+   "email": "xavier.le-gall@menhir-finance.example",
+   "first": "Xavier",
+   "last": "Le-Gall",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "y.even",
+   "email": "yann.even@menhir-finance.example",
+   "first": "Yann",
+   "last": "Even",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "y.laurent",
+   "email": "yannick.laurent@menhir-finance.example",
+   "first": "Yannick",
+   "last": "Laurent",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "y.tanguy",
+   "email": "yannick.tanguy@menhir-finance.example",
+   "first": "Yannick",
+   "last": "Tanguy",
+   "role": "admin",
+   "totp": false
+  },
+  {
+   "login": "y.vincent",
+   "email": "yannick.vincent@menhir-finance.example",
+   "first": "Yannick",
+   "last": "Vincent",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "z.lefloch",
+   "email": "zoe.lefloch@menhir-finance.example",
+   "first": "Zoe",
+   "last": "Lefloch",
+   "role": "conseiller",
+   "totp": true
+  }
+ ],
+ "notes": [],
+ "expected": {
+  "PSI-4.1": "fail",
+  "PSI-4.2": "pass",
+  "PSI-4.3": "fail",
+  "PSI-4.4": "pass",
+  "PSI-4.5": "fail",
+  "PSI-4.6": "pass",
+  "PSI-4.7": "pass"
+ },
+ "expected_generic_admins": []
+}

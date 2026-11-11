@@ -16,6 +16,7 @@ TARGETS = {
         "owner_en": "IT department — IAM team",
         "doc": "lab/API.md",
         "default_page": "/admin/security",
+        "probe": "/api/security",
         "remediable": True,                  # correctifs de paramètres via le compte de changement
     },
     "repo:paiement-api": {
@@ -29,7 +30,21 @@ TARGETS = {
         "doc": "lab/REPO_API.md",
         "repo": "paiement-api",
         "default_page": "/repo/paiement-api/view?path=README.md",
+        "probe": "/api/repos",
         "remediable": False,                 # le code est corrigé par l'équipe de développement
+    },
+    "keycloak": {
+        "kind": "app",
+        "label": {"fr": "Keycloak (fournisseur d'identité open source), via la passerelle en lecture seule",
+                  "en": "Keycloak (open-source identity provider), through the read-only gateway"},
+        "system": "Keycloak — fournisseur d'identité",
+        "owner": "DSI — équipe IAM",
+        "system_en": "Keycloak — identity provider",
+        "owner_en": "IT department — IAM team",
+        "doc": "connectors/keycloak/API.md",
+        "default_page": "/kc/realm",
+        "probe": "/api/kc/realm",            # route qui prouve que cette cible est servie à LAB_URL
+        "remediable": False,                 # la passerelle n'a aucune route d'écriture
     },
 }
 
@@ -54,3 +69,18 @@ def text(target_id: str, key: str, lang: str | None = None) -> str:
     """Champ d'une cible dans la langue du rapport (`key_en`), sinon le champ de base."""
     t = get(target_id)
     return t.get(f"{key}_{lang or config.lang()}", t[key])
+
+
+def available(lab_url: str, token: str) -> dict:
+    """Cibles réellement servies à cette adresse (leur route témoin répond au compte d'audit).
+    Si rien ne répond (console arrêtée), toutes les cibles sont rendues : l'erreur viendra du contrôle préalable."""
+    import requests
+    ok = {}
+    for tid, t in TARGETS.items():
+        try:
+            r = requests.get(lab_url + t["probe"], timeout=3, headers={"Authorization": f"Bearer {token}"})
+            if r.status_code == 200:
+                ok[tid] = t
+        except requests.RequestException:
+            pass
+    return ok or dict(TARGETS)

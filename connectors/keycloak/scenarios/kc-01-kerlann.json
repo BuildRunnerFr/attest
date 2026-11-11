@@ -1,0 +1,2110 @@
+{
+ "id": "kc-01-kerlann",
+ "realm": "kerlann",
+ "label": "Royaume Keycloak non conforme, 260 comptes",
+ "entity": "Banque Kerlann (fictive)",
+ "system": "Keycloak — royaume kerlann (fournisseur d'identité)",
+ "tests": "7 non-conformités sur un vrai Keycloak ; l'administrateur générique « support-n2 » n'est pas dans les 100 premiers comptes (taille de page par défaut de Keycloak).",
+ "settings": {
+  "passwordPolicy": "length(8)",
+  "bruteForceProtected": false,
+  "failureFactor": 30,
+  "ssoSessionIdleTimeout": 28800,
+  "adminEventsEnabled": false
+ },
+ "users": [
+  {
+   "login": "a.abgrall",
+   "email": "adele.abgrall@kerlann-banque.example",
+   "first": "Adele",
+   "last": "Abgrall",
+   "role": "admin",
+   "totp": false
+  },
+  {
+   "login": "a.allain",
+   "email": "anne.allain@kerlann-banque.example",
+   "first": "Anne",
+   "last": "Allain",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "a.bertrand",
+   "email": "antoine.bertrand@kerlann-banque.example",
+   "first": "Antoine",
+   "last": "Bertrand",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "a.briand",
+   "email": "anne.briand@kerlann-banque.example",
+   "first": "Anne",
+   "last": "Briand",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "a.derrien",
+   "email": "anne.derrien@kerlann-banque.example",
+   "first": "Anne",
+   "last": "Derrien",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "a.floch",
+   "email": "alexandre.floch@kerlann-banque.example",
+   "first": "Alexandre",
+   "last": "Floch",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "a.fournier",
+   "email": "adele.fournier@kerlann-banque.example",
+   "first": "Adele",
+   "last": "Fournier",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "a.jegou",
+   "email": "alexandre.jegou@kerlann-banque.example",
+   "first": "Alexandre",
+   "last": "Jegou",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "a.kerjean",
+   "email": "antoine.kerjean@kerlann-banque.example",
+   "first": "Antoine",
+   "last": "Kerjean",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "a.kervella",
+   "email": "alexandre.kervella@kerlann-banque.example",
+   "first": "Alexandre",
+   "last": "Kervella",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "a.le-roux",
+   "email": "antoine.le-roux@kerlann-banque.example",
+   "first": "Antoine",
+   "last": "Le-Roux",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "a.lefebvre",
+   "email": "alexandre.lefebvre@kerlann-banque.example",
+   "first": "Alexandre",
+   "last": "Lefebvre",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "a.lefloch",
+   "email": "arthur.lefloch@kerlann-banque.example",
+   "first": "Arthur",
+   "last": "Lefloch",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "a.madec",
+   "email": "alexandre.madec@kerlann-banque.example",
+   "first": "Alexandre",
+   "last": "Madec",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "a.mercier",
+   "email": "arthur.mercier@kerlann-banque.example",
+   "first": "Arthur",
+   "last": "Mercier",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "a.pennec",
+   "email": "anne.pennec@kerlann-banque.example",
+   "first": "Anne",
+   "last": "Pennec",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "a.quere",
+   "email": "alexandre.quere@kerlann-banque.example",
+   "first": "Alexandre",
+   "last": "Quere",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "a.quere2",
+   "email": "arthur.quere2@kerlann-banque.example",
+   "first": "Arthur",
+   "last": "Quere",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "a.quillien",
+   "email": "adele.quillien@kerlann-banque.example",
+   "first": "Adele",
+   "last": "Quillien",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "a.raoul",
+   "email": "adele.raoul@kerlann-banque.example",
+   "first": "Adele",
+   "last": "Raoul",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "a.robert",
+   "email": "arthur.robert@kerlann-banque.example",
+   "first": "Arthur",
+   "last": "Robert",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "a.roux",
+   "email": "anne.roux@kerlann-banque.example",
+   "first": "Anne",
+   "last": "Roux",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "a.roux2",
+   "email": "arthur.roux2@kerlann-banque.example",
+   "first": "Arthur",
+   "last": "Roux",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "b.bihan",
+   "email": "bastien.bihan@kerlann-banque.example",
+   "first": "Bastien",
+   "last": "Bihan",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "b.bonnet",
+   "email": "bastien.bonnet@kerlann-banque.example",
+   "first": "Bastien",
+   "last": "Bonnet",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "b.cariou",
+   "email": "bleuenn.cariou@kerlann-banque.example",
+   "first": "Bleuenn",
+   "last": "Cariou",
+   "role": "admin",
+   "totp": false
+  },
+  {
+   "login": "b.cloarec",
+   "email": "bleuenn.cloarec@kerlann-banque.example",
+   "first": "Bleuenn",
+   "last": "Cloarec",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "b.dupont",
+   "email": "bleuenn.dupont@kerlann-banque.example",
+   "first": "Bleuenn",
+   "last": "Dupont",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "b.even",
+   "email": "bleuenn.even@kerlann-banque.example",
+   "first": "Bleuenn",
+   "last": "Even",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "b.kerbrat",
+   "email": "bastien.kerbrat@kerlann-banque.example",
+   "first": "Bastien",
+   "last": "Kerbrat",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "b.kerjean",
+   "email": "bastien.kerjean@kerlann-banque.example",
+   "first": "Bastien",
+   "last": "Kerjean",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "b.madec",
+   "email": "bastien.madec@kerlann-banque.example",
+   "first": "Bastien",
+   "last": "Madec",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "b.morel",
+   "email": "bastien.morel@kerlann-banque.example",
+   "first": "Bastien",
+   "last": "Morel",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "b.quillien",
+   "email": "bleuenn.quillien@kerlann-banque.example",
+   "first": "Bleuenn",
+   "last": "Quillien",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "b.roux",
+   "email": "bleuenn.roux@kerlann-banque.example",
+   "first": "Bleuenn",
+   "last": "Roux",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "b.uguen",
+   "email": "bleuenn.uguen@kerlann-banque.example",
+   "first": "Bleuenn",
+   "last": "Uguen",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "c.abgrall",
+   "email": "corentin.abgrall@kerlann-banque.example",
+   "first": "Corentin",
+   "last": "Abgrall",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "c.bertrand",
+   "email": "claire.bertrand@kerlann-banque.example",
+   "first": "Claire",
+   "last": "Bertrand",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "c.denis",
+   "email": "corentin.denis@kerlann-banque.example",
+   "first": "Corentin",
+   "last": "Denis",
+   "role": "admin",
+   "totp": false
+  },
+  {
+   "login": "c.durand",
+   "email": "celine.durand@kerlann-banque.example",
+   "first": "Celine",
+   "last": "Durand",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "c.floch",
+   "email": "corentin.floch@kerlann-banque.example",
+   "first": "Corentin",
+   "last": "Floch",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "c.guillou",
+   "email": "chloe.guillou@kerlann-banque.example",
+   "first": "Chloe",
+   "last": "Guillou",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "c.jacq",
+   "email": "claire.jacq@kerlann-banque.example",
+   "first": "Claire",
+   "last": "Jacq",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "c.lagadec",
+   "email": "camille.lagadec@kerlann-banque.example",
+   "first": "Camille",
+   "last": "Lagadec",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "c.lambert",
+   "email": "chloe.lambert@kerlann-banque.example",
+   "first": "Chloe",
+   "last": "Lambert",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "c.le-bihan",
+   "email": "celine.le-bihan@kerlann-banque.example",
+   "first": "Celine",
+   "last": "Le-Bihan",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "c.leroy",
+   "email": "chloe.leroy@kerlann-banque.example",
+   "first": "Chloe",
+   "last": "Leroy",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "c.madec",
+   "email": "chloe.madec@kerlann-banque.example",
+   "first": "Chloe",
+   "last": "Madec",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "c.quillien",
+   "email": "corentin.quillien@kerlann-banque.example",
+   "first": "Corentin",
+   "last": "Quillien",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "c.quillien2",
+   "email": "claire.quillien2@kerlann-banque.example",
+   "first": "Claire",
+   "last": "Quillien",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "c.raoul",
+   "email": "camille.raoul@kerlann-banque.example",
+   "first": "Camille",
+   "last": "Raoul",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "c.raoul2",
+   "email": "corentin.raoul2@kerlann-banque.example",
+   "first": "Corentin",
+   "last": "Raoul",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "c.robert",
+   "email": "celine.robert@kerlann-banque.example",
+   "first": "Celine",
+   "last": "Robert",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "c.roux",
+   "email": "chloe.roux@kerlann-banque.example",
+   "first": "Chloe",
+   "last": "Roux",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "c.uguen",
+   "email": "celine.uguen@kerlann-banque.example",
+   "first": "Celine",
+   "last": "Uguen",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "d.jaouen",
+   "email": "damien.jaouen@kerlann-banque.example",
+   "first": "Damien",
+   "last": "Jaouen",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "d.madec",
+   "email": "damien.madec@kerlann-banque.example",
+   "first": "Damien",
+   "last": "Madec",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "d.martin",
+   "email": "denez.martin@kerlann-banque.example",
+   "first": "Denez",
+   "last": "Martin",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "d.roux",
+   "email": "denez.roux@kerlann-banque.example",
+   "first": "Denez",
+   "last": "Roux",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "e.david",
+   "email": "enora.david@kerlann-banque.example",
+   "first": "Enora",
+   "last": "David",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "e.dubois",
+   "email": "elodie.dubois@kerlann-banque.example",
+   "first": "Elodie",
+   "last": "Dubois",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "e.floch",
+   "email": "erwan.floch@kerlann-banque.example",
+   "first": "Erwan",
+   "last": "Floch",
+   "role": "admin",
+   "totp": false
+  },
+  {
+   "login": "e.girard",
+   "email": "elodie.girard@kerlann-banque.example",
+   "first": "Elodie",
+   "last": "Girard",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "e.le-gall",
+   "email": "enora.le-gall@kerlann-banque.example",
+   "first": "Enora",
+   "last": "Le-Gall",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "e.le-gall2",
+   "email": "emma.le-gall2@kerlann-banque.example",
+   "first": "Emma",
+   "last": "Le-Gall",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "e.lefloch",
+   "email": "emma.lefloch@kerlann-banque.example",
+   "first": "Emma",
+   "last": "Lefloch",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "e.michel",
+   "email": "emma.michel@kerlann-banque.example",
+   "first": "Emma",
+   "last": "Michel",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "e.morel",
+   "email": "erwan.morel@kerlann-banque.example",
+   "first": "Erwan",
+   "last": "Morel",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "e.nedelec",
+   "email": "erwan.nedelec@kerlann-banque.example",
+   "first": "Erwan",
+   "last": "Nedelec",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "e.petit",
+   "email": "erwan.petit@kerlann-banque.example",
+   "first": "Erwan",
+   "last": "Petit",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "e.robert",
+   "email": "elodie.robert@kerlann-banque.example",
+   "first": "Elodie",
+   "last": "Robert",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "e.salaun",
+   "email": "enora.salaun@kerlann-banque.example",
+   "first": "Enora",
+   "last": "Salaun",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "e.tanguy",
+   "email": "erwan.tanguy@kerlann-banque.example",
+   "first": "Erwan",
+   "last": "Tanguy",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "e.toullec",
+   "email": "elodie.toullec@kerlann-banque.example",
+   "first": "Elodie",
+   "last": "Toullec",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "e.vincent",
+   "email": "elodie.vincent@kerlann-banque.example",
+   "first": "Elodie",
+   "last": "Vincent",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "e.vincent2",
+   "email": "emma.vincent2@kerlann-banque.example",
+   "first": "Emma",
+   "last": "Vincent",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "f.daniel",
+   "email": "fabien.daniel@kerlann-banque.example",
+   "first": "Fabien",
+   "last": "Daniel",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "f.guillou",
+   "email": "fabien.guillou@kerlann-banque.example",
+   "first": "Fabien",
+   "last": "Guillou",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "f.kerjean",
+   "email": "fabien.kerjean@kerlann-banque.example",
+   "first": "Fabien",
+   "last": "Kerjean",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "g.bernard",
+   "email": "gabriel.bernard@kerlann-banque.example",
+   "first": "Gabriel",
+   "last": "Bernard",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "g.bertrand",
+   "email": "gabriel.bertrand@kerlann-banque.example",
+   "first": "Gabriel",
+   "last": "Bertrand",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "g.even",
+   "email": "gwen.even@kerlann-banque.example",
+   "first": "Gwen",
+   "last": "Even",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "g.gourvennec",
+   "email": "gwen.gourvennec@kerlann-banque.example",
+   "first": "Gwen",
+   "last": "Gourvennec",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "g.henaff",
+   "email": "gabriel.henaff@kerlann-banque.example",
+   "first": "Gabriel",
+   "last": "Henaff",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "g.herve",
+   "email": "gwenael.herve@kerlann-banque.example",
+   "first": "Gwenael",
+   "last": "Herve",
+   "role": "admin",
+   "totp": false
+  },
+  {
+   "login": "g.kerjean",
+   "email": "gaelle.kerjean@kerlann-banque.example",
+   "first": "Gaelle",
+   "last": "Kerjean",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "g.lambert",
+   "email": "goulven.lambert@kerlann-banque.example",
+   "first": "Goulven",
+   "last": "Lambert",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "g.lambert2",
+   "email": "gwen.lambert2@kerlann-banque.example",
+   "first": "Gwen",
+   "last": "Lambert",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "g.laurent",
+   "email": "gabriel.laurent@kerlann-banque.example",
+   "first": "Gabriel",
+   "last": "Laurent",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "g.lefloch",
+   "email": "gwen.lefloch@kerlann-banque.example",
+   "first": "Gwen",
+   "last": "Lefloch",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "g.morel",
+   "email": "gabriel.morel@kerlann-banque.example",
+   "first": "Gabriel",
+   "last": "Morel",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "g.petit",
+   "email": "gwen.petit@kerlann-banque.example",
+   "first": "Gwen",
+   "last": "Petit",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "g.richard",
+   "email": "goulven.richard@kerlann-banque.example",
+   "first": "Goulven",
+   "last": "Richard",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "h.gourvennec",
+   "email": "herve.gourvennec@kerlann-banque.example",
+   "first": "Herve",
+   "last": "Gourvennec",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "h.le-roux",
+   "email": "herve.le-roux@kerlann-banque.example",
+   "first": "Herve",
+   "last": "Le-Roux",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "h.moreau",
+   "email": "hugo.moreau@kerlann-banque.example",
+   "first": "Hugo",
+   "last": "Moreau",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "h.robert",
+   "email": "herve.robert@kerlann-banque.example",
+   "first": "Herve",
+   "last": "Robert",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "i.girard",
+   "email": "ivona.girard@kerlann-banque.example",
+   "first": "Ivona",
+   "last": "Girard",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "i.gourmelen",
+   "email": "isabelle.gourmelen@kerlann-banque.example",
+   "first": "Isabelle",
+   "last": "Gourmelen",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "i.jaouen",
+   "email": "isabelle.jaouen@kerlann-banque.example",
+   "first": "Isabelle",
+   "last": "Jaouen",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "i.kerjean",
+   "email": "ines.kerjean@kerlann-banque.example",
+   "first": "Ines",
+   "last": "Kerjean",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "i.robert",
+   "email": "ines.robert@kerlann-banque.example",
+   "first": "Ines",
+   "last": "Robert",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "i.salaun",
+   "email": "ines.salaun@kerlann-banque.example",
+   "first": "Ines",
+   "last": "Salaun",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "i.toullec",
+   "email": "ivona.toullec@kerlann-banque.example",
+   "first": "Ivona",
+   "last": "Toullec",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "i.toullec2",
+   "email": "isabelle.toullec2@kerlann-banque.example",
+   "first": "Isabelle",
+   "last": "Toullec",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "j.bernard",
+   "email": "julie.bernard@kerlann-banque.example",
+   "first": "Julie",
+   "last": "Bernard",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "j.bihan",
+   "email": "jean.bihan@kerlann-banque.example",
+   "first": "Jean",
+   "last": "Bihan",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "j.briand",
+   "email": "jean.briand@kerlann-banque.example",
+   "first": "Jean",
+   "last": "Briand",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "j.fournier",
+   "email": "julie.fournier@kerlann-banque.example",
+   "first": "Julie",
+   "last": "Fournier",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "j.girard",
+   "email": "jerome.girard@kerlann-banque.example",
+   "first": "Jerome",
+   "last": "Girard",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "j.kerbrat",
+   "email": "julie.kerbrat@kerlann-banque.example",
+   "first": "Julie",
+   "last": "Kerbrat",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "j.kerjean",
+   "email": "jean.kerjean@kerlann-banque.example",
+   "first": "Jean",
+   "last": "Kerjean",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "j.kermarrec",
+   "email": "jeanne.kermarrec@kerlann-banque.example",
+   "first": "Jeanne",
+   "last": "Kermarrec",
+   "role": "admin",
+   "totp": false
+  },
+  {
+   "login": "j.lagadec",
+   "email": "jean.lagadec@kerlann-banque.example",
+   "first": "Jean",
+   "last": "Lagadec",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "j.le-meur",
+   "email": "julie.le-meur@kerlann-banque.example",
+   "first": "Julie",
+   "last": "Le-Meur",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "j.le-roux",
+   "email": "julie.le-roux@kerlann-banque.example",
+   "first": "Julie",
+   "last": "Le-Roux",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "j.lefebvre",
+   "email": "julie.lefebvre@kerlann-banque.example",
+   "first": "Julie",
+   "last": "Lefebvre",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "j.mercier",
+   "email": "jerome.mercier@kerlann-banque.example",
+   "first": "Jerome",
+   "last": "Mercier",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "j.michel",
+   "email": "jerome.michel@kerlann-banque.example",
+   "first": "Jerome",
+   "last": "Michel",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "j.olier",
+   "email": "julie.olier@kerlann-banque.example",
+   "first": "Julie",
+   "last": "Olier",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "j.toullec",
+   "email": "jean.toullec@kerlann-banque.example",
+   "first": "Jean",
+   "last": "Toullec",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "k.allain",
+   "email": "klervi.allain@kerlann-banque.example",
+   "first": "Klervi",
+   "last": "Allain",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "k.bihan",
+   "email": "klervi.bihan@kerlann-banque.example",
+   "first": "Klervi",
+   "last": "Bihan",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "k.jaouen",
+   "email": "klervi.jaouen@kerlann-banque.example",
+   "first": "Klervi",
+   "last": "Jaouen",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "k.lambert",
+   "email": "katell.lambert@kerlann-banque.example",
+   "first": "Katell",
+   "last": "Lambert",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "k.nedelec",
+   "email": "klervi.nedelec@kerlann-banque.example",
+   "first": "Klervi",
+   "last": "Nedelec",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "k.richard",
+   "email": "katell.richard@kerlann-banque.example",
+   "first": "Katell",
+   "last": "Richard",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "k.salaun",
+   "email": "katell.salaun@kerlann-banque.example",
+   "first": "Katell",
+   "last": "Salaun",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "k.thepaut",
+   "email": "katell.thepaut@kerlann-banque.example",
+   "first": "Katell",
+   "last": "Thepaut",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "l.bihan",
+   "email": "laura.bihan@kerlann-banque.example",
+   "first": "Laura",
+   "last": "Bihan",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "l.bonnet",
+   "email": "laura.bonnet@kerlann-banque.example",
+   "first": "Laura",
+   "last": "Bonnet",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "l.bonnet2",
+   "email": "lucas.bonnet2@kerlann-banque.example",
+   "first": "Lucas",
+   "last": "Bonnet",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "l.briand",
+   "email": "lucas.briand@kerlann-banque.example",
+   "first": "Lucas",
+   "last": "Briand",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "l.daniel",
+   "email": "loic.daniel@kerlann-banque.example",
+   "first": "Loic",
+   "last": "Daniel",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "l.daniel2",
+   "email": "loic.daniel2@kerlann-banque.example",
+   "first": "Loic",
+   "last": "Daniel",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "l.derrien",
+   "email": "louis.derrien@kerlann-banque.example",
+   "first": "Louis",
+   "last": "Derrien",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "l.henaff",
+   "email": "lucas.henaff@kerlann-banque.example",
+   "first": "Lucas",
+   "last": "Henaff",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "l.jacq",
+   "email": "louis.jacq@kerlann-banque.example",
+   "first": "Louis",
+   "last": "Jacq",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "l.jegou",
+   "email": "loic.jegou@kerlann-banque.example",
+   "first": "Loic",
+   "last": "Jegou",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "l.lambert",
+   "email": "lea.lambert@kerlann-banque.example",
+   "first": "Lea",
+   "last": "Lambert",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "l.lambert2",
+   "email": "louis.lambert2@kerlann-banque.example",
+   "first": "Louis",
+   "last": "Lambert",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "l.le-meur",
+   "email": "lea.le-meur@kerlann-banque.example",
+   "first": "Lea",
+   "last": "Le-Meur",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "l.le-meur2",
+   "email": "loic.le-meur2@kerlann-banque.example",
+   "first": "Loic",
+   "last": "Le-Meur",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "l.martin",
+   "email": "lucas.martin@kerlann-banque.example",
+   "first": "Lucas",
+   "last": "Martin",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "l.michel",
+   "email": "loic.michel@kerlann-banque.example",
+   "first": "Loic",
+   "last": "Michel",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "l.moreau",
+   "email": "lea.moreau@kerlann-banque.example",
+   "first": "Lea",
+   "last": "Moreau",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "l.raoul",
+   "email": "laura.raoul@kerlann-banque.example",
+   "first": "Laura",
+   "last": "Raoul",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "l.robert",
+   "email": "louis.robert@kerlann-banque.example",
+   "first": "Louis",
+   "last": "Robert",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "l.toullec",
+   "email": "lucas.toullec@kerlann-banque.example",
+   "first": "Lucas",
+   "last": "Toullec",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "l.vigouroux",
+   "email": "lea.vigouroux@kerlann-banque.example",
+   "first": "Lea",
+   "last": "Vigouroux",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "m.abgrall",
+   "email": "marie.abgrall@kerlann-banque.example",
+   "first": "Marie",
+   "last": "Abgrall",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "m.allain",
+   "email": "morgane.allain@kerlann-banque.example",
+   "first": "Morgane",
+   "last": "Allain",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "m.bernard",
+   "email": "morgane.bernard@kerlann-banque.example",
+   "first": "Morgane",
+   "last": "Bernard",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "m.bernard2",
+   "email": "maela.bernard2@kerlann-banque.example",
+   "first": "Maela",
+   "last": "Bernard",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "m.bertrand",
+   "email": "maela.bertrand@kerlann-banque.example",
+   "first": "Maela",
+   "last": "Bertrand",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "m.cariou",
+   "email": "maela.cariou@kerlann-banque.example",
+   "first": "Maela",
+   "last": "Cariou",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "m.even",
+   "email": "maxime.even@kerlann-banque.example",
+   "first": "Maxime",
+   "last": "Even",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "m.garcia",
+   "email": "mael.garcia@kerlann-banque.example",
+   "first": "Mael",
+   "last": "Garcia",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "m.jacq",
+   "email": "marie.jacq@kerlann-banque.example",
+   "first": "Marie",
+   "last": "Jacq",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "m.kervella",
+   "email": "maxime.kervella@kerlann-banque.example",
+   "first": "Maxime",
+   "last": "Kervella",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "m.kervella2",
+   "email": "maxime.kervella2@kerlann-banque.example",
+   "first": "Maxime",
+   "last": "Kervella",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "m.lambert",
+   "email": "mael.lambert@kerlann-banque.example",
+   "first": "Mael",
+   "last": "Lambert",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "m.laurent",
+   "email": "manon.laurent@kerlann-banque.example",
+   "first": "Manon",
+   "last": "Laurent",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "m.le-bihan",
+   "email": "mael.le-bihan@kerlann-banque.example",
+   "first": "Mael",
+   "last": "Le-Bihan",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "m.le-goff",
+   "email": "marie.le-goff@kerlann-banque.example",
+   "first": "Marie",
+   "last": "Le-Goff",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "m.leroy",
+   "email": "manon.leroy@kerlann-banque.example",
+   "first": "Manon",
+   "last": "Leroy",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "m.madec",
+   "email": "marie.madec@kerlann-banque.example",
+   "first": "Marie",
+   "last": "Madec",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "m.michel",
+   "email": "maxime.michel@kerlann-banque.example",
+   "first": "Maxime",
+   "last": "Michel",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "m.morel",
+   "email": "maxime.morel@kerlann-banque.example",
+   "first": "Maxime",
+   "last": "Morel",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "m.morel2",
+   "email": "maela.morel2@kerlann-banque.example",
+   "first": "Maela",
+   "last": "Morel",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "m.morvan",
+   "email": "marie.morvan@kerlann-banque.example",
+   "first": "Marie",
+   "last": "Morvan",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "m.nedelec",
+   "email": "marie.nedelec@kerlann-banque.example",
+   "first": "Marie",
+   "last": "Nedelec",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "m.quere",
+   "email": "manon.quere@kerlann-banque.example",
+   "first": "Manon",
+   "last": "Quere",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "m.quillien",
+   "email": "marie.quillien@kerlann-banque.example",
+   "first": "Marie",
+   "last": "Quillien",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "m.quillien2",
+   "email": "morgane.quillien2@kerlann-banque.example",
+   "first": "Morgane",
+   "last": "Quillien",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "m.raoul",
+   "email": "morgane.raoul@kerlann-banque.example",
+   "first": "Morgane",
+   "last": "Raoul",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "m.riou",
+   "email": "marie.riou@kerlann-banque.example",
+   "first": "Marie",
+   "last": "Riou",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "m.roux",
+   "email": "mael.roux@kerlann-banque.example",
+   "first": "Mael",
+   "last": "Roux",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "m.salaun",
+   "email": "marie.salaun@kerlann-banque.example",
+   "first": "Marie",
+   "last": "Salaun",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "m.toullec",
+   "email": "morgane.toullec@kerlann-banque.example",
+   "first": "Morgane",
+   "last": "Toullec",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "n.bonnet",
+   "email": "nathalie.bonnet@kerlann-banque.example",
+   "first": "Nathalie",
+   "last": "Bonnet",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "n.durand",
+   "email": "nolwenn.durand@kerlann-banque.example",
+   "first": "Nolwenn",
+   "last": "Durand",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "n.fournier",
+   "email": "nolwenn.fournier@kerlann-banque.example",
+   "first": "Nolwenn",
+   "last": "Fournier",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "n.laurent",
+   "email": "nolwenn.laurent@kerlann-banque.example",
+   "first": "Nolwenn",
+   "last": "Laurent",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "n.le-meur",
+   "email": "nicolas.le-meur@kerlann-banque.example",
+   "first": "Nicolas",
+   "last": "Le-Meur",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "n.olier",
+   "email": "nolwenn.olier@kerlann-banque.example",
+   "first": "Nolwenn",
+   "last": "Olier",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "n.richard",
+   "email": "nathalie.richard@kerlann-banque.example",
+   "first": "Nathalie",
+   "last": "Richard",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "n.vincent",
+   "email": "nicolas.vincent@kerlann-banque.example",
+   "first": "Nicolas",
+   "last": "Vincent",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "o.cariou",
+   "email": "olivier.cariou@kerlann-banque.example",
+   "first": "Olivier",
+   "last": "Cariou",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "o.nedelec",
+   "email": "oriane.nedelec@kerlann-banque.example",
+   "first": "Oriane",
+   "last": "Nedelec",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "o.pennec",
+   "email": "oriane.pennec@kerlann-banque.example",
+   "first": "Oriane",
+   "last": "Pennec",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "o.petit",
+   "email": "olivier.petit@kerlann-banque.example",
+   "first": "Olivier",
+   "last": "Petit",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "o.raoul",
+   "email": "olivier.raoul@kerlann-banque.example",
+   "first": "Olivier",
+   "last": "Raoul",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "p.abgrall",
+   "email": "pierre.abgrall@kerlann-banque.example",
+   "first": "Pierre",
+   "last": "Abgrall",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "p.bonnet",
+   "email": "paul.bonnet@kerlann-banque.example",
+   "first": "Paul",
+   "last": "Bonnet",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "p.cloarec",
+   "email": "patrick.cloarec@kerlann-banque.example",
+   "first": "Patrick",
+   "last": "Cloarec",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "p.derrien",
+   "email": "pauline.derrien@kerlann-banque.example",
+   "first": "Pauline",
+   "last": "Derrien",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "p.guillou",
+   "email": "pierre.guillou@kerlann-banque.example",
+   "first": "Pierre",
+   "last": "Guillou",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "p.guillou2",
+   "email": "pierre.guillou2@kerlann-banque.example",
+   "first": "Pierre",
+   "last": "Guillou",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "p.lambert",
+   "email": "pauline.lambert@kerlann-banque.example",
+   "first": "Pauline",
+   "last": "Lambert",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "p.le-corre",
+   "email": "pierre.le-corre@kerlann-banque.example",
+   "first": "Pierre",
+   "last": "Le-Corre",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "p.le-gall",
+   "email": "pierre.le-gall@kerlann-banque.example",
+   "first": "Pierre",
+   "last": "Le-Gall",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "p.michel",
+   "email": "paul.michel@kerlann-banque.example",
+   "first": "Paul",
+   "last": "Michel",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "p.nedelec",
+   "email": "pierre.nedelec@kerlann-banque.example",
+   "first": "Pierre",
+   "last": "Nedelec",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "p.quere",
+   "email": "patrick.quere@kerlann-banque.example",
+   "first": "Patrick",
+   "last": "Quere",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "p.quere2",
+   "email": "pauline.quere2@kerlann-banque.example",
+   "first": "Pauline",
+   "last": "Quere",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "p.raoul",
+   "email": "pauline.raoul@kerlann-banque.example",
+   "first": "Pauline",
+   "last": "Raoul",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "p.richard",
+   "email": "patrick.richard@kerlann-banque.example",
+   "first": "Patrick",
+   "last": "Richard",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "p.simon",
+   "email": "pauline.simon@kerlann-banque.example",
+   "first": "Pauline",
+   "last": "Simon",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "p.tanguy",
+   "email": "pauline.tanguy@kerlann-banque.example",
+   "first": "Pauline",
+   "last": "Tanguy",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "p.toullec",
+   "email": "pierre.toullec@kerlann-banque.example",
+   "first": "Pierre",
+   "last": "Toullec",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "p.vigouroux",
+   "email": "pierre.vigouroux@kerlann-banque.example",
+   "first": "Pierre",
+   "last": "Vigouroux",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "q.girard",
+   "email": "quentin.girard@kerlann-banque.example",
+   "first": "Quentin",
+   "last": "Girard",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "q.lefloch",
+   "email": "quentin.lefloch@kerlann-banque.example",
+   "first": "Quentin",
+   "last": "Lefloch",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "r.gourmelen",
+   "email": "romain.gourmelen@kerlann-banque.example",
+   "first": "Romain",
+   "last": "Gourmelen",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "r.hamon",
+   "email": "rozenn.hamon@kerlann-banque.example",
+   "first": "Rozenn",
+   "last": "Hamon",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "r.henaff",
+   "email": "romain.henaff@kerlann-banque.example",
+   "first": "Romain",
+   "last": "Henaff",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "r.morel",
+   "email": "romain.morel@kerlann-banque.example",
+   "first": "Romain",
+   "last": "Morel",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "r.salaun",
+   "email": "rozenn.salaun@kerlann-banque.example",
+   "first": "Rozenn",
+   "last": "Salaun",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "r.uguen",
+   "email": "rozenn.uguen@kerlann-banque.example",
+   "first": "Rozenn",
+   "last": "Uguen",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "s.cariou",
+   "email": "sophie.cariou@kerlann-banque.example",
+   "first": "Sophie",
+   "last": "Cariou",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "s.even",
+   "email": "sarah.even@kerlann-banque.example",
+   "first": "Sarah",
+   "last": "Even",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "s.fournier",
+   "email": "sylvain.fournier@kerlann-banque.example",
+   "first": "Sylvain",
+   "last": "Fournier",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "s.jegou",
+   "email": "sylvain.jegou@kerlann-banque.example",
+   "first": "Sylvain",
+   "last": "Jegou",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "s.kerjean",
+   "email": "sylvain.kerjean@kerlann-banque.example",
+   "first": "Sylvain",
+   "last": "Kerjean",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "s.kervella",
+   "email": "sarah.kervella@kerlann-banque.example",
+   "first": "Sarah",
+   "last": "Kervella",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "s.martin",
+   "email": "sophie.martin@kerlann-banque.example",
+   "first": "Sophie",
+   "last": "Martin",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "s.morvan",
+   "email": "sophie.morvan@kerlann-banque.example",
+   "first": "Sophie",
+   "last": "Morvan",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "s.quillien",
+   "email": "sylvain.quillien@kerlann-banque.example",
+   "first": "Sylvain",
+   "last": "Quillien",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "s.quillien2",
+   "email": "sarah.quillien2@kerlann-banque.example",
+   "first": "Sarah",
+   "last": "Quillien",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "s.richard",
+   "email": "sarah.richard@kerlann-banque.example",
+   "first": "Sarah",
+   "last": "Richard",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "s.simon",
+   "email": "sarah.simon@kerlann-banque.example",
+   "first": "Sarah",
+   "last": "Simon",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "support-n2",
+   "email": "support-n2@kerlann-banque.example",
+   "first": "Compte",
+   "last": "support-n2",
+   "role": "admin",
+   "totp": false
+  },
+  {
+   "login": "t.cloarec",
+   "email": "thomas.cloarec@kerlann-banque.example",
+   "first": "Thomas",
+   "last": "Cloarec",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "t.jegou",
+   "email": "tifenn.jegou@kerlann-banque.example",
+   "first": "Tifenn",
+   "last": "Jegou",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "t.le-corre",
+   "email": "tifenn.le-corre@kerlann-banque.example",
+   "first": "Tifenn",
+   "last": "Le-Corre",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "t.le-gall",
+   "email": "tifenn.le-gall@kerlann-banque.example",
+   "first": "Tifenn",
+   "last": "Le-Gall",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "t.lefloch",
+   "email": "thomas.lefloch@kerlann-banque.example",
+   "first": "Thomas",
+   "last": "Lefloch",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "t.quere",
+   "email": "thomas.quere@kerlann-banque.example",
+   "first": "Thomas",
+   "last": "Quere",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "t.simon",
+   "email": "tifenn.simon@kerlann-banque.example",
+   "first": "Tifenn",
+   "last": "Simon",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "u.floch",
+   "email": "ulysse.floch@kerlann-banque.example",
+   "first": "Ulysse",
+   "last": "Floch",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "v.even",
+   "email": "valerie.even@kerlann-banque.example",
+   "first": "Valerie",
+   "last": "Even",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "v.gourmelen",
+   "email": "valerie.gourmelen@kerlann-banque.example",
+   "first": "Valerie",
+   "last": "Gourmelen",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "v.kerjean",
+   "email": "valerie.kerjean@kerlann-banque.example",
+   "first": "Valerie",
+   "last": "Kerjean",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "x.gourmelen",
+   "email": "xavier.gourmelen@kerlann-banque.example",
+   "first": "Xavier",
+   "last": "Gourmelen",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "x.quillien",
+   "email": "xavier.quillien@kerlann-banque.example",
+   "first": "Xavier",
+   "last": "Quillien",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "y.bernard",
+   "email": "yann.bernard@kerlann-banque.example",
+   "first": "Yann",
+   "last": "Bernard",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "y.cariou",
+   "email": "yann.cariou@kerlann-banque.example",
+   "first": "Yann",
+   "last": "Cariou",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "y.dubois",
+   "email": "yann.dubois@kerlann-banque.example",
+   "first": "Yann",
+   "last": "Dubois",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "y.floch",
+   "email": "yann.floch@kerlann-banque.example",
+   "first": "Yann",
+   "last": "Floch",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "y.hamon",
+   "email": "yannick.hamon@kerlann-banque.example",
+   "first": "Yannick",
+   "last": "Hamon",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "y.jaouen",
+   "email": "yann.jaouen@kerlann-banque.example",
+   "first": "Yann",
+   "last": "Jaouen",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "y.le-roux",
+   "email": "yann.le-roux@kerlann-banque.example",
+   "first": "Yann",
+   "last": "Le-Roux",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "y.michel",
+   "email": "yann.michel@kerlann-banque.example",
+   "first": "Yann",
+   "last": "Michel",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "y.nedelec",
+   "email": "yann.nedelec@kerlann-banque.example",
+   "first": "Yann",
+   "last": "Nedelec",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "y.prigent",
+   "email": "yannick.prigent@kerlann-banque.example",
+   "first": "Yannick",
+   "last": "Prigent",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "z.jegou",
+   "email": "zoe.jegou@kerlann-banque.example",
+   "first": "Zoe",
+   "last": "Jegou",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "z.lefloch",
+   "email": "zoe.lefloch@kerlann-banque.example",
+   "first": "Zoe",
+   "last": "Lefloch",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "z.morel",
+   "email": "zoe.morel@kerlann-banque.example",
+   "first": "Zoe",
+   "last": "Morel",
+   "role": "conseiller",
+   "totp": false
+  },
+  {
+   "login": "z.pennec",
+   "email": "zoe.pennec@kerlann-banque.example",
+   "first": "Zoe",
+   "last": "Pennec",
+   "role": "conseiller",
+   "totp": false
+  }
+ ],
+ "notes": [],
+ "expected": {
+  "PSI-4.1": "fail",
+  "PSI-4.2": "fail",
+  "PSI-4.3": "fail",
+  "PSI-4.4": "fail",
+  "PSI-4.5": "fail",
+  "PSI-4.6": "fail",
+  "PSI-4.7": "fail"
+ },
+ "expected_generic_admins": [
+  "support-n2"
+ ]
+}

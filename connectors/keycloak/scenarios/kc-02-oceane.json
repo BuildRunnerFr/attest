@@ -1,0 +1,1972 @@
+{
+ "id": "kc-02-oceane",
+ "realm": "oceane",
+ "label": "Royaume Keycloak conforme, valeurs aux seuils",
+ "entity": "Crédit Océane (fictif)",
+ "system": "Keycloak — royaume oceane (fournisseur d'identité)",
+ "tests": "Aucun constat attendu : seuils exacts (12, 5, 900 s), administrateurs nommés opsomer, teamson, rootsaert, comptes de fonction sans droits d'administration.",
+ "settings": {
+  "passwordPolicy": "length(12) and upperCase(1) and lowerCase(1) and digits(1) and specialChars(1)",
+  "bruteForceProtected": true,
+  "failureFactor": 5,
+  "ssoSessionIdleTimeout": 900,
+  "adminEventsEnabled": true
+ },
+ "users": [
+  {
+   "login": "a.allain",
+   "email": "arthur.allain@credit-oceane.example",
+   "first": "Arthur",
+   "last": "Allain",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "a.daniel",
+   "email": "adele.daniel@credit-oceane.example",
+   "first": "Adele",
+   "last": "Daniel",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "a.dubois",
+   "email": "arthur.dubois@credit-oceane.example",
+   "first": "Arthur",
+   "last": "Dubois",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "a.girard",
+   "email": "alexandre.girard@credit-oceane.example",
+   "first": "Alexandre",
+   "last": "Girard",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "a.guillou",
+   "email": "antoine.guillou@credit-oceane.example",
+   "first": "Antoine",
+   "last": "Guillou",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "a.henaff",
+   "email": "anne.henaff@credit-oceane.example",
+   "first": "Anne",
+   "last": "Henaff",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "a.jegou",
+   "email": "antoine.jegou@credit-oceane.example",
+   "first": "Antoine",
+   "last": "Jegou",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "a.kerbrat",
+   "email": "anne-sophie.kerbrat@credit-oceane.example",
+   "first": "Anne-Sophie",
+   "last": "Kerbrat",
+   "role": "admin",
+   "totp": true
+  },
+  {
+   "login": "a.kerbrat2",
+   "email": "adele.kerbrat2@credit-oceane.example",
+   "first": "Adele",
+   "last": "Kerbrat",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "a.le-bihan",
+   "email": "arthur.le-bihan@credit-oceane.example",
+   "first": "Arthur",
+   "last": "Le-Bihan",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "a.le-gall",
+   "email": "anne.le-gall@credit-oceane.example",
+   "first": "Anne",
+   "last": "Le-Gall",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "a.martin",
+   "email": "anne.martin@credit-oceane.example",
+   "first": "Anne",
+   "last": "Martin",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "a.pennec",
+   "email": "anne.pennec@credit-oceane.example",
+   "first": "Anne",
+   "last": "Pennec",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "a.raoul",
+   "email": "anne.raoul@credit-oceane.example",
+   "first": "Anne",
+   "last": "Raoul",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "a.richard",
+   "email": "antoine.richard@credit-oceane.example",
+   "first": "Antoine",
+   "last": "Richard",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "b.gourmelen",
+   "email": "bleuenn.gourmelen@credit-oceane.example",
+   "first": "Bleuenn",
+   "last": "Gourmelen",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "b.le-corre",
+   "email": "bleuenn.le-corre@credit-oceane.example",
+   "first": "Bleuenn",
+   "last": "Le-Corre",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "b.martin",
+   "email": "bleuenn.martin@credit-oceane.example",
+   "first": "Bleuenn",
+   "last": "Martin",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "b.olier",
+   "email": "bleuenn.olier@credit-oceane.example",
+   "first": "Bleuenn",
+   "last": "Olier",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "b.richard",
+   "email": "bastien.richard@credit-oceane.example",
+   "first": "Bastien",
+   "last": "Richard",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "b.robert",
+   "email": "bastien.robert@credit-oceane.example",
+   "first": "Bastien",
+   "last": "Robert",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "b.uguen",
+   "email": "bleuenn.uguen@credit-oceane.example",
+   "first": "Bleuenn",
+   "last": "Uguen",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "c.bonnet",
+   "email": "corentin.bonnet@credit-oceane.example",
+   "first": "Corentin",
+   "last": "Bonnet",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "c.briand",
+   "email": "chloe.briand@credit-oceane.example",
+   "first": "Chloe",
+   "last": "Briand",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "c.cloarec",
+   "email": "corentin.cloarec@credit-oceane.example",
+   "first": "Corentin",
+   "last": "Cloarec",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "c.derrien",
+   "email": "chloe.derrien@credit-oceane.example",
+   "first": "Chloe",
+   "last": "Derrien",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "c.dupont",
+   "email": "celine.dupont@credit-oceane.example",
+   "first": "Celine",
+   "last": "Dupont",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "c.fournier",
+   "email": "corentin.fournier@credit-oceane.example",
+   "first": "Corentin",
+   "last": "Fournier",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "c.garcia",
+   "email": "chloe.garcia@credit-oceane.example",
+   "first": "Chloe",
+   "last": "Garcia",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "c.girard",
+   "email": "chloe.girard@credit-oceane.example",
+   "first": "Chloe",
+   "last": "Girard",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "c.hamon",
+   "email": "camille.hamon@credit-oceane.example",
+   "first": "Camille",
+   "last": "Hamon",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "c.hamon2",
+   "email": "celine.hamon2@credit-oceane.example",
+   "first": "Celine",
+   "last": "Hamon",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "c.itier",
+   "email": "claire.itier@credit-oceane.example",
+   "first": "Claire",
+   "last": "Itier",
+   "role": "admin",
+   "totp": true
+  },
+  {
+   "login": "c.kerbrat",
+   "email": "chloe.kerbrat@credit-oceane.example",
+   "first": "Chloe",
+   "last": "Kerbrat",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "c.kerjean",
+   "email": "corentin.kerjean@credit-oceane.example",
+   "first": "Corentin",
+   "last": "Kerjean",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "c.kervella",
+   "email": "corentin.kervella@credit-oceane.example",
+   "first": "Corentin",
+   "last": "Kervella",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "c.kervella2",
+   "email": "corentin.kervella2@credit-oceane.example",
+   "first": "Corentin",
+   "last": "Kervella",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "c.lagadec",
+   "email": "chloe.lagadec@credit-oceane.example",
+   "first": "Chloe",
+   "last": "Lagadec",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "c.lagadec2",
+   "email": "celine.lagadec2@credit-oceane.example",
+   "first": "Celine",
+   "last": "Lagadec",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "c.lambert",
+   "email": "camille.lambert@credit-oceane.example",
+   "first": "Camille",
+   "last": "Lambert",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "c.le-goff",
+   "email": "claire.le-goff@credit-oceane.example",
+   "first": "Claire",
+   "last": "Le-Goff",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "c.le-meur",
+   "email": "corentin.le-meur@credit-oceane.example",
+   "first": "Corentin",
+   "last": "Le-Meur",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "c.pennec",
+   "email": "claire.pennec@credit-oceane.example",
+   "first": "Claire",
+   "last": "Pennec",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "c.roux",
+   "email": "celine.roux@credit-oceane.example",
+   "first": "Celine",
+   "last": "Roux",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "c.thepaut",
+   "email": "claire.thepaut@credit-oceane.example",
+   "first": "Claire",
+   "last": "Thepaut",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "c.uguen",
+   "email": "camille.uguen@credit-oceane.example",
+   "first": "Camille",
+   "last": "Uguen",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "d.dubois",
+   "email": "denez.dubois@credit-oceane.example",
+   "first": "Denez",
+   "last": "Dubois",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "d.lambert",
+   "email": "damien.lambert@credit-oceane.example",
+   "first": "Damien",
+   "last": "Lambert",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "d.le-corre",
+   "email": "damien.le-corre@credit-oceane.example",
+   "first": "Damien",
+   "last": "Le-Corre",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "d.raoul",
+   "email": "damien.raoul@credit-oceane.example",
+   "first": "Damien",
+   "last": "Raoul",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "d.uguen",
+   "email": "denez.uguen@credit-oceane.example",
+   "first": "Denez",
+   "last": "Uguen",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "d.vincent",
+   "email": "denez.vincent@credit-oceane.example",
+   "first": "Denez",
+   "last": "Vincent",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "e.floch",
+   "email": "emma.floch@credit-oceane.example",
+   "first": "Emma",
+   "last": "Floch",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "e.lagadec",
+   "email": "elodie.lagadec@credit-oceane.example",
+   "first": "Elodie",
+   "last": "Lagadec",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "e.le-gall",
+   "email": "enora.le-gall@credit-oceane.example",
+   "first": "Enora",
+   "last": "Le-Gall",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "e.quillien",
+   "email": "enora.quillien@credit-oceane.example",
+   "first": "Enora",
+   "last": "Quillien",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "e.riou",
+   "email": "elodie.riou@credit-oceane.example",
+   "first": "Elodie",
+   "last": "Riou",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "e.tanguy",
+   "email": "enora.tanguy@credit-oceane.example",
+   "first": "Enora",
+   "last": "Tanguy",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "f.bernard",
+   "email": "fabien.bernard@credit-oceane.example",
+   "first": "Fabien",
+   "last": "Bernard",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "f.jegou",
+   "email": "fabien.jegou@credit-oceane.example",
+   "first": "Fabien",
+   "last": "Jegou",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "g.bonnet",
+   "email": "gabriel.bonnet@credit-oceane.example",
+   "first": "Gabriel",
+   "last": "Bonnet",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "g.briand",
+   "email": "gabriel.briand@credit-oceane.example",
+   "first": "Gabriel",
+   "last": "Briand",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "g.girard",
+   "email": "gwen.girard@credit-oceane.example",
+   "first": "Gwen",
+   "last": "Girard",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "g.laurent",
+   "email": "gwen.laurent@credit-oceane.example",
+   "first": "Gwen",
+   "last": "Laurent",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "g.le-corre",
+   "email": "gwen.le-corre@credit-oceane.example",
+   "first": "Gwen",
+   "last": "Le-Corre",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "g.le-gall",
+   "email": "gabriel.le-gall@credit-oceane.example",
+   "first": "Gabriel",
+   "last": "Le-Gall",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "g.le-goff",
+   "email": "gabriel.le-goff@credit-oceane.example",
+   "first": "Gabriel",
+   "last": "Le-Goff",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "g.le-goff2",
+   "email": "goulven.le-goff2@credit-oceane.example",
+   "first": "Goulven",
+   "last": "Le-Goff",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "g.martin",
+   "email": "gabriel.martin@credit-oceane.example",
+   "first": "Gabriel",
+   "last": "Martin",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "g.martin2",
+   "email": "gwen.martin2@credit-oceane.example",
+   "first": "Gwen",
+   "last": "Martin",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "g.michel",
+   "email": "gwen.michel@credit-oceane.example",
+   "first": "Gwen",
+   "last": "Michel",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "g.morvan",
+   "email": "gwen.morvan@credit-oceane.example",
+   "first": "Gwen",
+   "last": "Morvan",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "g.uguen",
+   "email": "gwen.uguen@credit-oceane.example",
+   "first": "Gwen",
+   "last": "Uguen",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "h.guillou",
+   "email": "herve.guillou@credit-oceane.example",
+   "first": "Herve",
+   "last": "Guillou",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "h.laurent",
+   "email": "herve.laurent@credit-oceane.example",
+   "first": "Herve",
+   "last": "Laurent",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "h.mercier",
+   "email": "hugo.mercier@credit-oceane.example",
+   "first": "Hugo",
+   "last": "Mercier",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "h.mercier2",
+   "email": "herve.mercier2@credit-oceane.example",
+   "first": "Herve",
+   "last": "Mercier",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "h.petit",
+   "email": "hugo.petit@credit-oceane.example",
+   "first": "Hugo",
+   "last": "Petit",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "h.prigent",
+   "email": "hugo.prigent@credit-oceane.example",
+   "first": "Hugo",
+   "last": "Prigent",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "h.richard",
+   "email": "hugo.richard@credit-oceane.example",
+   "first": "Hugo",
+   "last": "Richard",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "h.salaun",
+   "email": "hugo.salaun@credit-oceane.example",
+   "first": "Hugo",
+   "last": "Salaun",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "h.thepaut",
+   "email": "herve.thepaut@credit-oceane.example",
+   "first": "Herve",
+   "last": "Thepaut",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "helpdesk",
+   "email": "helpdesk@credit-oceane.example",
+   "first": "Compte",
+   "last": "helpdesk",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "i.bertrand",
+   "email": "ivona.bertrand@credit-oceane.example",
+   "first": "Ivona",
+   "last": "Bertrand",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "i.david",
+   "email": "isabelle.david@credit-oceane.example",
+   "first": "Isabelle",
+   "last": "David",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "i.hamon",
+   "email": "isabelle.hamon@credit-oceane.example",
+   "first": "Isabelle",
+   "last": "Hamon",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "i.jacq",
+   "email": "isabelle.jacq@credit-oceane.example",
+   "first": "Isabelle",
+   "last": "Jacq",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "i.jaouen",
+   "email": "ines.jaouen@credit-oceane.example",
+   "first": "Ines",
+   "last": "Jaouen",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "i.le-bihan",
+   "email": "isabelle.le-bihan@credit-oceane.example",
+   "first": "Isabelle",
+   "last": "Le-Bihan",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "i.le-meur",
+   "email": "isabelle.le-meur@credit-oceane.example",
+   "first": "Isabelle",
+   "last": "Le-Meur",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "i.martin",
+   "email": "ivona.martin@credit-oceane.example",
+   "first": "Ivona",
+   "last": "Martin",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "i.morvan",
+   "email": "ivona.morvan@credit-oceane.example",
+   "first": "Ivona",
+   "last": "Morvan",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "i.roux",
+   "email": "ivona.roux@credit-oceane.example",
+   "first": "Ivona",
+   "last": "Roux",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "i.salaun",
+   "email": "isabelle.salaun@credit-oceane.example",
+   "first": "Isabelle",
+   "last": "Salaun",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "i.simon",
+   "email": "ines.simon@credit-oceane.example",
+   "first": "Ines",
+   "last": "Simon",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "i.uguen",
+   "email": "isabelle.uguen@credit-oceane.example",
+   "first": "Isabelle",
+   "last": "Uguen",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "i.yvinec",
+   "email": "ivona.yvinec@credit-oceane.example",
+   "first": "Ivona",
+   "last": "Yvinec",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "j.bertrand",
+   "email": "jean.bertrand@credit-oceane.example",
+   "first": "Jean",
+   "last": "Bertrand",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "j.cloarec",
+   "email": "julie.cloarec@credit-oceane.example",
+   "first": "Julie",
+   "last": "Cloarec",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "j.garcia",
+   "email": "jean.garcia@credit-oceane.example",
+   "first": "Jean",
+   "last": "Garcia",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "j.gourmelen",
+   "email": "jerome.gourmelen@credit-oceane.example",
+   "first": "Jerome",
+   "last": "Gourmelen",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "j.gourvennec",
+   "email": "jerome.gourvennec@credit-oceane.example",
+   "first": "Jerome",
+   "last": "Gourvennec",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "j.hamon",
+   "email": "jakez.hamon@credit-oceane.example",
+   "first": "Jakez",
+   "last": "Hamon",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "j.jegou",
+   "email": "jean.jegou@credit-oceane.example",
+   "first": "Jean",
+   "last": "Jegou",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "j.kervella",
+   "email": "jakez.kervella@credit-oceane.example",
+   "first": "Jakez",
+   "last": "Kervella",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "j.lagadec",
+   "email": "julie.lagadec@credit-oceane.example",
+   "first": "Julie",
+   "last": "Lagadec",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "j.lambert",
+   "email": "jakez.lambert@credit-oceane.example",
+   "first": "Jakez",
+   "last": "Lambert",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "j.le-bihan",
+   "email": "julie.le-bihan@credit-oceane.example",
+   "first": "Julie",
+   "last": "Le-Bihan",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "j.le-corre",
+   "email": "jean.le-corre@credit-oceane.example",
+   "first": "Jean",
+   "last": "Le-Corre",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "j.le-gall",
+   "email": "jerome.le-gall@credit-oceane.example",
+   "first": "Jerome",
+   "last": "Le-Gall",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "j.le-goff",
+   "email": "jakez.le-goff@credit-oceane.example",
+   "first": "Jakez",
+   "last": "Le-Goff",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "j.le-roux",
+   "email": "jerome.le-roux@credit-oceane.example",
+   "first": "Jerome",
+   "last": "Le-Roux",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "j.lefebvre",
+   "email": "jean.lefebvre@credit-oceane.example",
+   "first": "Jean",
+   "last": "Lefebvre",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "j.leroy",
+   "email": "julie.leroy@credit-oceane.example",
+   "first": "Julie",
+   "last": "Leroy",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "j.morvan",
+   "email": "jerome.morvan@credit-oceane.example",
+   "first": "Jerome",
+   "last": "Morvan",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "j.opsomer",
+   "email": "jean.opsomer@credit-oceane.example",
+   "first": "Jean",
+   "last": "Opsomer",
+   "role": "admin",
+   "totp": true
+  },
+  {
+   "login": "j.riou",
+   "email": "jean.riou@credit-oceane.example",
+   "first": "Jean",
+   "last": "Riou",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "k.dupont",
+   "email": "klervi.dupont@credit-oceane.example",
+   "first": "Klervi",
+   "last": "Dupont",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "k.dupont2",
+   "email": "klervi.dupont2@credit-oceane.example",
+   "first": "Klervi",
+   "last": "Dupont",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "k.fournier",
+   "email": "klervi.fournier@credit-oceane.example",
+   "first": "Klervi",
+   "last": "Fournier",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "k.gourvennec",
+   "email": "klervi.gourvennec@credit-oceane.example",
+   "first": "Klervi",
+   "last": "Gourvennec",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "k.morvan",
+   "email": "kit.morvan@credit-oceane.example",
+   "first": "Kit",
+   "last": "Morvan",
+   "role": "admin",
+   "totp": true
+  },
+  {
+   "login": "k.morvan2",
+   "email": "klervi.morvan2@credit-oceane.example",
+   "first": "Klervi",
+   "last": "Morvan",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "k.olier",
+   "email": "klervi.olier@credit-oceane.example",
+   "first": "Klervi",
+   "last": "Olier",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "k.thepaut",
+   "email": "katell.thepaut@credit-oceane.example",
+   "first": "Katell",
+   "last": "Thepaut",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "k.toullec",
+   "email": "klervi.toullec@credit-oceane.example",
+   "first": "Klervi",
+   "last": "Toullec",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "k.uguen",
+   "email": "klervi.uguen@credit-oceane.example",
+   "first": "Klervi",
+   "last": "Uguen",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "l.bernard",
+   "email": "louis.bernard@credit-oceane.example",
+   "first": "Louis",
+   "last": "Bernard",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "l.bonnet",
+   "email": "lena.bonnet@credit-oceane.example",
+   "first": "Lena",
+   "last": "Bonnet",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "l.dubois",
+   "email": "lea.dubois@credit-oceane.example",
+   "first": "Lea",
+   "last": "Dubois",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "l.dupont",
+   "email": "lena.dupont@credit-oceane.example",
+   "first": "Lena",
+   "last": "Dupont",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "l.even",
+   "email": "loic.even@credit-oceane.example",
+   "first": "Loic",
+   "last": "Even",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "l.fournier",
+   "email": "lucas.fournier@credit-oceane.example",
+   "first": "Lucas",
+   "last": "Fournier",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "l.girard",
+   "email": "loic.girard@credit-oceane.example",
+   "first": "Loic",
+   "last": "Girard",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "l.henaff",
+   "email": "loic.henaff@credit-oceane.example",
+   "first": "Loic",
+   "last": "Henaff",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "l.le-gall",
+   "email": "lena.le-gall@credit-oceane.example",
+   "first": "Lena",
+   "last": "Le-Gall",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "l.martin",
+   "email": "loic.martin@credit-oceane.example",
+   "first": "Loic",
+   "last": "Martin",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "l.morvan",
+   "email": "lena.morvan@credit-oceane.example",
+   "first": "Lena",
+   "last": "Morvan",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "l.nedelec",
+   "email": "lucas.nedelec@credit-oceane.example",
+   "first": "Lucas",
+   "last": "Nedelec",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "l.quere",
+   "email": "lucas.quere@credit-oceane.example",
+   "first": "Lucas",
+   "last": "Quere",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "l.richard",
+   "email": "lucas.richard@credit-oceane.example",
+   "first": "Lucas",
+   "last": "Richard",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "l.roux",
+   "email": "lena.roux@credit-oceane.example",
+   "first": "Lena",
+   "last": "Roux",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "l.servien",
+   "email": "louis.servien@credit-oceane.example",
+   "first": "Louis",
+   "last": "Servien",
+   "role": "admin",
+   "totp": true
+  },
+  {
+   "login": "l.simon",
+   "email": "lea.simon@credit-oceane.example",
+   "first": "Lea",
+   "last": "Simon",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "m.briand",
+   "email": "marie.briand@credit-oceane.example",
+   "first": "Marie",
+   "last": "Briand",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "m.durand",
+   "email": "morgane.durand@credit-oceane.example",
+   "first": "Morgane",
+   "last": "Durand",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "m.durand2",
+   "email": "maxime.durand2@credit-oceane.example",
+   "first": "Maxime",
+   "last": "Durand",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "m.floch",
+   "email": "marie.floch@credit-oceane.example",
+   "first": "Marie",
+   "last": "Floch",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "m.jacq",
+   "email": "maxime.jacq@credit-oceane.example",
+   "first": "Maxime",
+   "last": "Jacq",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "m.kerjean",
+   "email": "manon.kerjean@credit-oceane.example",
+   "first": "Manon",
+   "last": "Kerjean",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "m.kervella",
+   "email": "maxime.kervella@credit-oceane.example",
+   "first": "Maxime",
+   "last": "Kervella",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "m.laurent",
+   "email": "maxime.laurent@credit-oceane.example",
+   "first": "Maxime",
+   "last": "Laurent",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "m.le-bihan-riou",
+   "email": "maela.le-bihan-riou@credit-oceane.example",
+   "first": "Maela",
+   "last": "Le-Bihan-Riou",
+   "role": "admin",
+   "totp": true
+  },
+  {
+   "login": "m.le-goff",
+   "email": "maxime.le-goff@credit-oceane.example",
+   "first": "Maxime",
+   "last": "Le-Goff",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "m.le-meur",
+   "email": "mael.le-meur@credit-oceane.example",
+   "first": "Mael",
+   "last": "Le-Meur",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "m.michel",
+   "email": "mael.michel@credit-oceane.example",
+   "first": "Mael",
+   "last": "Michel",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "m.moreau",
+   "email": "maxime.moreau@credit-oceane.example",
+   "first": "Maxime",
+   "last": "Moreau",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "m.morvan",
+   "email": "maxime.morvan@credit-oceane.example",
+   "first": "Maxime",
+   "last": "Morvan",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "m.roux",
+   "email": "mael.roux@credit-oceane.example",
+   "first": "Mael",
+   "last": "Roux",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "m.thepaut",
+   "email": "maela.thepaut@credit-oceane.example",
+   "first": "Maela",
+   "last": "Thepaut",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "m.yvinec",
+   "email": "marie.yvinec@credit-oceane.example",
+   "first": "Marie",
+   "last": "Yvinec",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "n.dupont",
+   "email": "nolwenn.dupont@credit-oceane.example",
+   "first": "Nolwenn",
+   "last": "Dupont",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "n.dupont2",
+   "email": "nolwenn.dupont2@credit-oceane.example",
+   "first": "Nolwenn",
+   "last": "Dupont",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "n.even",
+   "email": "nathalie.even@credit-oceane.example",
+   "first": "Nathalie",
+   "last": "Even",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "n.garcia",
+   "email": "nicolas.garcia@credit-oceane.example",
+   "first": "Nicolas",
+   "last": "Garcia",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "n.gourmelen",
+   "email": "nathalie.gourmelen@credit-oceane.example",
+   "first": "Nathalie",
+   "last": "Gourmelen",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "n.le-corre",
+   "email": "nicolas.le-corre@credit-oceane.example",
+   "first": "Nicolas",
+   "last": "Le-Corre",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "n.le-corre2",
+   "email": "nicolas.le-corre2@credit-oceane.example",
+   "first": "Nicolas",
+   "last": "Le-Corre",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "n.moreau",
+   "email": "nicolas.moreau@credit-oceane.example",
+   "first": "Nicolas",
+   "last": "Moreau",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "n.olier",
+   "email": "nolwenn.olier@credit-oceane.example",
+   "first": "Nolwenn",
+   "last": "Olier",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "n.roux",
+   "email": "nicolas.roux@credit-oceane.example",
+   "first": "Nicolas",
+   "last": "Roux",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "n.toullec",
+   "email": "nicolas.toullec@credit-oceane.example",
+   "first": "Nicolas",
+   "last": "Toullec",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "n.toullec2",
+   "email": "nicolas.toullec2@credit-oceane.example",
+   "first": "Nicolas",
+   "last": "Toullec",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "o.raoul",
+   "email": "olivier.raoul@credit-oceane.example",
+   "first": "Olivier",
+   "last": "Raoul",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "o.roux",
+   "email": "olivier.roux@credit-oceane.example",
+   "first": "Olivier",
+   "last": "Roux",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "o.tanguy",
+   "email": "olivier.tanguy@credit-oceane.example",
+   "first": "Olivier",
+   "last": "Tanguy",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "p.cloarec",
+   "email": "pierre.cloarec@credit-oceane.example",
+   "first": "Pierre",
+   "last": "Cloarec",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "p.guillou",
+   "email": "paul.guillou@credit-oceane.example",
+   "first": "Paul",
+   "last": "Guillou",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "p.kerjean",
+   "email": "pauline.kerjean@credit-oceane.example",
+   "first": "Pauline",
+   "last": "Kerjean",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "p.le-bihan",
+   "email": "paul.le-bihan@credit-oceane.example",
+   "first": "Paul",
+   "last": "Le-Bihan",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "p.madec",
+   "email": "paul.madec@credit-oceane.example",
+   "first": "Paul",
+   "last": "Madec",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "p.pennec",
+   "email": "patrick.pennec@credit-oceane.example",
+   "first": "Patrick",
+   "last": "Pennec",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "p.quere",
+   "email": "pauline.quere@credit-oceane.example",
+   "first": "Pauline",
+   "last": "Quere",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "p.quillien",
+   "email": "patrick.quillien@credit-oceane.example",
+   "first": "Patrick",
+   "last": "Quillien",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "p.quillien2",
+   "email": "paul.quillien2@credit-oceane.example",
+   "first": "Paul",
+   "last": "Quillien",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "p.uguen",
+   "email": "pierre.uguen@credit-oceane.example",
+   "first": "Pierre",
+   "last": "Uguen",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "p.vigouroux",
+   "email": "pierre.vigouroux@credit-oceane.example",
+   "first": "Pierre",
+   "last": "Vigouroux",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "q.quere",
+   "email": "quentin.quere@credit-oceane.example",
+   "first": "Quentin",
+   "last": "Quere",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "q.uguen",
+   "email": "quentin.uguen@credit-oceane.example",
+   "first": "Quentin",
+   "last": "Uguen",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "r.garcia",
+   "email": "rozenn.garcia@credit-oceane.example",
+   "first": "Rozenn",
+   "last": "Garcia",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "r.jaouen",
+   "email": "rozenn.jaouen@credit-oceane.example",
+   "first": "Rozenn",
+   "last": "Jaouen",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "r.richard",
+   "email": "romain.richard@credit-oceane.example",
+   "first": "Romain",
+   "last": "Richard",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "r.rootsaert",
+   "email": "rose.rootsaert@credit-oceane.example",
+   "first": "Rose",
+   "last": "Rootsaert",
+   "role": "admin",
+   "totp": true
+  },
+  {
+   "login": "r.salaun",
+   "email": "romain.salaun@credit-oceane.example",
+   "first": "Romain",
+   "last": "Salaun",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "s.allain",
+   "email": "sylvain.allain@credit-oceane.example",
+   "first": "Sylvain",
+   "last": "Allain",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "s.bihan",
+   "email": "sarah.bihan@credit-oceane.example",
+   "first": "Sarah",
+   "last": "Bihan",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "s.daniel",
+   "email": "sylvain.daniel@credit-oceane.example",
+   "first": "Sylvain",
+   "last": "Daniel",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "s.durand",
+   "email": "sarah.durand@credit-oceane.example",
+   "first": "Sarah",
+   "last": "Durand",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "s.durand2",
+   "email": "sylvain.durand2@credit-oceane.example",
+   "first": "Sylvain",
+   "last": "Durand",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "s.hamon",
+   "email": "sophie.hamon@credit-oceane.example",
+   "first": "Sophie",
+   "last": "Hamon",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "s.henaff",
+   "email": "sophie.henaff@credit-oceane.example",
+   "first": "Sophie",
+   "last": "Henaff",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "s.morel",
+   "email": "sylvain.morel@credit-oceane.example",
+   "first": "Sylvain",
+   "last": "Morel",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "s.nedelec",
+   "email": "sophie.nedelec@credit-oceane.example",
+   "first": "Sophie",
+   "last": "Nedelec",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "s.pennec",
+   "email": "sarah.pennec@credit-oceane.example",
+   "first": "Sarah",
+   "last": "Pennec",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "s.raoul",
+   "email": "sylvain.raoul@credit-oceane.example",
+   "first": "Sylvain",
+   "last": "Raoul",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "s.vigouroux",
+   "email": "sarah.vigouroux@credit-oceane.example",
+   "first": "Sarah",
+   "last": "Vigouroux",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "support-agence",
+   "email": "support-agence@credit-oceane.example",
+   "first": "Compte",
+   "last": "support-agence",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "svc-batch",
+   "email": "svc-batch@credit-oceane.example",
+   "first": "Compte",
+   "last": "svc-batch",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "t.cloarec",
+   "email": "thomas.cloarec@credit-oceane.example",
+   "first": "Thomas",
+   "last": "Cloarec",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "t.daniel",
+   "email": "thomas.daniel@credit-oceane.example",
+   "first": "Thomas",
+   "last": "Daniel",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "t.dupont",
+   "email": "thomas.dupont@credit-oceane.example",
+   "first": "Thomas",
+   "last": "Dupont",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "t.le-gall",
+   "email": "tifenn.le-gall@credit-oceane.example",
+   "first": "Tifenn",
+   "last": "Le-Gall",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "t.petit",
+   "email": "thomas.petit@credit-oceane.example",
+   "first": "Thomas",
+   "last": "Petit",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "t.richard",
+   "email": "tifenn.richard@credit-oceane.example",
+   "first": "Tifenn",
+   "last": "Richard",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "t.robert",
+   "email": "thomas.robert@credit-oceane.example",
+   "first": "Thomas",
+   "last": "Robert",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "t.teamson",
+   "email": "tom.teamson@credit-oceane.example",
+   "first": "Tom",
+   "last": "Teamson",
+   "role": "admin",
+   "totp": true
+  },
+  {
+   "login": "t.toullec",
+   "email": "thomas.toullec@credit-oceane.example",
+   "first": "Thomas",
+   "last": "Toullec",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "t.vincent",
+   "email": "thomas.vincent@credit-oceane.example",
+   "first": "Thomas",
+   "last": "Vincent",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "u.allain",
+   "email": "ulysse.allain@credit-oceane.example",
+   "first": "Ulysse",
+   "last": "Allain",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "u.fournier",
+   "email": "ulysse.fournier@credit-oceane.example",
+   "first": "Ulysse",
+   "last": "Fournier",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "u.girard",
+   "email": "ulysse.girard@credit-oceane.example",
+   "first": "Ulysse",
+   "last": "Girard",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "u.henaff",
+   "email": "ulysse.henaff@credit-oceane.example",
+   "first": "Ulysse",
+   "last": "Henaff",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "u.kervella",
+   "email": "ulysse.kervella@credit-oceane.example",
+   "first": "Ulysse",
+   "last": "Kervella",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "u.le-goff",
+   "email": "ulysse.le-goff@credit-oceane.example",
+   "first": "Ulysse",
+   "last": "Le-Goff",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "u.quillien",
+   "email": "ulysse.quillien@credit-oceane.example",
+   "first": "Ulysse",
+   "last": "Quillien",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "u.vigouroux",
+   "email": "ulysse.vigouroux@credit-oceane.example",
+   "first": "Ulysse",
+   "last": "Vigouroux",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "u.vincent",
+   "email": "ulysse.vincent@credit-oceane.example",
+   "first": "Ulysse",
+   "last": "Vincent",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "v.david",
+   "email": "valerie.david@credit-oceane.example",
+   "first": "Valerie",
+   "last": "David",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "v.garcia",
+   "email": "valerie.garcia@credit-oceane.example",
+   "first": "Valerie",
+   "last": "Garcia",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "v.laurent",
+   "email": "valerie.laurent@credit-oceane.example",
+   "first": "Valerie",
+   "last": "Laurent",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "v.thepaut",
+   "email": "valerie.thepaut@credit-oceane.example",
+   "first": "Valerie",
+   "last": "Thepaut",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "x.david",
+   "email": "xavier.david@credit-oceane.example",
+   "first": "Xavier",
+   "last": "David",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "y.leroy",
+   "email": "yann.leroy@credit-oceane.example",
+   "first": "Yann",
+   "last": "Leroy",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "y.leroy2",
+   "email": "yann.leroy2@credit-oceane.example",
+   "first": "Yann",
+   "last": "Leroy",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "y.mercier",
+   "email": "yann.mercier@credit-oceane.example",
+   "first": "Yann",
+   "last": "Mercier",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "y.robert",
+   "email": "yannick.robert@credit-oceane.example",
+   "first": "Yannick",
+   "last": "Robert",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "y.salaun",
+   "email": "yann.salaun@credit-oceane.example",
+   "first": "Yann",
+   "last": "Salaun",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "y.uguen",
+   "email": "yannick.uguen@credit-oceane.example",
+   "first": "Yannick",
+   "last": "Uguen",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "y.vigouroux",
+   "email": "yannick.vigouroux@credit-oceane.example",
+   "first": "Yannick",
+   "last": "Vigouroux",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "z.dupont",
+   "email": "zoe.dupont@credit-oceane.example",
+   "first": "Zoe",
+   "last": "Dupont",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "z.jacq",
+   "email": "zoe.jacq@credit-oceane.example",
+   "first": "Zoe",
+   "last": "Jacq",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "z.olier",
+   "email": "zoe.olier@credit-oceane.example",
+   "first": "Zoe",
+   "last": "Olier",
+   "role": "conseiller",
+   "totp": true
+  },
+  {
+   "login": "z.pennec",
+   "email": "zoe.pennec@credit-oceane.example",
+   "first": "Zoe",
+   "last": "Pennec",
+   "role": "conseiller",
+   "totp": true
+  }
+ ],
+ "notes": [],
+ "expected": {
+  "PSI-4.1": "pass",
+  "PSI-4.2": "pass",
+  "PSI-4.3": "pass",
+  "PSI-4.4": "pass",
+  "PSI-4.5": "pass",
+  "PSI-4.6": "pass",
+  "PSI-4.7": "pass"
+ },
+ "expected_generic_admins": []
+}

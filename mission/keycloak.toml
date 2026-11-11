@@ -1,0 +1,48 @@
+# Lettre de mission : audit d'un vrai Keycloak (royaume de test, entreprise fictive) à travers la passerelle
+# en lecture seule `connectors/keycloak`. Lancement : bash ops/keycloak_up.sh puis python -m attest run mission/keycloak.toml
+
+[mission]
+id = "AUD-2026-KC-01"
+target = "keycloak"
+title_fr = "Authentification forte et accès à privilèges — Keycloak"
+title_en = "Strong authentication and privileged access — Keycloak"
+entity = "Banque Kerlann (fictive)"
+system = "Keycloak — royaume kerlann (fournisseur d'identité)"
+system_criticality = "Supporte des fonctions critiques ou importantes (DORA)"
+environment = "Keycloak de test (royaume fictif)"
+owner = "DSI — équipe IAM"
+entity_en = "Banque Kerlann (fictitious)"
+system_en = "Keycloak — kerlann realm (identity provider)"
+system_criticality_en = "Supports critical or important functions (DORA)"
+environment_en = "Test Keycloak (fictitious realm)"
+owner_en = "IT department — IAM team"
+lead_auditor = "A. Auditeur"
+classification = "TLP:AMBER+STRICT"
+requirement = "exigences/keycloak_authentification.md"
+lab_url = "http://127.0.0.1:5050"
+
+[scope]
+in = [
+  "Paramètres de sécurité du royaume Keycloak (mot de passe, verrouillage, session, journalisation)",
+  "Comptes du royaume et membres du rôle admin",
+]
+out = [
+  "Efficacité intrinsèque des facteurs MFA et flux d'authentification personnalisés",
+  "Clients, fédération d'identité et applications raccordées",
+  "Hébergement et exploitation du serveur Keycloak",
+]
+in_en = [
+  "Security settings of the Keycloak realm (password, lockout, session, logging)",
+  "Realm accounts and members of the admin role",
+]
+out_en = [
+  "Intrinsic strength of MFA factors and custom authentication flows",
+  "Clients, identity federation and connected applications",
+  "Hosting and operation of the Keycloak server",
+]
+
+[sla_days]
+critique = 30
+elevee = 90
+moyenne = 180
+faible = 365

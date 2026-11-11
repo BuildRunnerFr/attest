@@ -239,7 +239,7 @@ def render(tpl: str, lang: str, **kw):
 @app.get("/")
 def index():
     lang = lang_of()
-    return render(INDEX, lang, library=library(lang), targets=targets.TARGETS, backend=llm.BACKEND, error=None)
+    return render(INDEX, lang, library=library(lang), targets=targets.available(config.lab_url(), config.AUDIT_TOKEN), backend=llm.BACKEND, error=None)
 
 
 def running() -> bool:
@@ -247,7 +247,7 @@ def running() -> bool:
 
 
 def index_error(lang: str, error: str):
-    return render(INDEX, lang, library=library(lang), targets=targets.TARGETS, backend=llm.BACKEND, error=error)
+    return render(INDEX, lang, library=library(lang), targets=targets.available(config.lab_url(), config.AUDIT_TOKEN), backend=llm.BACKEND, error=error)
 
 
 @app.post("/interpret")
@@ -272,16 +272,16 @@ def do_interpret():
         try:
             texts.append((up.filename, read_upload(up)))
         except Exception as ex:
-            return render(INDEX, lang, library=library(lang), targets=targets.TARGETS, backend=llm.BACKEND,
+            return render(INDEX, lang, library=library(lang), targets=targets.available(config.lab_url(), config.AUDIT_TOKEN), backend=llm.BACKEND,
                           error=f"{up.filename}{colon(lang)}{ex}")
     if not texts:
-        return render(INDEX, lang, library=library(lang), targets=targets.TARGETS, backend=llm.BACKEND, error=S[lang]["none"])
+        return render(INDEX, lang, library=library(lang), targets=targets.available(config.lab_url(), config.AUDIT_TOKEN), backend=llm.BACKEND, error=S[lang]["none"])
     llm.USAGE.reset()                                   # coût de cette mission : interprétation + audit
     try:
         result = interpret.interpret(texts, target_id)
     except Exception as ex:
         traceback.print_exc()
-        return render(INDEX, lang, library=library(lang), targets=targets.TARGETS, backend=llm.BACKEND,
+        return render(INDEX, lang, library=library(lang), targets=targets.available(config.lab_url(), config.AUDIT_TOKEN), backend=llm.BACKEND,
                       error=f"{type(ex).__name__}{colon(lang)}{ex}")
     sid = time.strftime("%Y%m%d-%H%M%S-") + uuid.uuid4().hex[:4]
     d = WORK / sid
