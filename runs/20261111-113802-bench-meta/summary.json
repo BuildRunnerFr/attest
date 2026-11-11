@@ -1,0 +1,31 @@
+{
+  "id": "20261111-113802-bench-meta",
+  "utc": "20261111-113802",
+  "kind": "bench",
+  "backend": "meta",
+  "note": "preuve sur la page du compte constaté ; jetons entiers",
+  "commit": "44b28a5",
+  "workflow_run": "43013475565",
+  "status": "success",
+  "budget_spent_usd": 1.0268,
+  "priced_usd": 0.2668,
+  "unpriced": [
+    "sam-3.1"
+  ],
+  "bench": {
+    "checks": 14,
+    "TP": 1,
+    "TN": 13,
+    "FP": 0,
+    "FN": 0,
+    "inconclusive": 0,
+    "accuracy": 1.0,
+    "pii_total": 400,
+    "pii_model": 270,
+    "pii_masked": 400,
+    "injection_cases": 0,
+    "injection_flagged": 0,
+    "cost_usd": 0.2668,
+    "seconds": 611
+  }
+}

@@ -1,0 +1,2344 @@
+{
+  "mission": {
+    "id": "AUD-2026-IAM-01",
+    "title": "Strong authentication and privileged access — KRL-ADM",
+    "entity": "Crédit Océane (fictif)",
+    "system": "Annuaire central des accès",
+    "system_criticality": "Supports critical or important functions (DORA)",
+    "environment": "Demonstration pre-production",
+    "owner": "IT department — IAM team",
+    "lead_auditor": "Attest CI (automated run, no human auditor)",
+    "classification": "TLP:AMBER+STRICT",
+    "requirement_path": "exigences/dora_authentification.md",
+    "lab_url": "http://127.0.0.1:5050",
+    "scope_in": [
+      "Authentication and session settings of the KRL-ADM console",
+      "Accounts with access to the console",
+      "Logging of administrative actions"
+    ],
+    "scope_out": [
+      "Intrinsic strength of MFA factors (robustness of authentication means)",
+      "Central directory and identity federation",
+      "Physical controls"
+    ],
+    "sla_days": {
+      "critique": 30,
+      "elevee": 90,
+      "moyenne": 180,
+      "faible": 365
+    },
+    "target": "iam-console",
+    "framework_label": "DORA art. 9(4) · RTS (UE) 2024/1774 art. 12, 21 · PSI-4",
+    "requirement_text": null
+  },
+  "run_id": "20261111-113802-bench-meta",
+  "started": "2026-11-11 11:46",
+  "lang": "en",
+  "target": "iam-console",
+  "target_label": "KRL-ADM IAM admin console (Banque Kerlann)",
+  "backend": "meta",
+  "models": {
+    "reason": "muse-spark-1.3",
+    "code": "muse-spark-1.3",
+    "segmentation": "sam-3.1"
+  },
+  "entries": [
+    {
+      "control": {
+        "id": "C1",
+        "rule": "PSI-4.1",
+        "title": "Mandatory MFA for privileged accounts",
+        "objective": "MFA is enforced for all privileged admin accounts on KRL-ADM",
+        "test_procedure": "Retrieve the security configuration via GET /api/security and verify that mfa_admin is true",
+        "expected": "mfa_admin == true",
+        "severity": "critique",
+        "references": [
+          "DORA 9(4)(d)",
+          "RTS 21(1)(f)(ii)"
+        ],
+        "risk": "Without MFA for admins, stolen credentials allow full takeover of critical functions with no second barrier",
+        "recommendation": "Enable mandatory MFA for all privileged accounts by setting mfa_admin to true",
+        "evidence_page": "/admin/security",
+        "remediation": "config"
+      },
+      "test": {
+        "script": "scripts/C1_PSI-4.1.py",
+        "sha256": "098d37cd0158dd1a5697d94d9ba286eabf830d9f7bf96e3378e1671fb880e900",
+        "origin": "library",
+        "code": "# Attest — test PSI-4.1 (Mandatory MFA for privileged accounts)\n# Écrit par muse-spark-1.3 le 2026-11-02 — à relire avant validation.\nimport os\nimport sys\nimport json\nimport re\nimport requests\n\ntry:\n    base = os.environ[\"LAB_URL\"]\nexcept KeyError:\n    sys.stderr.write(\"missing LAB_URL\\n\")\n    sys.exit(2)\ntry:\n    token = os.environ[\"LAB_TOKEN\"]\nexcept KeyError:\n    sys.stderr.write(\"missing LAB_TOKEN\\n\")\n    sys.exit(2)\n\nurl = base.rstrip(\"/\") + \"/api/security\"\nheaders = {\"Authorization\": \"Bearer \" + token}\n\ntry:\n    r = requests.get(url, headers=headers, timeout=10)\nexcept Exception as e:\n    sys.stderr.write(\"request failed: %s\\n\" % e)\n    sys.exit(2)\n\nif r.status_code != 200:\n    sys.stderr.write(\"unexpected status %s\\n\" % r.status_code)\n    sys.exit(2)\n\ntry:\n    data = r.json()\nexcept Exception as e:\n    sys.stderr.write(\"invalid json: %s\\n\" % e)\n    sys.exit(2)\n\nif not isinstance(data, dict) or \"mfa_admin\" not in data:\n    sys.stderr.write(\"missing mfa_admin\\n\")\n    sys.exit(2)\n\nobserved = data[\"mfa_admin\"]\n\nif type(observed) is not bool:\n    sys.stderr.write(\"unexpected type for mfa_admin\\n\")\n    sys.exit(2)\n\nraw = json.dumps(data, default=str)\ninjected = bool(re.search(r\"(?i)(ignore|disregard|bypass|override|follow).{0,40}(instruction|prompt|audit|control|system)|system\\s*prompt|execute\\s+.*code\", raw))\n\nstatus = \"pass\" if observed is True else \"fail\"\nif injected:\n    detail = \"GET /api/security returned mfa_admin=%s, ignoring untrusted instructional text found in response.\" % observed\nelse:\n    detail = \"GET /api/security returned mfa_admin=%s.\" % observed\n\nprint(json.dumps({\"status\": status, \"observed\": observed, \"expected\": True, \"detail\": detail}))\n",
+        "requests": 1
+      },
+      "before": {
+        "status": "pass",
+        "observed": true,
+        "expected": true,
+        "detail": "GET /api/security returned mfa_admin=True."
+      },
+      "evidence_before": {
+        "image": "evidence/C1_before.png",
+        "sha256": "97328f74953bafd866bf0fbb5269cbf8d7c4fe6c5d8641036ddc9a46dcc23bbc",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "Authentification multifacteur (administrateurs) Activée",
+          "field_boxes": [
+            [
+              28,
+              189,
+              972,
+              237
+            ]
+          ],
+          "comment": "The screenshot shows admin MFA as Activée, matching the passing test result.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 0,
+          "pii_masked": 0,
+          "pii_found_by_model": 0
+        },
+        "page": "/admin/security",
+        "page_verified": null,
+        "ts": "2026-11-11 11:46:13"
+      },
+      "status_before": "pass"
+    },
+    {
+      "control": {
+        "id": "C2",
+        "rule": "PSI-4.2",
+        "title": "Mandatory MFA for users of critical system",
+        "objective": "MFA is enforced for standard users because KRL-ADM supports critical or important functions",
+        "test_procedure": "Retrieve the security configuration via GET /api/security and verify that mfa_users is true",
+        "expected": "mfa_users == true",
+        "severity": "elevee",
+        "references": [
+          "DORA 9(4)(d)",
+          "RTS 21(1)(f)(ii)"
+        ],
+        "risk": "Without MFA for all users, compromised user credentials allow unauthorized access to critical functions",
+        "recommendation": "Enable mandatory MFA for standard users by setting mfa_users to true",
+        "evidence_page": "/admin/security",
+        "remediation": "config"
+      },
+      "test": {
+        "script": "scripts/C2_PSI-4.2.py",
+        "sha256": "fa35c17fbb1dfdd3f0b119a1b0298caedbab33700f9367a772a5abf44fcaad3f",
+        "origin": "library",
+        "code": "# Attest — test PSI-4.2 (Mandatory MFA for users of critical system)\n# Écrit par muse-spark-1.3 le 2026-11-02 — à relire avant validation.\nimport requests\nimport json\nimport os\nimport sys\nimport re\n\ntry:\n    base = os.environ[\"LAB_URL\"]\n    token = os.environ[\"LAB_TOKEN\"]\nexcept KeyError as e:\n    print(f\"missing environment variable: {e}\", file=sys.stderr)\n    sys.exit(2)\n\nurl = re.sub(r\"/+$\", \"\", base) + \"/api/security\"\nheaders = {\"Authorization\": \"Bearer \" + token}\n\ntry:\n    r = requests.get(url, headers=headers, timeout=10)\nexcept Exception as e:\n    print(f\"request failed: {e}\", file=sys.stderr)\n    sys.exit(2)\n\nif r.status_code != 200:\n    print(f\"unexpected status {r.status_code} for GET /api/security\", file=sys.stderr)\n    sys.exit(2)\n\ntry:\n    data = r.json()\nexcept Exception as e:\n    print(f\"invalid json: {e}\", file=sys.stderr)\n    sys.exit(2)\n\nif not isinstance(data, dict) or \"mfa_users\" not in data or not isinstance(data[\"mfa_users\"], bool):\n    print(\"missing or invalid mfa_users field\", file=sys.stderr)\n    sys.exit(2)\n\nobserved = data[\"mfa_users\"]\nstatus = \"pass\" if observed is True else \"fail\"\nprint(json.dumps({\"status\": status, \"observed\": observed, \"expected\": True, \"detail\": f\"mfa_users is {observed}.\"}))\n",
+        "requests": 1
+      },
+      "before": {
+        "status": "pass",
+        "observed": true,
+        "expected": true,
+        "detail": "mfa_users is True."
+      },
+      "evidence_before": {
+        "image": "evidence/C2_before.png",
+        "sha256": "dc7c05daf5406d18809a7b15c69e96cdd68a4bcc49903451898a4c3b069363be",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "Authentification multifacteur (utilisateurs) Activée",
+          "field_boxes": [
+            [
+              28,
+              235,
+              969,
+              282
+            ]
+          ],
+          "comment": "The security policy table shows MFA for users as Activée, matching the passing test result.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 0,
+          "pii_masked": 0,
+          "pii_found_by_model": 0
+        },
+        "page": "/admin/security",
+        "page_verified": null,
+        "ts": "2026-11-11 11:46:18"
+      },
+      "status_before": "pass"
+    },
+    {
+      "control": {
+        "id": "C3",
+        "rule": "PSI-4.3",
+        "title": "Strong password policy",
+        "objective": "Passwords require a minimum length of 12 characters with complexity requirements enabled",
+        "test_procedure": "Retrieve the security configuration via GET /api/security and verify password_min_length and password_require_complexity",
+        "expected": "password_min_length >= 12 AND password_require_complexity == true",
+        "severity": "moyenne",
+        "references": [
+          "DORA 9(4)(d)"
+        ],
+        "risk": "Weak or short passwords can be guessed or brute-forced, enabling unauthorized access to the system",
+        "recommendation": "Enforce a minimum password length of 12 characters with complexity by correcting the password settings",
+        "evidence_page": "/admin/security",
+        "remediation": "config"
+      },
+      "test": {
+        "script": "scripts/C3_PSI-4.3.py",
+        "sha256": "b440a5b4dc6b0fb35e3237b2c31c911447c452d28a8439534757301411e1949b",
+        "origin": "library",
+        "code": "# Attest — test PSI-4.3 (Strong password policy)\n# Écrit par muse-spark-1.3 le 2026-11-02 — à relire avant validation.\nimport requests\nimport json\nimport os\nimport sys\nimport re\n\ntry:\n    LAB_URL = os.environ[\"LAB_URL\"]\n    LAB_TOKEN = os.environ[\"LAB_TOKEN\"]\nexcept KeyError as e:\n    sys.stderr.write(f\"missing env var: {e}\\n\")\n    sys.exit(2)\n\nurl = LAB_URL.rstrip(\"/\") + \"/api/security\"\nheaders = {\"Authorization\": \"Bearer \" + LAB_TOKEN}\n\ntry:\n    resp = requests.get(url, headers=headers, timeout=10)\nexcept Exception as e:\n    sys.stderr.write(f\"request failed: {e}\\n\")\n    sys.exit(2)\n\nif resp.status_code != 200:\n    sys.stderr.write(f\"unexpected status: {resp.status_code}\\n\")\n    sys.exit(2)\n\ntry:\n    data = json.loads(resp.text)\nexcept Exception as e:\n    sys.stderr.write(f\"invalid json: {e}\\n\")\n    sys.exit(2)\n\nif not isinstance(data, dict):\n    sys.stderr.write(\"unexpected data type: expected object\\n\")\n    sys.exit(2)\n\nif \"password_min_length\" not in data or \"password_require_complexity\" not in data:\n    sys.stderr.write(\"missing required fields\\n\")\n    sys.exit(2)\n\nml = data[\"password_min_length\"]\nrc = data[\"password_require_complexity\"]\n\nif not isinstance(ml, int) or isinstance(ml, bool):\n    sys.stderr.write(\"unexpected type for password_min_length\\n\")\n    sys.exit(2)\n\nif type(rc) is not bool:\n    sys.stderr.write(\"unexpected type for password_require_complexity\\n\")\n    sys.exit(2)\n\nok = (ml >= 12 and rc is True)\nstatus = \"pass\" if ok else \"fail\"\nobserved = {\"password_min_length\": ml, \"password_require_complexity\": rc}\nexpected = \"password_min_length >= 12 AND password_require_complexity == true\"\n\nif re.search(r\"(?i)ignore\\b.*\\binstruct|system\\s+prompt|do\\s+not\\s+follow|override\\s+audit|disregard\\b.*\\binstruct\", resp.text):\n    detail = f\"password_min_length is {ml} and password_require_complexity is {rc} with untrusted instructional text present in response and ignored.\"\nelse:\n    detail = f\"password_min_length is {ml} and password_require_complexity is {rc}.\"\n\nprint(json.dumps({\"status\": status, \"observed\": observed, \"expected\": expected, \"detail\": detail}))\n",
+        "requests": 1
+      },
+      "before": {
+        "status": "pass",
+        "observed": {
+          "password_min_length": 12,
+          "password_require_complexity": true
+        },
+        "expected": "password_min_length >= 12 AND password_require_complexity == true",
+        "detail": "password_min_length is 12 and password_require_complexity is True."
+      },
+      "evidence_before": {
+        "image": "evidence/C3_before.png",
+        "sha256": "ff0c884c5a7a76f022f7894bc69f570d5ecb8822b4c4c5247a12c8fe53a1b70a",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "Longueur minimale du mot de passe 12; Complexité du mot de passe exigée Activée",
+          "field_boxes": [
+            [
+              28,
+              281,
+              970,
+              329
+            ],
+            [
+              28,
+              329,
+              970,
+              376
+            ]
+          ],
+          "comment": "The screenshot shows minimum password length 12 and password complexity enabled, matching the automated pass result.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 0,
+          "pii_masked": 0,
+          "pii_found_by_model": 0
+        },
+        "page": "/admin/security",
+        "page_verified": null,
+        "ts": "2026-11-11 11:46:14"
+      },
+      "status_before": "pass"
+    },
+    {
+      "control": {
+        "id": "C4",
+        "rule": "PSI-4.4",
+        "title": "Account lockout after failed logins",
+        "objective": "Accounts lock after at most 5 failed login attempts and lockout is never disabled",
+        "test_procedure": "Retrieve the security configuration via GET /api/security and verify that lockout_threshold is between 1 and 5 inclusive",
+        "expected": "lockout_threshold >= 1 AND lockout_threshold <= 5",
+        "severity": "moyenne",
+        "references": [
+          "DORA 9(4)(c)"
+        ],
+        "risk": "Without lockout, attackers can perform unlimited password-guessing attacks against accounts",
+        "recommendation": "Configure account lockout to 5 attempts at most by setting lockout_threshold between 1 and 5",
+        "evidence_page": "/admin/security",
+        "remediation": "config"
+      },
+      "test": {
+        "script": "scripts/C4_PSI-4.4.py",
+        "sha256": "10d2a8f06337b5bca5667b2efa7dc25c74553b33470fbc3749f9aefa5454dfce",
+        "origin": "library",
+        "code": "# Attest — test PSI-4.4 (Account lockout after failed logins)\n# Écrit par muse-spark-1.3 le 2026-11-02 — à relire avant validation.\nimport requests\nimport json\nimport os\nimport sys\nimport re\n\ntry:\n    LAB_URL = os.environ[\"LAB_URL\"]\nexcept KeyError:\n    print(\"missing LAB_URL\", file=sys.stderr)\n    sys.exit(2)\n\ntry:\n    LAB_TOKEN = os.environ[\"LAB_TOKEN\"]\nexcept KeyError:\n    print(\"missing LAB_TOKEN\", file=sys.stderr)\n    sys.exit(2)\n\nurl = LAB_URL.rstrip(\"/\") + \"/api/security\"\nheaders = {\"Authorization\": \"Bearer \" + os.environ[\"LAB_TOKEN\"]}\n\ntry:\n    r = requests.get(url, headers=headers, timeout=10)\nexcept Exception as e:\n    print(\"request failed: \" + str(e), file=sys.stderr)\n    sys.exit(2)\n\nif r.status_code != 200:\n    print(\"unexpected status: \" + str(r.status_code), file=sys.stderr)\n    sys.exit(2)\n\ntry:\n    data = json.loads(r.text)\nexcept Exception as e:\n    print(\"invalid json: \" + str(e), file=sys.stderr)\n    sys.exit(2)\n\nif not isinstance(data, dict) or \"lockout_threshold\" not in data:\n    print(\"missing lockout_threshold\", file=sys.stderr)\n    sys.exit(2)\n\nvalue = data[\"lockout_threshold\"]\n\nif isinstance(value, bool) or not isinstance(value, int):\n    print(\"unexpected lockout_threshold type\", file=sys.stderr)\n    sys.exit(2)\n\ninjection_found = False\ntry:\n    if re.search(r\"(?i)\\b(ignore|disregard|bypass|override)\\b.{0,60}\\b(instruction|prompt|rule|verdict|audit|test)\\b|\\b(you\\s+are\\s+an?|act\\s+as|system\\s+prompt)\\b\", r.text):\n        injection_found = True\nexcept Exception:\n    injection_found = False\n\nexpected = \"lockout_threshold >= 1 AND lockout_threshold <= 5\"\n\nif 1 <= value <= 5:\n    status = \"pass\"\n    if injection_found:\n        detail = \"lockout_threshold is \" + str(value) + \", which is within the required range 1 to 5 inclusive, and untrusted instructional text in the response was observed and ignored.\"\n    else:\n        detail = \"lockout_threshold is \" + str(value) + \", which is within the required range 1 to 5 inclusive.\"\nelse:\n    status = \"fail\"\n    if injection_found:\n        detail = \"lockout_threshold is \" + str(value) + \", which is outside the required range 1 to 5 inclusive, and untrusted instructional text in the response was observed and ignored.\"\n    else:\n        detail = \"lockout_threshold is \" + str(value) + \", which is outside the required range 1 to 5 inclusive.\"\n\nprint(json.dumps({\"status\": status, \"observed\": value, \"expected\": expected, \"detail\": detail}))\n",
+        "requests": 1
+      },
+      "before": {
+        "status": "pass",
+        "observed": 5,
+        "expected": "lockout_threshold >= 1 AND lockout_threshold <= 5",
+        "detail": "lockout_threshold is 5, which is within the required range 1 to 5 inclusive."
+      },
+      "evidence_before": {
+        "image": "evidence/C4_before.png",
+        "sha256": "1812b2c7da0a5eac3a928a0ed00cb6080f8f715d96c28bb69dfbd28d53b4c59b",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "Verrouillage après N échecs de connexion 5",
+          "field_boxes": [
+            [
+              28,
+              377,
+              968,
+              424
+            ]
+          ],
+          "comment": "The screenshot shows lockout after 5 failed attempts, matching the automated pass result.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 0,
+          "pii_masked": 0,
+          "pii_found_by_model": 0
+        },
+        "page": "/admin/security",
+        "page_verified": null,
+        "ts": "2026-11-11 11:46:17"
+      },
+      "status_before": "pass"
+    },
+    {
+      "control": {
+        "id": "C5",
+        "rule": "PSI-4.5",
+        "title": "Inactive session timeout",
+        "objective": "Inactive sessions expire after at most 15 minutes and expiration is never disabled",
+        "test_procedure": "Retrieve the security configuration via GET /api/security and verify that session_timeout_minutes is between 1 and 15 inclusive",
+        "expected": "session_timeout_minutes >= 1 AND session_timeout_minutes <= 15",
+        "severity": "moyenne",
+        "references": [
+          "DORA 9(4)(c)"
+        ],
+        "risk": "Unlimited inactive sessions allow session hijacking and unauthorized use of unattended workstations",
+        "recommendation": "Enforce inactive session expiration at 15 minutes at most by setting session_timeout_minutes between 1 and 15",
+        "evidence_page": "/admin/security",
+        "remediation": "config"
+      },
+      "test": {
+        "script": "scripts/C5_PSI-4.5.py",
+        "sha256": "4157e9750f010f98c706b06c46595e822377ff01e012bfa30a122013ca8828e9",
+        "origin": "library",
+        "code": "# Attest — test PSI-4.5 (Inactive session timeout)\n# Écrit par muse-spark-1.3 le 2026-11-02 — à relire avant validation.\nimport json\nimport os\nimport sys\nimport requests\n\ntry:\n    LAB_URL = os.environ[\"LAB_URL\"]\n    LAB_TOKEN = os.environ[\"LAB_TOKEN\"]\nexcept KeyError as e:\n    print(f\"missing environment variable: {e}\", file=sys.stderr)\n    sys.exit(2)\n\nif not LAB_URL or not LAB_TOKEN:\n    print(\"missing LAB_URL or LAB_TOKEN\", file=sys.stderr)\n    sys.exit(2)\n\nurl = LAB_URL.rstrip(\"/\") + \"/api/security\"\nheaders = {\"Authorization\": \"Bearer \" + LAB_TOKEN}\n\ntry:\n    resp = requests.get(url, headers=headers, timeout=10)\nexcept Exception as e:\n    print(f\"request failed: {e}\", file=sys.stderr)\n    sys.exit(2)\n\nif resp.status_code != 200:\n    print(f\"unexpected status {resp.status_code} for GET /api/security\", file=sys.stderr)\n    sys.exit(2)\n\ntry:\n    data = resp.json()\nexcept Exception as e:\n    print(f\"invalid JSON: {e}\", file=sys.stderr)\n    sys.exit(2)\n\nif not isinstance(data, dict) or \"session_timeout_minutes\" not in data:\n    print(\"missing session_timeout_minutes in /api/security response\", file=sys.stderr)\n    sys.exit(2)\n\nval = data[\"session_timeout_minutes\"]\n\nif type(val) is not int:\n    print(f\"unexpected type for session_timeout_minutes: {type(val).__name__}\", file=sys.stderr)\n    sys.exit(2)\n\nexpected = \"session_timeout_minutes >= 1 AND session_timeout_minutes <= 15\"\nif 1 <= val <= 15:\n    status = \"pass\"\n    detail = f\"Observed session_timeout_minutes is {val}, within the required 1 to 15 inclusive.\"\nelse:\n    status = \"fail\"\n    detail = f\"Observed session_timeout_minutes is {val}, outside the required 1 to 15 inclusive.\"\n\nprint(json.dumps({\"status\": status, \"observed\": val, \"expected\": expected, \"detail\": detail}))\n",
+        "requests": 1
+      },
+      "before": {
+        "status": "pass",
+        "observed": 15,
+        "expected": "session_timeout_minutes >= 1 AND session_timeout_minutes <= 15",
+        "detail": "Observed session_timeout_minutes is 15, within the required 1 to 15 inclusive."
+      },
+      "evidence_before": {
+        "image": "evidence/C5_before.png",
+        "sha256": "913d5c3e3fcd0d9ade219499433155ec06e10c7c1fdbdff32fa3a5a45ecfdb68",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "Expiration de session inactive (minutes) 15",
+          "field_boxes": [
+            [
+              29,
+              425,
+              944,
+              472
+            ]
+          ],
+          "comment": "Screenshot shows inactive session expiration set to 15 minutes, matching the automated test result.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 0,
+          "pii_masked": 0,
+          "pii_found_by_model": 0
+        },
+        "page": "/admin/security",
+        "page_verified": null,
+        "ts": "2026-11-11 11:46:23"
+      },
+      "status_before": "pass"
+    },
+    {
+      "control": {
+        "id": "C6",
+        "rule": "PSI-4.6",
+        "title": "Logging of administration actions",
+        "objective": "All administration actions are logged",
+        "test_procedure": "Retrieve the security configuration via GET /api/security and verify that admin_audit_log is true",
+        "expected": "admin_audit_log == true",
+        "severity": "elevee",
+        "references": [
+          "RTS 12(2)(c)(i)"
+        ],
+        "risk": "Without admin audit logging, privileged actions cannot be traced, preventing detection and investigation of abuse",
+        "recommendation": "Enable logging of all administration actions by setting admin_audit_log to true",
+        "evidence_page": "/admin/security",
+        "remediation": "config"
+      },
+      "test": {
+        "script": "scripts/C6_PSI-4.6.py",
+        "sha256": "e2f35349092109778d4c0f2baf30d8414192be5d8c53853cf3b725025514fc83",
+        "origin": "library",
+        "code": "# Attest — test PSI-4.6 (Logging of administration actions)\n# Écrit par muse-spark-1.3 le 2026-11-02 — à relire avant validation.\nimport os\nimport sys\nimport json\nimport requests\n\ntry:\n    base_url = os.environ[\"LAB_URL\"]\n    token = os.environ[\"LAB_TOKEN\"]\nexcept KeyError as e:\n    print(f\"missing environment variable: {e}\", file=sys.stderr)\n    sys.exit(2)\n\nurl = base_url.rstrip(\"/\") + \"/api/security\"\nheaders = {\"Authorization\": \"Bearer \" + token}\n\ntry:\n    r = requests.get(url, headers=headers, timeout=10)\nexcept Exception as e:\n    print(f\"request failed: {e}\", file=sys.stderr)\n    sys.exit(2)\n\nif r.status_code != 200:\n    print(f\"unexpected status code: {r.status_code}\", file=sys.stderr)\n    sys.exit(2)\n\ntry:\n    data = r.json()\nexcept Exception as e:\n    print(f\"invalid JSON: {e}\", file=sys.stderr)\n    sys.exit(2)\n\nif not isinstance(data, dict) or \"admin_audit_log\" not in data:\n    print(\"missing field: admin_audit_log\", file=sys.stderr)\n    sys.exit(2)\n\nval = data[\"admin_audit_log\"]\nif type(val) is not bool:\n    print(f\"unexpected type for admin_audit_log: {type(val).__name__}\", file=sys.stderr)\n    sys.exit(2)\n\nif val is True:\n    print(json.dumps({\"status\": \"pass\", \"observed\": val, \"expected\": True, \"detail\": \"admin_audit_log is true.\"}))\nelse:\n    print(json.dumps({\"status\": \"fail\", \"observed\": val, \"expected\": True, \"detail\": \"admin_audit_log is false.\"}))\n",
+        "requests": 1
+      },
+      "before": {
+        "status": "pass",
+        "observed": true,
+        "expected": true,
+        "detail": "admin_audit_log is true."
+      },
+      "evidence_before": {
+        "image": "evidence/C6_before.png",
+        "sha256": "642c1ceb3b259ded3ab34dffaeb9c6cebb22f649fa871b5b186e12f6ff652b38",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "Journalisation des actions d'administration Activée",
+          "field_boxes": [
+            [
+              27,
+              471,
+              1073,
+              520
+            ]
+          ],
+          "comment": "The screenshot shows the admin action logging row as Activée.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 0,
+          "pii_masked": 0,
+          "pii_found_by_model": 0
+        },
+        "page": "/admin/security",
+        "page_verified": null,
+        "ts": "2026-11-11 11:46:28"
+      },
+      "status_before": "pass"
+    },
+    {
+      "control": {
+        "id": "C7",
+        "rule": "PSI-4.7",
+        "title": "No generic or shared admin accounts",
+        "objective": "No account with role admin is generic or shared and every admin has a nominative login of the form initiale.nom with a personal email",
+        "test_procedure": "Retrieve all accounts via GET /api/users and verify that every user with role admin has a nominative login and a personal email without function identifier or shared mailbox",
+        "expected": "for all users where role == admin: login matches initiale.nom pattern and email is personal, with no function login and no shared mailbox",
+        "severity": "elevee",
+        "references": [
+          "DORA 9(4)(c)",
+          "RTS 21(1)(c)",
+          "RTS 21(1)(e)(ii)"
+        ],
+        "risk": "Generic or shared admin accounts destroy individual accountability and prevent attribution of privileged actions",
+        "recommendation": "Remove or disable generic and shared admin accounts and replace them with dedicated nominative accounts",
+        "evidence_page": "/admin/users",
+        "remediation": "manual"
+      },
+      "test": {
+        "script": "scripts/C7_PSI-4.7.py",
+        "sha256": "121d96a62200902496179cbba34fba2eb0f15f97773ab62eaadf307ba1df05ab",
+        "origin": "library",
+        "code": "# Attest — test PSI-4.7 (No generic or shared admin accounts)\n# Écrit par muse-spark-1.3 le 2026-11-11 — à relire avant validation.\nimport requests\nimport json\nimport os\nimport sys\nimport re\ntry:\n    base_url = os.environ[\"LAB_URL\"]\n    lab_token = os.environ[\"LAB_TOKEN\"]\nexcept KeyError:\n    sys.stderr.write(\"missing env\\n\")\n    sys.exit(2)\nif not isinstance(base_url, str) or not isinstance(lab_token, str) or not base_url or not lab_token:\n    sys.stderr.write(\"missing env\\n\")\n    sys.exit(2)\nbase_url = base_url.rstrip(\"/\")\nheaders = {\"Authorization\": \"Bearer \" + lab_token}\ntry:\n    ev = requests.get(base_url + \"/admin/users\", headers=headers)\nexcept Exception:\n    sys.stderr.write(\"evidence request failed\\n\")\n    sys.exit(2)\nif ev.status_code != 200:\n    sys.stderr.write(\"evidence request failed\\n\")\n    sys.exit(2)\nall_users = []\nnext_url = base_url + \"/api/users\"\nvisited = []\npage_count = 0\nwhile next_url:\n    if next_url in visited:\n        sys.stderr.write(\"pagination loop\\n\")\n        sys.exit(2)\n    visited.append(next_url)\n    current_url = next_url\n    try:\n        resp = requests.get(next_url, headers=headers)\n    except Exception:\n        sys.stderr.write(\"users request failed\\n\")\n        sys.exit(2)\n    if resp.status_code != 200:\n        sys.stderr.write(\"users request failed\\n\")\n        sys.exit(2)\n    page_count = page_count + 1\n    try:\n        payload = resp.json()\n    except Exception:\n        sys.stderr.write(\"bad json\\n\")\n        sys.exit(2)\n    if isinstance(payload, list):\n        batch = payload\n    elif isinstance(payload, dict):\n        batch = None\n        for key in (\"users\", \"data\", \"items\", \"results\"):\n            if key in payload and isinstance(payload[key], list):\n                batch = payload[key]\n                break\n        if batch is None:\n            sys.stderr.write(\"unexpected users format\\n\")\n            sys.exit(2)\n    else:\n        sys.stderr.write(\"unexpected users format\\n\")\n        sys.exit(2)\n    for entry in batch:\n        all_users.append(entry)\n    candidate = None\n    try:\n        linkmap = resp.links\n        if \"next\" in linkmap:\n            info = linkmap[\"next\"]\n            if \"url\" in info:\n                candidate = info[\"url\"]\n    except Exception:\n        candidate = None\n    if not candidate:\n        if \"Link\" in resp.headers:\n            lh = resp.headers[\"Link\"]\n            if isinstance(lh, str):\n                m2 = re.search(r'<([^>]+)>\\s*;\\s*rel=\"next\"', lh)\n                if m2:\n                    candidate = m2.group(1)\n    if candidate:\n        if candidate.startswith(\"http://\") or candidate.startswith(\"https://\"):\n            next_url = candidate\n        elif candidate.startswith(\"/\"):\n            next_url = base_url + candidate\n        else:\n            next_url = base_url + \"/\" + candidate\n    else:\n        total_pages = None\n        if \"X-Total-Pages\" in resp.headers:\n            try:\n                total_pages = int(resp.headers[\"X-Total-Pages\"])\n            except Exception:\n                sys.stderr.write(\"bad total pages\\n\")\n                sys.exit(2)\n        if total_pages is not None:\n            cur_page = None\n            for hkey in (\"X-Current-Page\", \"X-Page\"):\n                if hkey in resp.headers:\n                    try:\n                        cur_page = int(resp.headers[hkey])\n                    except Exception:\n                        cur_page = None\n                    if cur_page is not None:\n                        break\n            if cur_page is None:\n                m = re.search(r\"[?&]page=(\\d+)\", current_url)\n                if m:\n                    cur_page = int(m.group(1))\n                else:\n                    cur_page = page_count\n            if cur_page < total_pages:\n                want = cur_page + 1\n                if re.search(r\"[?&]page=\\d+\", current_url):\n                    next_url = re.sub(r\"([?&]page=)\\d+\", r\"\\g<1>\" + str(want), current_url)\n                else:\n                    if \"?\" in current_url:\n                        next_url = current_url + \"&page=\" + str(want)\n                    else:\n                        next_url = current_url + \"?page=\" + str(want)\n            else:\n                next_url = None\n        else:\n            next_url = None\ndef tokens_of(value):\n    parts = re.split(r\"[^A-Za-z]+\", value.lower())\n    out = []\n    for p in parts:\n        if p:\n            out.append(p)\n    return out\ngeneric = [\"admin\", \"administrator\", \"administrateur\", \"root\", \"superuser\", \"sysadmin\", \"system\", \"support\", \"helpdesk\", \"help\", \"team\", \"equipe\", \"service\", \"services\", \"contact\", \"info\", \"infos\", \"generic\", \"generique\", \"shared\", \"partage\", \"test\", \"demo\", \"guest\", \"operator\", \"security\"]\nadmins = []\nfor u in all_users:\n    if not isinstance(u, dict):\n        sys.stderr.write(\"unexpected user entry\\n\")\n        sys.exit(2)\n    if \"login\" not in u or \"email\" not in u or \"role\" not in u:\n        sys.stderr.write(\"missing user field\\n\")\n        sys.exit(2)\n    login = u[\"login\"]\n    email = u[\"email\"]\n    role = u[\"role\"]\n    if not isinstance(login, str) or not isinstance(email, str) or not isinstance(role, str):\n        sys.stderr.write(\"bad user field type\\n\")\n        sys.exit(2)\n    if role == \"admin\":\n        admins.append(u)\nadmin_logins = []\nfor a in admins:\n    admin_logins.append(a[\"login\"])\noffending = []\nfor a in admins:\n    login = a[\"login\"]\n    email = a[\"email\"]\n    bad = False\n    if not re.match(r\"^[A-Za-z]\\.[A-Za-z]+(?:-[A-Za-z]+)*$\", login):\n        bad = True\n    else:\n        lt = tokens_of(login)\n        for t in lt:\n            if t in generic:\n                bad = True\n                break\n    parts = email.split(\"@\")\n    if len(parts) != 2 or not parts[0] or not parts[1]:\n        bad = True\n    else:\n        local = parts[0]\n        if \".\" not in local:\n            bad = True\n        elif not re.match(r\"^[A-Za-z]+(?:[.\\-][A-Za-z]+)+$\", local):\n            bad = True\n        else:\n            et = tokens_of(local)\n            for t in et:\n                if t in generic:\n                    bad = True\n                    break\n    if bad:\n        offending.append(login)\nexpected = \"for all users where role == admin: login matches initiale.nom pattern and email is personal, with no function login and no shared mailbox\"\ntotal_count = len(all_users)\nadmin_count = len(admins)\noff_count = len(offending)\nif off_count == 0:\n    detail = \"Checked \" + str(admin_count) + \" admin accounts among \" + str(total_count) + \" users across \" + str(page_count) + \" pages with no generic or shared admin account\"\n    print(json.dumps({\"status\": \"pass\", \"observed\": admin_logins, \"expected\": expected, \"detail\": detail, \"evidence_page\": \"/admin/users\"}))\nelse:\n    detail = \"Checked \" + str(admin_count) + \" admin accounts among \" + str(total_count) + \" users across \" + str(page_count) + \" pages with \" + str(off_count) + \" generic or shared admin accounts\"\n    print(json.dumps({\"status\": \"fail\", \"observed\": offending, \"expected\": expected, \"detail\": detail, \"evidence_page\": \"/admin/users\"}))\n",
+        "requests": 9
+      },
+      "before": {
+        "status": "pass",
+        "observed": [
+          "a.kerbrat",
+          "a.petit",
+          "c.itier",
+          "i.uguen",
+          "j.opsomer",
+          "k.morvan",
+          "l.gourvennec",
+          "l.servien",
+          "m.le-bihan-riou",
+          "m.thepaut",
+          "r.rootsaert",
+          "s.laurent",
+          "t.teamson",
+          "y.mercier"
+        ],
+        "expected": "for all users where role == admin: login matches initiale.nom pattern and email is personal, with no function login and no shared mailbox",
+        "detail": "Checked 14 admin accounts among 720 users across 8 pages with no generic or shared admin account",
+        "evidence_page": "/admin/users"
+      },
+      "evidence_before": {
+        "image": "evidence/C7_before.png",
+        "sha256": "85745ea70b698b3340a75d68973f540f50438bdd164f4798b814d74b0d473be3",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "a.kerbrat | anne-sophie.kerbrat@credit-oceane.example | admin | 10.10.109.189 | Oui; a.petit | antoine.petit@credit-oceane.example | admin | 10.16.50.37 | Oui; c.itier | claire.itier@credit-oceane.example | admin | 10.14.50.182 | Oui",
+          "field_boxes": [
+            [
+              15,
+              1585,
+              1085,
+              1630
+            ],
+            [
+              15,
+              2395,
+              1085,
+              2440
+            ],
+            [
+              15,
+              4240,
+              1085,
+              4285
+            ]
+          ],
+          "comment": "Page 1 of 8 shows three admin accounts with nominative logins and personal emails and no generic admin.",
+          "pii": [
+            {
+              "text": "adele.abgrall@credit-oceane.example",
+              "box": [
+                210,
+                202,
+                550,
+                222
+              ]
+            },
+            {
+              "text": "10.17.182.17",
+              "box": [
+                740,
+                202,
+                860,
+                222
+              ]
+            },
+            {
+              "text": "arthur.abgrall2@credit-oceane.example",
+              "box": [
+                210,
+                247,
+                550,
+                267
+              ]
+            },
+            {
+              "text": "10.28.159.60",
+              "box": [
+                740,
+                247,
+                860,
+                267
+              ]
+            },
+            {
+              "text": "adele.abgrall3@credit-oceane.example",
+              "box": [
+                210,
+                292,
+                550,
+                312
+              ]
+            },
+            {
+              "text": "10.34.224.52",
+              "box": [
+                740,
+                292,
+                860,
+                312
+              ]
+            },
+            {
+              "text": "anne.allain@credit-oceane.example",
+              "box": [
+                210,
+                337,
+                550,
+                357
+              ]
+            },
+            {
+              "text": "10.39.226.39",
+              "box": [
+                740,
+                337,
+                860,
+                357
+              ]
+            },
+            {
+              "text": "antoine.bernard@credit-oceane.example",
+              "box": [
+                210,
+                382,
+                550,
+                402
+              ]
+            },
+            {
+              "text": "10.32.150.183",
+              "box": [
+                740,
+                382,
+                860,
+                402
+              ]
+            },
+            {
+              "text": "antoine.bertrand@credit-oceane.example",
+              "box": [
+                210,
+                427,
+                550,
+                447
+              ]
+            },
+            {
+              "text": "10.14.76.117",
+              "box": [
+                740,
+                427,
+                860,
+                447
+              ]
+            },
+            {
+              "text": "arthur.briand@credit-oceane.example",
+              "box": [
+                210,
+                472,
+                550,
+                492
+              ]
+            },
+            {
+              "text": "10.14.242.125",
+              "box": [
+                740,
+                472,
+                860,
+                492
+              ]
+            },
+            {
+              "text": "alexandre.cloarec@credit-oceane.example",
+              "box": [
+                210,
+                517,
+                550,
+                537
+              ]
+            },
+            {
+              "text": "10.10.43.137",
+              "box": [
+                740,
+                517,
+                860,
+                537
+              ]
+            },
+            {
+              "text": "arthur.cloarec2@credit-oceane.example",
+              "box": [
+                210,
+                562,
+                550,
+                582
+              ]
+            },
+            {
+              "text": "10.37.217.176",
+              "box": [
+                740,
+                562,
+                860,
+                582
+              ]
+            },
+            {
+              "text": "anne.daniel@credit-oceane.example",
+              "box": [
+                210,
+                607,
+                550,
+                627
+              ]
+            },
+            {
+              "text": "10.32.66.98",
+              "box": [
+                740,
+                607,
+                860,
+                627
+              ]
+            },
+            {
+              "text": "arthur.david@credit-oceane.example",
+              "box": [
+                210,
+                652,
+                550,
+                672
+              ]
+            },
+            {
+              "text": "10.39.208.161",
+              "box": [
+                740,
+                652,
+                860,
+                672
+              ]
+            },
+            {
+              "text": "anne.david2@credit-oceane.example",
+              "box": [
+                210,
+                697,
+                550,
+                717
+              ]
+            },
+            {
+              "text": "10.28.102.12",
+              "box": [
+                740,
+                697,
+                860,
+                717
+              ]
+            },
+            {
+              "text": "arthur.david3@credit-oceane.example",
+              "box": [
+                210,
+                742,
+                550,
+                762
+              ]
+            },
+            {
+              "text": "10.30.95.23",
+              "box": [
+                740,
+                742,
+                860,
+                762
+              ]
+            },
+            {
+              "text": "alexandre.derrien@credit-oceane.example",
+              "box": [
+                210,
+                787,
+                550,
+                807
+              ]
+            },
+            {
+              "text": "10.34.206.142",
+              "box": [
+                740,
+                787,
+                860,
+                807
+              ]
+            },
+            {
+              "text": "arthur.derrien2@credit-oceane.example",
+              "box": [
+                210,
+                832,
+                550,
+                852
+              ]
+            },
+            {
+              "text": "10.18.115.11",
+              "box": [
+                740,
+                832,
+                860,
+                852
+              ]
+            },
+            {
+              "text": "anne.dubois@credit-oceane.example",
+              "box": [
+                210,
+                877,
+                550,
+                897
+              ]
+            },
+            {
+              "text": "10.21.149.108",
+              "box": [
+                740,
+                877,
+                860,
+                897
+              ]
+            },
+            {
+              "text": "adele.dubois2@credit-oceane.example",
+              "box": [
+                210,
+                922,
+                550,
+                942
+              ]
+            },
+            {
+              "text": "10.15.235.119",
+              "box": [
+                740,
+                922,
+                860,
+                942
+              ]
+            },
+            {
+              "text": "adele.dupont@credit-oceane.example",
+              "box": [
+                210,
+                967,
+                550,
+                987
+              ]
+            },
+            {
+              "text": "10.23.217.154",
+              "box": [
+                740,
+                967,
+                860,
+                987
+              ]
+            },
+            {
+              "text": "anne.durand@credit-oceane.example",
+              "box": [
+                210,
+                1012,
+                550,
+                1032
+              ]
+            },
+            {
+              "text": "10.16.28.147",
+              "box": [
+                740,
+                1012,
+                860,
+                1032
+              ]
+            },
+            {
+              "text": "arthur.durand2@credit-oceane.example",
+              "box": [
+                210,
+                1057,
+                550,
+                1077
+              ]
+            },
+            {
+              "text": "10.32.133.101",
+              "box": [
+                740,
+                1057,
+                860,
+                1077
+              ]
+            },
+            {
+              "text": "anne.floch@credit-oceane.example",
+              "box": [
+                210,
+                1102,
+                550,
+                1122
+              ]
+            },
+            {
+              "text": "10.40.67.128",
+              "box": [
+                740,
+                1102,
+                860,
+                1122
+              ]
+            },
+            {
+              "text": "arthur.floch2@credit-oceane.example",
+              "box": [
+                210,
+                1147,
+                550,
+                1167
+              ]
+            },
+            {
+              "text": "10.31.220.17",
+              "box": [
+                740,
+                1147,
+                860,
+                1167
+              ]
+            },
+            {
+              "text": "antoine.fournier@credit-oceane.example",
+              "box": [
+                210,
+                1192,
+                550,
+                1212
+              ]
+            },
+            {
+              "text": "10.19.252.34",
+              "box": [
+                740,
+                1192,
+                860,
+                1212
+              ]
+            },
+            {
+              "text": "arthur.gourmelen@credit-oceane.example",
+              "box": [
+                210,
+                1237,
+                550,
+                1257
+              ]
+            },
+            {
+              "text": "10.16.171.236",
+              "box": [
+                740,
+                1237,
+                860,
+                1257
+              ]
+            },
+            {
+              "text": "arthur.hamon@credit-oceane.example",
+              "box": [
+                210,
+                1282,
+                550,
+                1302
+              ]
+            },
+            {
+              "text": "10.35.176.58",
+              "box": [
+                740,
+                1282,
+                860,
+                1302
+              ]
+            },
+            {
+              "text": "antoine.hamon2@credit-oceane.example",
+              "box": [
+                210,
+                1327,
+                550,
+                1347
+              ]
+            },
+            {
+              "text": "10.36.4.81",
+              "box": [
+                740,
+                1327,
+                860,
+                1347
+              ]
+            },
+            {
+              "text": "alexandre.jacq@credit-oceane.example",
+              "box": [
+                210,
+                1372,
+                550,
+                1392
+              ]
+            },
+            {
+              "text": "10.16.10.148",
+              "box": [
+                740,
+                1372,
+                860,
+                1392
+              ]
+            },
+            {
+              "text": "adele.jaouen@credit-oceane.example",
+              "box": [
+                210,
+                1417,
+                550,
+                1437
+              ]
+            },
+            {
+              "text": "10.18.231.77",
+              "box": [
+                740,
+                1417,
+                860,
+                1437
+              ]
+            },
+            {
+              "text": "alexandre.jegou@credit-oceane.example",
+              "box": [
+                210,
+                1462,
+                550,
+                1482
+              ]
+            },
+            {
+              "text": "10.27.78.196",
+              "box": [
+                740,
+                1462,
+                860,
+                1482
+              ]
+            },
+            {
+              "text": "alexandre.jegou2@credit-oceane.example",
+              "box": [
+                210,
+                1507,
+                550,
+                1527
+              ]
+            },
+            {
+              "text": "10.32.72.6",
+              "box": [
+                740,
+                1507,
+                860,
+                1527
+              ]
+            },
+            {
+              "text": "adele.jegou3@credit-oceane.example",
+              "box": [
+                210,
+                1552,
+                550,
+                1572
+              ]
+            },
+            {
+              "text": "10.39.230.67",
+              "box": [
+                740,
+                1552,
+                860,
+                1572
+              ]
+            },
+            {
+              "text": "anne-sophie.kerbrat@credit-oceane.example",
+              "box": [
+                210,
+                1597,
+                550,
+                1617
+              ]
+            },
+            {
+              "text": "10.10.109.189",
+              "box": [
+                740,
+                1597,
+                860,
+                1617
+              ]
+            },
+            {
+              "text": "anne.kerbrat2@credit-oceane.example",
+              "box": [
+                210,
+                1642,
+                550,
+                1662
+              ]
+            },
+            {
+              "text": "10.38.156.112",
+              "box": [
+                740,
+                1642,
+                860,
+                1662
+              ]
+            },
+            {
+              "text": "adele.kervella@credit-oceane.example",
+              "box": [
+                210,
+                1687,
+                550,
+                1707
+              ]
+            },
+            {
+              "text": "10.29.62.104",
+              "box": [
+                740,
+                1687,
+                860,
+                1707
+              ]
+            },
+            {
+              "text": "antoine.lagadec@credit-oceane.example",
+              "box": [
+                210,
+                1732,
+                550,
+                1752
+              ]
+            },
+            {
+              "text": "10.37.25.119",
+              "box": [
+                740,
+                1732,
+                860,
+                1752
+              ]
+            },
+            {
+              "text": "arthur.lagadec2@credit-oceane.example",
+              "box": [
+                210,
+                1777,
+                550,
+                1797
+              ]
+            },
+            {
+              "text": "10.20.115.194",
+              "box": [
+                740,
+                1777,
+                860,
+                1797
+              ]
+            },
+            {
+              "text": "antoine.laurent@credit-oceane.example",
+              "box": [
+                210,
+                1822,
+                550,
+                1842
+              ]
+            },
+            {
+              "text": "10.29.254.171",
+              "box": [
+                740,
+                1822,
+                860,
+                1842
+              ]
+            },
+            {
+              "text": "alexandre.le-gall@credit-oceane.example",
+              "box": [
+                210,
+                1867,
+                550,
+                1887
+              ]
+            },
+            {
+              "text": "10.25.221.236",
+              "box": [
+                740,
+                1867,
+                860,
+                1887
+              ]
+            },
+            {
+              "text": "arthur.le-gall2@credit-oceane.example",
+              "box": [
+                210,
+                1912,
+                550,
+                1932
+              ]
+            },
+            {
+              "text": "10.15.178.131",
+              "box": [
+                740,
+                1912,
+                860,
+                1932
+              ]
+            },
+            {
+              "text": "antoine.le-goff@credit-oceane.example",
+              "box": [
+                210,
+                1957,
+                550,
+                1977
+              ]
+            },
+            {
+              "text": "10.33.92.233",
+              "box": [
+                740,
+                1957,
+                860,
+                1977
+              ]
+            },
+            {
+              "text": "alexandre.le-meur@credit-oceane.example",
+              "box": [
+                210,
+                2002,
+                550,
+                2022
+              ]
+            },
+            {
+              "text": "10.31.111.187",
+              "box": [
+                740,
+                2002,
+                860,
+                2022
+              ]
+            },
+            {
+              "text": "arthur.le-roux@credit-oceane.example",
+              "box": [
+                210,
+                2047,
+                550,
+                2067
+              ]
+            },
+            {
+              "text": "10.32.86.227",
+              "box": [
+                740,
+                2047,
+                860,
+                2067
+              ]
+            },
+            {
+              "text": "antoine.lefebvre@credit-oceane.example",
+              "box": [
+                210,
+                2092,
+                550,
+                2112
+              ]
+            },
+            {
+              "text": "10.19.230.38",
+              "box": [
+                740,
+                2092,
+                860,
+                2112
+              ]
+            },
+            {
+              "text": "arthur.madec@credit-oceane.example",
+              "box": [
+                210,
+                2137,
+                550,
+                2157
+              ]
+            },
+            {
+              "text": "10.21.11.107",
+              "box": [
+                740,
+                2137,
+                860,
+                2157
+              ]
+            },
+            {
+              "text": "antoine.moreau@credit-oceane.example",
+              "box": [
+                210,
+                2182,
+                550,
+                2202
+              ]
+            },
+            {
+              "text": "10.40.191.205",
+              "box": [
+                740,
+                2182,
+                860,
+                2202
+              ]
+            },
+            {
+              "text": "anne.morel@credit-oceane.example",
+              "box": [
+                210,
+                2227,
+                550,
+                2247
+              ]
+            },
+            {
+              "text": "10.12.94.248",
+              "box": [
+                740,
+                2227,
+                860,
+                2247
+              ]
+            },
+            {
+              "text": "anne.nedelec@credit-oceane.example",
+              "box": [
+                210,
+                2272,
+                550,
+                2292
+              ]
+            },
+            {
+              "text": "10.39.135.93",
+              "box": [
+                740,
+                2272,
+                860,
+                2292
+              ]
+            },
+            {
+              "text": "arthur.olier@credit-oceane.example",
+              "box": [
+                210,
+                2317,
+                550,
+                2337
+              ]
+            },
+            {
+              "text": "10.27.118.217",
+              "box": [
+                740,
+                2317,
+                860,
+                2337
+              ]
+            },
+            {
+              "text": "antoine.pennec@credit-oceane.example",
+              "box": [
+                210,
+                2362,
+                550,
+                2382
+              ]
+            },
+            {
+              "text": "10.35.20.181",
+              "box": [
+                740,
+                2362,
+                860,
+                2382
+              ]
+            },
+            {
+              "text": "antoine.petit@credit-oceane.example",
+              "box": [
+                210,
+                2407,
+                550,
+                2427
+              ]
+            },
+            {
+              "text": "10.16.50.37",
+              "box": [
+                740,
+                2407,
+                860,
+                2427
+              ]
+            },
+            {
+              "text": "antoine.prigent@credit-oceane.example",
+              "box": [
+                210,
+                2452,
+                550,
+                2472
+              ]
+            },
+            {
+              "text": "10.12.198.10",
+              "box": [
+                740,
+                2452,
+                860,
+                2472
+              ]
+            },
+            {
+              "text": "alexandre.quere@credit-oceane.example",
+              "box": [
+                210,
+                2497,
+                550,
+                2517
+              ]
+            },
+            {
+              "text": "10.16.136.29",
+              "box": [
+                740,
+                2497,
+                860,
+                2517
+              ]
+            },
+            {
+              "text": "arthur.quillien@credit-oceane.example",
+              "box": [
+                210,
+                2542,
+                550,
+                2562
+              ]
+            },
+            {
+              "text": "10.33.137.13",
+              "box": [
+                740,
+                2542,
+                860,
+                2562
+              ]
+            },
+            {
+              "text": "adele.robert@credit-oceane.example",
+              "box": [
+                210,
+                2587,
+                550,
+                2607
+              ]
+            },
+            {
+              "text": "10.22.36.126",
+              "box": [
+                740,
+                2587,
+                860,
+                2607
+              ]
+            },
+            {
+              "text": "anne.roux@credit-oceane.example",
+              "box": [
+                210,
+                2632,
+                550,
+                2652
+              ]
+            },
+            {
+              "text": "10.34.19.5",
+              "box": [
+                740,
+                2632,
+                860,
+                2652
+              ]
+            },
+            {
+              "text": "arthur.simon@credit-oceane.example",
+              "box": [
+                210,
+                2677,
+                550,
+                2697
+              ]
+            },
+            {
+              "text": "10.19.123.10",
+              "box": [
+                740,
+                2677,
+                860,
+                2697
+              ]
+            },
+            {
+              "text": "alexandre.tanguy@credit-oceane.example",
+              "box": [
+                210,
+                2722,
+                550,
+                2742
+              ]
+            },
+            {
+              "text": "10.37.138.97",
+              "box": [
+                740,
+                2722,
+                860,
+                2742
+              ]
+            },
+            {
+              "text": "alexandre.uguen@credit-oceane.example",
+              "box": [
+                210,
+                2767,
+                550,
+                2787
+              ]
+            },
+            {
+              "text": "10.27.125.219",
+              "box": [
+                740,
+                2767,
+                860,
+                2787
+              ]
+            },
+            {
+              "text": "arthur.yvinec@credit-oceane.example",
+              "box": [
+                210,
+                2812,
+                550,
+                2832
+              ]
+            },
+            {
+              "text": "10.17.101.238",
+              "box": [
+                740,
+                2812,
+                860,
+                2832
+              ]
+            },
+            {
+              "text": "bastien.abgrall@credit-oceane.example",
+              "box": [
+                210,
+                2857,
+                550,
+                2877
+              ]
+            },
+            {
+              "text": "10.22.213.58",
+              "box": [
+                740,
+                2857,
+                860,
+                2877
+              ]
+            },
+            {
+              "text": "bastien.cloarec@credit-oceane.example",
+              "box": [
+                210,
+                2902,
+                550,
+                2922
+              ]
+            },
+            {
+              "text": "10.21.92.197",
+              "box": [
+                740,
+                2902,
+                860,
+                2922
+              ]
+            },
+            {
+              "text": "bleuenn.daniel@credit-oceane.example",
+              "box": [
+                210,
+                2947,
+                550,
+                2967
+              ]
+            },
+            {
+              "text": "10.11.99.249",
+              "box": [
+                740,
+                2947,
+                860,
+                2967
+              ]
+            },
+            {
+              "text": "bastien.daniel2@credit-oceane.example",
+              "box": [
+                210,
+                2992,
+                550,
+                3012
+              ]
+            },
+            {
+              "text": "10.39.164.253",
+              "box": [
+                740,
+                2992,
+                860,
+                3012
+              ]
+            },
+            {
+              "text": "bleuenn.david@credit-oceane.example",
+              "box": [
+                210,
+                3037,
+                550,
+                3057
+              ]
+            },
+            {
+              "text": "10.37.164.47",
+              "box": [
+                740,
+                3037,
+                860,
+                3057
+              ]
+            },
+            {
+              "text": "bleuenn.durand@credit-oceane.example",
+              "box": [
+                210,
+                3082,
+                550,
+                3102
+              ]
+            },
+            {
+              "text": "10.38.240.103",
+              "box": [
+                740,
+                3082,
+                860,
+                3102
+              ]
+            },
+            {
+              "text": "bleuenn.kerjean@credit-oceane.example",
+              "box": [
+                210,
+                3127,
+                550,
+                3147
+              ]
+            },
+            {
+              "text": "10.26.1.194",
+              "box": [
+                740,
+                3127,
+                860,
+                3147
+              ]
+            },
+            {
+              "text": "bastien.laurent@credit-oceane.example",
+              "box": [
+                210,
+                3172,
+                550,
+                3192
+              ]
+            },
+            {
+              "text": "10.28.28.225",
+              "box": [
+                740,
+                3172,
+                860,
+                3192
+              ]
+            },
+            {
+              "text": "bleuenn.le-meur@credit-oceane.example",
+              "box": [
+                210,
+                3217,
+                550,
+                3237
+              ]
+            },
+            {
+              "text": "10.19.19.186",
+              "box": [
+                740,
+                3217,
+                860,
+                3237
+              ]
+            },
+            {
+              "text": "bastien.morvan@credit-oceane.example",
+              "box": [
+                210,
+                3262,
+                550,
+                3282
+              ]
+            },
+            {
+              "text": "10.38.57.88",
+              "box": [
+                740,
+                3262,
+                860,
+                3282
+              ]
+            },
+            {
+              "text": "bastien.petit@credit-oceane.example",
+              "box": [
+                210,
+                3307,
+                550,
+                3327
+              ]
+            },
+            {
+              "text": "10.39.129.40",
+              "box": [
+                740,
+                3307,
+                860,
+                3327
+              ]
+            },
+            {
+              "text": "bleuenn.uguen@credit-oceane.example",
+              "box": [
+                210,
+                3352,
+                550,
+                3372
+              ]
+            },
+            {
+              "text": "10.18.96.221",
+              "box": [
+                740,
+                3352,
+                860,
+                3372
+              ]
+            },
+            {
+              "text": "chloe.allain@credit-oceane.example",
+              "box": [
+                210,
+                3397,
+                550,
+                3417
+              ]
+            },
+            {
+              "text": "10.35.37.124",
+              "box": [
+                740,
+                3397,
+                860,
+                3417
+              ]
+            },
+            {
+              "text": "claire.allain2@credit-oceane.example",
+              "box": [
+                210,
+                3442,
+                550,
+                3462
+              ]
+            },
+            {
+              "text": "10.21.0.30",
+              "box": [
+                740,
+                3442,
+                860,
+                3462
+              ]
+            },
+            {
+              "text": "corentin.bertrand@credit-oceane.example",
+              "box": [
+                210,
+                3487,
+                550,
+                3507
+              ]
+            },
+            {
+              "text": "10.31.164.74",
+              "box": [
+                740,
+                3487,
+                860,
+                3507
+              ]
+            },
+            {
+              "text": "celine.bertrand2@credit-oceane.example",
+              "box": [
+                210,
+                3532,
+                550,
+                3552
+              ]
+            },
+            {
+              "text": "10.13.140.104",
+              "box": [
+                740,
+                3532,
+                860,
+                3552
+              ]
+            },
+            {
+              "text": "camille.bihan@credit-oceane.example",
+              "box": [
+                210,
+                3577,
+                550,
+                3597
+              ]
+            },
+            {
+              "text": "10.40.118.47",
+              "box": [
+                740,
+                3577,
+                860,
+                3597
+              ]
+            },
+            {
+              "text": "corentin.bihan2@credit-oceane.example",
+              "box": [
+                210,
+                3622,
+                550,
+                3642
+              ]
+            },
+            {
+              "text": "10.19.180.66",
+              "box": [
+                740,
+                3622,
+                860,
+                3642
+              ]
+            },
+            {
+              "text": "corentin.bihan3@credit-oceane.example",
+              "box": [
+                210,
+                3667,
+                550,
+                3687
+              ]
+            },
+            {
+              "text": "10.18.246.31",
+              "box": [
+                740,
+                3667,
+                860,
+                3687
+              ]
+            },
+            {
+              "text": "corentin.briand@credit-oceane.example",
+              "box": [
+                210,
+                3712,
+                550,
+                3732
+              ]
+            },
+            {
+              "text": "10.38.153.53",
+              "box": [
+                740,
+                3712,
+                860,
+                3732
+              ]
+            },
+            {
+              "text": "celine.cariou@credit-oceane.example",
+              "box": [
+                210,
+                3757,
+                550,
+                3777
+              ]
+            },
+            {
+              "text": "10.23.213.132",
+              "box": [
+                740,
+                3757,
+                860,
+                3777
+              ]
+            },
+            {
+              "text": "claire.cariou2@credit-oceane.example",
+              "box": [
+                210,
+                3802,
+                550,
+                3822
+              ]
+            },
+            {
+              "text": "10.13.156.126",
+              "box": [
+                740,
+                3802,
+                860,
+                3822
+              ]
+            },
+            {
+              "text": "celine.daniel@credit-oceane.example",
+              "box": [
+                210,
+                3847,
+                550,
+                3867
+              ]
+            },
+            {
+              "text": "10.22.31.230",
+              "box": [
+                740,
+                3847,
+                860,
+                3867
+              ]
+            },
+            {
+              "text": "camille.derrien@credit-oceane.example",
+              "box": [
+                210,
+                3892,
+                550,
+                3912
+              ]
+            },
+            {
+              "text": "10.26.106.29",
+              "box": [
+                740,
+                3892,
+                860,
+                3912
+              ]
+            },
+            {
+              "text": "corentin.dubois@credit-oceane.example",
+              "box": [
+                210,
+                3937,
+                550,
+                3957
+              ]
+            },
+            {
+              "text": "10.32.213.189",
+              "box": [
+                740,
+                3937,
+                860,
+                3957
+              ]
+            },
+            {
+              "text": "celine.durand@credit-oceane.example",
+              "box": [
+                210,
+                3982,
+                550,
+                4002
+              ]
+            },
+            {
+              "text": "10.35.145.139",
+              "box": [
+                740,
+                3982,
+                860,
+                4002
+              ]
+            },
+            {
+              "text": "claire.fournier@credit-oceane.example",
+              "box": [
+                210,
+                4027,
+                550,
+                4047
+              ]
+            },
+            {
+              "text": "10.15.230.56",
+              "box": [
+                740,
+                4027,
+                860,
+                4047
+              ]
+            },
+            {
+              "text": "claire.girard@credit-oceane.example",
+              "box": [
+                210,
+                4072,
+                550,
+                4092
+              ]
+            },
+            {
+              "text": "10.20.191.20",
+              "box": [
+                740,
+                4072,
+                860,
+                4092
+              ]
+            },
+            {
+              "text": "camille.girard2@credit-oceane.example",
+              "box": [
+                210,
+                4117,
+                550,
+                4137
+              ]
+            },
+            {
+              "text": "10.31.22.39",
+              "box": [
+                740,
+                4117,
+                860,
+                4137
+              ]
+            },
+            {
+              "text": "claire.guillou@credit-oceane.example",
+              "box": [
+                210,
+                4162,
+                550,
+                4182
+              ]
+            },
+            {
+              "text": "10.30.217.25",
+              "box": [
+                740,
+                4162,
+                860,
+                4182
+              ]
+            },
+            {
+              "text": "celine.hamon@credit-oceane.example",
+              "box": [
+                210,
+                4207,
+                550,
+                4227
+              ]
+            },
+            {
+              "text": "10.39.180.163",
+              "box": [
+                740,
+                4207,
+                860,
+                4227
+              ]
+            },
+            {
+              "text": "claire.itier@credit-oceane.example",
+              "box": [
+                210,
+                4252,
+                550,
+                4272
+              ]
+            },
+            {
+              "text": "10.14.50.182",
+              "box": [
+                740,
+                4252,
+                860,
+                4272
+              ]
+            },
+            {
+              "text": "corentin.jacq@credit-oceane.example",
+              "box": [
+                210,
+                4297,
+                550,
+                4317
+              ]
+            },
+            {
+              "text": "10.40.85.43",
+              "box": [
+                740,
+                4297,
+                860,
+                4317
+              ]
+            },
+            {
+              "text": "celine.jaouen@credit-oceane.example",
+              "box": [
+                210,
+                4342,
+                550,
+                4362
+              ]
+            },
+            {
+              "text": "10.19.96.65",
+              "box": [
+                740,
+                4342,
+                860,
+                4362
+              ]
+            },
+            {
+              "text": "chloe.jaouen2@credit-oceane.example",
+              "box": [
+                210,
+                4387,
+                550,
+                4407
+              ]
+            },
+            {
+              "text": "10.30.236.5",
+              "box": [
+                740,
+                4387,
+                860,
+                4407
+              ]
+            },
+            {
+              "text": "celine.jaouen3@credit-oceane.example",
+              "box": [
+                210,
+                4432,
+                550,
+                4452
+              ]
+            },
+            {
+              "text": "10.39.111.148",
+              "box": [
+                740,
+                4432,
+                860,
+                4452
+              ]
+            },
+            {
+              "text": "claire.jegou@credit-oceane.example",
+              "box": [
+                210,
+                4477,
+                550,
+                4497
+              ]
+            },
+            {
+              "text": "10.36.132.229",
+              "box": [
+                740,
+                4477,
+                860,
+                4497
+              ]
+            },
+            {
+              "text": "claire.jegou2@credit-oceane.example",
+              "box": [
+                210,
+                4522,
+                550,
+                4542
+              ]
+            },
+            {
+              "text": "10.40.115.140",
+              "box": [
+                740,
+                4522,
+                860,
+                4542
+              ]
+            },
+            {
+              "text": "corentin.kerbrat@credit-oceane.example",
+              "box": [
+                210,
+                4567,
+                550,
+                4587
+              ]
+            },
+            {
+              "text": "10.25.103.227",
+              "box": [
+                740,
+                4567,
+                860,
+                4587
+              ]
+            },
+            {
+              "text": "claire.le-corre@credit-oceane.example",
+              "box": [
+                210,
+                4612,
+                550,
+                4632
+              ]
+            },
+            {
+              "text": "10.33.253.35",
+              "box": [
+                740,
+                4612,
+                860,
+                4632
+              ]
+            },
+            {
+              "text": "celine.le-meur@credit-oceane.example",
+              "box": [
+                210,
+                4657,
+                550,
+                4677
+              ]
+            },
+            {
+              "text": "10.36.196.33",
+              "box": [
+                740,
+                4657,
+                860,
+                4677
+              ]
+            }
+          ],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 200,
+          "pii_masked": 200,
+          "pii_found_by_model": 174
+        },
+        "page": "/admin/users",
+        "page_verified": null,
+        "ts": "2026-11-11 11:48:13"
+      },
+      "status_before": "pass"
+    }
+  ],
+  "running": false,
+  "decisions": [],
+  "remediation_requested": false,
+  "usage": {
+    "rows": [
+      {
+        "model": "muse-spark-1.3",
+        "calls": 7,
+        "input": 13758,
+        "output": 19137,
+        "seconds": 132.0979142189026,
+        "images": 0,
+        "cost_usd": 0.09852975
+      },
+      {
+        "model": "sam-3.1",
+        "calls": 19,
+        "input": 0,
+        "output": 0,
+        "seconds": 37.404568910598755,
+        "images": 19,
+        "cost_usd": null
+      }
+    ],
+    "total_usd": 0.09852975,
+    "unpriced": [
+      "sam-3.1"
+    ],
+    "estimated": false
+  },
+  "duration_s": 131,
+  "catalogue": {
+    "source": "catalogue",
+    "reviewed": false,
+    "path": "controls/AUD-2026-IAM-01.en.json"
+  },
+  "interpretation": null,
+  "inconclusive": 0,
+  "opinion_initial": "satisfaisant",
+  "opinion_final": "satisfaisant",
+  "injection_detected": false,
+  "trail_head": "be175180f52589666a546ea78778060921cb9cf74dc8b4ea055077f66782c1a1"
+}

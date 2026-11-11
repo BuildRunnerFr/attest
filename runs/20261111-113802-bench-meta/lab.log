@@ -1,0 +1,65 @@
+ * Serving Flask app 'app'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5050
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [11/Nov/2026 11:38:03] "[33mGET / HTTP/1.1[0m" 404 -
+127.0.0.1 - - [11/Nov/2026 11:38:03] "POST /api/reset HTTP/1.1" 200 -
+127.0.0.1 - - [11/Nov/2026 11:38:03] "[31m[1mGET /api/security HTTP/1.1[0m" 401 -
+127.0.0.1 - - [11/Nov/2026 11:38:03] "GET /api/journal HTTP/1.1" 200 -
+127.0.0.1 - - [11/Nov/2026 11:38:03] "GET /api/security HTTP/1.1" 200 -
+127.0.0.1 - - [11/Nov/2026 11:38:03] "GET /api/security HTTP/1.1" 200 -
+127.0.0.1 - - [11/Nov/2026 11:38:03] "GET /api/security HTTP/1.1" 200 -
+127.0.0.1 - - [11/Nov/2026 11:38:03] "GET /api/security HTTP/1.1" 200 -
+127.0.0.1 - - [11/Nov/2026 11:38:04] "GET /admin/security HTTP/1.1" 200 -
+127.0.0.1 - - [11/Nov/2026 11:38:04] "GET /admin/security HTTP/1.1" 200 -
+127.0.0.1 - - [11/Nov/2026 11:38:04] "GET /admin/security HTTP/1.1" 200 -
+127.0.0.1 - - [11/Nov/2026 11:38:05] "GET /admin/security HTTP/1.1" 200 -
+127.0.0.1 - - [11/Nov/2026 11:38:18] "GET /api/security HTTP/1.1" 200 -
+127.0.0.1 - - [11/Nov/2026 11:38:19] "GET /admin/security HTTP/1.1" 200 -
+127.0.0.1 - - [11/Nov/2026 11:38:19] "GET /api/security HTTP/1.1" 200 -
+127.0.0.1 - - [11/Nov/2026 11:38:20] "GET /api/users HTTP/1.1" 200 -
+127.0.0.1 - - [11/Nov/2026 11:38:20] "GET /admin/security HTTP/1.1" 200 -
+127.0.0.1 - - [11/Nov/2026 11:44:20] "GET /admin/users HTTP/1.1" 200 -
+127.0.0.1 - - [11/Nov/2026 11:44:20] "GET /api/users HTTP/1.1" 200 -
+127.0.0.1 - - [11/Nov/2026 11:44:20] "GET /api/users?page=2&per_page=100 HTTP/1.1" 200 -
+127.0.0.1 - - [11/Nov/2026 11:44:20] "GET /api/users?page=3&per_page=100 HTTP/1.1" 200 -
+127.0.0.1 - - [11/Nov/2026 11:44:20] "GET /api/users?page=4&per_page=100 HTTP/1.1" 200 -
+127.0.0.1 - - [11/Nov/2026 11:44:20] "GET /api/users?page=5&per_page=100 HTTP/1.1" 200 -
+127.0.0.1 - - [11/Nov/2026 11:44:20] "GET /api/users?page=6&per_page=100 HTTP/1.1" 200 -
+127.0.0.1 - - [11/Nov/2026 11:44:20] "GET /api/users?page=7&per_page=100 HTTP/1.1" 200 -
+127.0.0.1 - - [11/Nov/2026 11:44:20] "GET /api/users?page=8&per_page=100 HTTP/1.1" 200 -
+127.0.0.1 - - [11/Nov/2026 11:44:20] "GET /admin/users HTTP/1.1" 200 -
+127.0.0.1 - - [11/Nov/2026 11:44:20] "GET /admin/users?page=2&per_page=100 HTTP/1.1" 200 -
+127.0.0.1 - - [11/Nov/2026 11:44:20] "GET /admin/users?page=3&per_page=100 HTTP/1.1" 200 -
+127.0.0.1 - - [11/Nov/2026 11:44:20] "GET /admin/users?page=4&per_page=100 HTTP/1.1" 200 -
+127.0.0.1 - - [11/Nov/2026 11:44:20] "GET /admin/users?page=5&per_page=100 HTTP/1.1" 200 -
+127.0.0.1 - - [11/Nov/2026 11:44:20] "GET /admin/users?page=6&per_page=100 HTTP/1.1" 200 -
+127.0.0.1 - - [11/Nov/2026 11:44:20] "GET /admin/users?page=7&per_page=100 HTTP/1.1" 200 -
+127.0.0.1 - - [11/Nov/2026 11:44:21] "GET /admin/users?page=7&per_page=100 HTTP/1.1" 200 -
+127.0.0.1 - - [11/Nov/2026 11:46:02] "POST /api/reset HTTP/1.1" 200 -
+127.0.0.1 - - [11/Nov/2026 11:46:02] "[31m[1mGET /api/security HTTP/1.1[0m" 401 -
+127.0.0.1 - - [11/Nov/2026 11:46:02] "GET /api/journal HTTP/1.1" 200 -
+127.0.0.1 - - [11/Nov/2026 11:46:02] "GET /api/security HTTP/1.1" 200 -
+127.0.0.1 - - [11/Nov/2026 11:46:02] "GET /api/security HTTP/1.1" 200 -
+127.0.0.1 - - [11/Nov/2026 11:46:02] "GET /api/security HTTP/1.1" 200 -
+127.0.0.1 - - [11/Nov/2026 11:46:02] "GET /api/security HTTP/1.1" 200 -
+127.0.0.1 - - [11/Nov/2026 11:46:03] "GET /admin/security HTTP/1.1" 200 -
+127.0.0.1 - - [11/Nov/2026 11:46:03] "GET /admin/security HTTP/1.1" 200 -
+127.0.0.1 - - [11/Nov/2026 11:46:03] "GET /admin/security HTTP/1.1" 200 -
+127.0.0.1 - - [11/Nov/2026 11:46:03] "GET /admin/security HTTP/1.1" 200 -
+127.0.0.1 - - [11/Nov/2026 11:46:13] "GET /api/security HTTP/1.1" 200 -
+127.0.0.1 - - [11/Nov/2026 11:46:14] "GET /admin/security HTTP/1.1" 200 -
+127.0.0.1 - - [11/Nov/2026 11:46:15] "GET /api/security HTTP/1.1" 200 -
+127.0.0.1 - - [11/Nov/2026 11:46:15] "GET /admin/security HTTP/1.1" 200 -
+127.0.0.1 - - [11/Nov/2026 11:46:17] "GET /admin/users HTTP/1.1" 200 -
+127.0.0.1 - - [11/Nov/2026 11:46:17] "GET /api/users HTTP/1.1" 200 -
+127.0.0.1 - - [11/Nov/2026 11:46:17] "GET /api/users?page=2&per_page=100 HTTP/1.1" 200 -
+127.0.0.1 - - [11/Nov/2026 11:46:17] "GET /api/users?page=3&per_page=100 HTTP/1.1" 200 -
+127.0.0.1 - - [11/Nov/2026 11:46:17] "GET /api/users?page=4&per_page=100 HTTP/1.1" 200 -
+127.0.0.1 - - [11/Nov/2026 11:46:17] "GET /api/users?page=5&per_page=100 HTTP/1.1" 200 -
+127.0.0.1 - - [11/Nov/2026 11:46:17] "GET /api/users?page=6&per_page=100 HTTP/1.1" 200 -
+127.0.0.1 - - [11/Nov/2026 11:46:17] "GET /api/users?page=7&per_page=100 HTTP/1.1" 200 -
+127.0.0.1 - - [11/Nov/2026 11:46:17] "GET /api/users?page=8&per_page=100 HTTP/1.1" 200 -
+127.0.0.1 - - [11/Nov/2026 11:46:18] "GET /admin/users HTTP/1.1" 200 -
+127.0.0.1 - - [11/Nov/2026 11:48:14] "POST /api/reset HTTP/1.1" 200 -
