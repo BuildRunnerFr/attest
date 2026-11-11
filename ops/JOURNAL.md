@@ -30,7 +30,9 @@ Exécutions réelles (only=09,10) :
   3 noms du jumeau signalés par sous-chaîne, non corroborés) : 12/14.
 - `20261111-113802-bench-meta` (44b28a5) : 14/14, `support-n2` trouvé et montré en page 7, jumeau conforme,
   précision et rappel par compte 100 %, 0,27 $ mesurés.
-- Dépense cumulée au registre (estimation prudente) : 24,52 $ / 130 $.
+- `20261111-115252-bench-meta` (863fa12, banc principal 01–08, non-régression) : 56/56, 0 faux constat, 0 manqué,
+  injection signalée 1/1, 0,51 $ mesurés.
+- Dépense cumulée au registre (estimation prudente) : 26,41 $ / 130 $.
 
 Reste ouvert : la branche `lock-test` ; `"reviewed": true` (Ethan) ; LICENSE ; la preuve d'un « pass » sur annuaire
 paginé reste la page 1 (une seule capture pour 8 pages).
