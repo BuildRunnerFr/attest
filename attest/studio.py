@@ -200,6 +200,7 @@ LIB_EN = {
     "dora-9-4-acces-changements": "DORA — Article 9(4): access, strong authentication, change management",
     "politique-pds-2-developpement": "Internal policy PDS-2 (Banque Kerlann, fictitious) — secure development",
     "politique-psi-4-acces": "Internal policy PSI-4 (Banque Kerlann, fictitious) — authentication and access",
+    "politique-psi-5-cycle-de-vie": "Internal policy PSI-5 (Banque Kerlann, fictitious) — access lifecycle",
     "rts-12-journalisation": "RTS 2024/1774 — Article 12: logging",
     "rts-16-developpement": "RTS 2024/1774 — Article 16: ICT systems acquisition, development and maintenance",
     "rts-21-controle-acces": "RTS 2024/1774 — Article 21: access control",

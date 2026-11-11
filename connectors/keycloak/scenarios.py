@@ -75,7 +75,10 @@ def build() -> list:
         out.append({"id": sid, "realm": realm, "label": label, "entity": entity,
                     "system": f"Keycloak — royaume {realm} (fournisseur d'identité)", "tests": tests,
                     "settings": settings, "users": users, "notes": [],
-                    "expected": expected(settings, users), "expected_generic_admins": sorted(generic_admins(users))})
+                    "expected": expected(settings, users), "expected_generic_admins": sorted(generic_admins(users)),
+                    "expected_offenders": {
+                        "PSI-4.1": sorted(u["login"] for u in users if u["role"] == "admin" and not u["totp"]),
+                        "PSI-4.7": sorted(generic_admins(users))}})
 
     # 1. Tout est non conforme ; le seul administrateur générique est servi après la 2e page de 100 comptes.
     rng = random.Random(4101)

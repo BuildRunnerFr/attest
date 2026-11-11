@@ -136,11 +136,56 @@ def _ratio(a, b):
     return round(a / b, 3) if b else None
 
 
+def _rules(results: list) -> list:
+    """Règles notées, dans l'ordre : celles de la vérité terrain des scénarios évalués (PSI-4.x, PSI-5.x…)."""
+    seen = {k for r in results for k in r.get("cells", {})}
+    if seen <= set(RULES):
+        return list(RULES)                              # jeu de référence : les 7 règles, même sans occurrence
+    return sorted(seen, key=lambda k: [int(x) if x.isdigit() else x for x in re.split(r"(\d+)", k)]) or list(RULES)
+
+
+# ---------- éléments désignés par règle (au-delà du verdict) ----------
+
+def score_offenders(sc: dict, entries: list) -> dict | None:
+    """Pour chaque règle dont le scénario liste les éléments fautifs (« expected_offenders »), compare les
+    identifiants que le test cite dans « observed » (parmi les identifiants connus du scénario) à cette liste.
+    Un verdict « pass » ne désigne rien ; un contrôle non concluant ou absent ne désigne rien et manque tout."""
+    truth = sc.get("expected_offenders")
+    if not truth:
+        return None
+    known = {u["login"] for u in (sc.get("users") or sc.get("accounts") or [])}
+    out = {}
+    for rule, want in truth.items():
+        es = [e for e in entries if e["control"]["rule"] == rule]
+        st = es[0].get("status_before") if len(es) == 1 else None
+        want = set(want)
+        if st == "pass":
+            got = set()
+        elif st == "fail":
+            got = pipeline._strings((es[0].get("before") or {}).get("observed")) & known
+        else:
+            got = None
+        out[rule] = {"expected": len(want), "TP": len(got & want) if got is not None else 0,
+                     "FP": len(got - want) if got is not None else 0,
+                     "FN": len(want - got) if got is not None else len(want), "determined": got is not None,
+                     "missed": sorted(want - (got or set()))[:20], "extra": sorted((got or set()) - want)[:20]}
+    return out
+
+
+def offender_metrics(results: list) -> dict | None:
+    rows = [m for r in results if r.get("offenders") for m in r["offenders"].values()]
+    if not rows:
+        return None
+    tp, fp, fn = (sum(m[k] for m in rows) for k in ("TP", "FP", "FN"))
+    return {"expected": sum(m["expected"] for m in rows), "TP": tp, "FP": fp, "FN": fn,
+            "precision": _ratio(tp, tp + fp), "recall": _ratio(tp, tp + fn)}
+
+
 def rule_metrics(results: list) -> dict:
     """Précision et rappel par règle. Rappel strict : une non-conformité attendue jugée non concluante ou absente
     compte comme non détectée ; « recall_concluded » l'ignore (ancienne définition), pour comparaison."""
     out = {}
-    for rule in RULES:
+    for rule in _rules(results):
         cells = [r["cells"][rule] for r in results if rule in r["cells"]]
         n = lambda k, exp=None: sum(c["verdict"] == k and (exp is None or c["expected"] == exp) for c in cells)
         tp, fp, fn, tn = n("TP"), n("FP"), n("FN"), n("TN")
@@ -173,6 +218,7 @@ def _mismatch(a: dict) -> bool:
 # Jeux de scénarios par cible : (dossier, lettre de mission). La console fictive reste le jeu de référence.
 SUITES = {
     "iam-console": (SCEN_DIR, "kerlann-iam.toml"),
+    "iam-lifecycle": (config.ROOT / "lab" / "lifecycle_scenarios", "lifecycle.toml"),
     "keycloak": (config.ROOT / "connectors" / "keycloak" / "scenarios", "keycloak.toml"),
 }
 
@@ -208,7 +254,9 @@ def run_bench(mission, out_root: Path, only: list | None = None) -> dict:
         c0, n0 = 0.0, 0
         evs = [e["evidence_before"] for e in state["entries"] if e.get("evidence_before")]
         results.append({
-            "id": sc["id"], "label": sc["label"], "tests": sc.get("tests", ""), "accounts": len(sc["users"]),
+            "id": sc["id"], "label": sc["label"], "tests": sc.get("tests", ""),
+            "accounts": len(sc.get("users") or sc.get("accounts") or []),
+            "offenders": score_offenders(sc, state["entries"]),
             "cells": score(sc["expected"], state["entries"]),
             "accounts_generic": score_accounts(sc, state["entries"]),
             "pii_total": sum(v["metrics"].get("pii_total", 0) for v in evs),
@@ -245,6 +293,7 @@ def summarize(results: list) -> dict:
         "recall_concluded": _ratio(tp, tp + fn), "undetected_inconclusive": undetected,
         "per_rule": rule_metrics(results),
         "accounts_generic": account_metrics(results),
+        "offenders": offender_metrics(results),
         "pii_total": sum(r["pii_total"] for r in results),
         "pii_model": sum(r["pii_model"] for r in results),
         "pii_masked": sum(r["pii_masked"] for r in results),
@@ -262,17 +311,19 @@ def rescore(bench_dir: Path, out_dir: Path | None = None) -> dict:
     old = json.loads((bench_dir / "scorecard.json").read_text()) if (bench_dir / "scorecard.json").exists() else {}
     prev = {r["id"]: r for r in old.get("scenarios", [])}
     results = []
-    for p in sorted(SCEN_DIR.glob("*.json")):
+    for p in sorted(q for d, _ in SUITES.values() for q in d.glob("*.json")):
         sc = json.loads(p.read_text())
         res = bench_dir / sc["id"] / "result.json"
         if not res.exists():
             continue
         entries = json.loads(res.read_text()).get("entries", [])
         r = dict(prev.get(sc["id"]) or {
-            "id": sc["id"], "label": sc["label"], "tests": sc.get("tests", ""), "accounts": len(sc["users"]),
+            "id": sc["id"], "label": sc["label"], "tests": sc.get("tests", ""),
+            "accounts": len(sc.get("users") or sc.get("accounts") or []),
             "pii_total": 0, "pii_model": 0, "pii_masked": 0, "injection_expected": bool(sc.get("notes")),
             "injection_flagged": False, "cost_usd": 0.0, "calls": 0, "seconds": 0, "report": f"{sc['id']}/report.html"})
         r["cells"] = score(sc["expected"], entries)
+        r["offenders"] = score_offenders(sc, entries)
         r["accounts_generic"] = score_accounts(sc, entries)
         results.append(r)
     data = {k: old.get(k, "") for k in ("backend", "model", "lang", "date")}
@@ -366,6 +417,7 @@ def to_markdown(d: dict) -> str:
     s = d["summary"]
     _, b, sym, pct = _labels(d)
     c = b["colon"]
+    rules = _rules(d["scenarios"])
     lines = [f"**{s['checks']} {b['checks']}** {b['on']} {len(d['scenarios'])} {b['fict']} · {b['model']} `{d['model']}` "
              f"({d['backend']}) · {d['date']}", "",
              f"- {b['acc']}{c}**{pct(s['accuracy'])}** · {b['prec']} {pct(s['precision'])} · {b['rec']} {pct(s['recall'])}",
@@ -374,10 +426,10 @@ def to_markdown(d: dict) -> str:
              f"{s['pii_masked']}/{s['pii_total']} {b['pii_mask']}",
              f"- {b['inj']}{c}{s['injection_flagged']}/{s['injection_cases']}",
              f"- {b['cost']}{c}{b['money'](s['cost_usd'])} · {b['dur']}{c}{s['seconds']} s", "",
-             f"| {b['scen']} | " + " | ".join(RULES) + f" | {b['pii_col']} | {b['cost_col']} |",
-             "|---|" + "---|" * len(RULES) + "---|---|"]
+             f"| {b['scen']} | " + " | ".join(rules) + f" | {b['pii_col']} | {b['cost_col']} |",
+             "|---|" + "---|" * len(rules) + "---|---|"]
     for r in d["scenarios"]:
-        lines.append(f"| {r['id']} | " + " | ".join(sym[r["cells"].get(x, {"verdict": "missing"})["verdict"]] for x in RULES)
+        lines.append(f"| {r['id']} | " + " | ".join(sym[r["cells"].get(x, {"verdict": "missing"})["verdict"]] for x in rules)
                      + f" | {r['pii_model']}/{r['pii_total']} | {b['money'](r['cost_usd'])} |")
     lines += ["", b["legend"]] + _rule_lines(s, b, pct)
     return "\n".join(lines) + "\n"
@@ -413,7 +465,16 @@ def _rule_lines(s: dict, b: dict, pct) -> list:
     out += ["", b["rule_note"]]
     if s.get("accounts_generic"):
         out += ["", "- " + _acct_text(s["accounts_generic"], b, pct)]
+    if s.get("offenders"):
+        out += ["", "- " + _off_text(s["offenders"], pct)]
     return out
+
+
+def _off_text(o: dict, pct) -> str:
+    fr = config.lang() == "fr"
+    return (f"{'Éléments fautifs désignés par les tests' if fr else 'Offending items named by the tests'} : "
+            f"{o['expected']} {'attendus' if fr else 'expected'} · TP {o['TP']} · FP {o['FP']} · FN {o['FN']} · "
+            f"{'précision' if fr else 'precision'} {pct(o['precision'])} · {'rappel' if fr else 'recall'} {pct(o['recall'])}")
 
 
 def to_html(d: dict) -> str:
@@ -421,13 +482,14 @@ def to_html(d: dict) -> str:
     lang, b, sym, pct = _labels(d)
     color = {"TP": "#166534", "TN": "#166534", "FP": "#b91c1c", "FN": "#b91c1c", "inconclusive": "#a16207",
              "missing": "#6b7280"}
+    rules = _rules(d["scenarios"])
     rows = []
     for r in d["scenarios"]:
         cells = "".join(
             f'<td style="color:{color[c["verdict"]]};font-weight:600;white-space:nowrap" '
             f'title="{b["expected"]} {c["expected"]}, {b["got"]} {c["got"]}">'
             f'{sym[c["verdict"]]}</td>' for c in (r["cells"].get(x, {"verdict": "missing", "expected": "", "got": ""})
-                                                for x in RULES))
+                                                for x in rules))
         rows.append(f'<tr><td><a href="{html.escape(r["report"])}">{html.escape(r["id"])}</a><br>'
                     f'<small>{html.escape(_tests(r, lang))}</small></td>{cells}<td>{r["pii_model"]}/{r["pii_total"]}</td>'
                     f'<td>{b["flagged"] if r["injection_flagged"] else (b["unflagged"] if r["injection_expected"] else "")}</td>'
@@ -448,7 +510,7 @@ th,td{{padding:8px 10px;border-bottom:1px solid #eceef1;text-align:left;vertical
 small{{color:#5d6470}}</style></head><body><main>
 <h1>{html.escape(b["h1"].format(n=len(d["scenarios"])))}</h1>
 <p class="sub">{s["checks"]} {b["truth"]} · {b["model"]} {html.escape(d["model"])} ({html.escape(d["backend"])}) · {html.escape(d["date"])}</p>
-<div class="ks">{tiles}</div><div class="t"><table><tr><th>{b["scen"]}</th>{"".join(f"<th>{x}</th>" for x in RULES)}
+<div class="ks">{tiles}</div><div class="t"><table><tr><th>{b["scen"]}</th>{"".join(f"<th>{x}</th>" for x in rules)}
 <th>{b["pii_th"]}</th><th>{b["inj_th"]}</th><th>{b["cost_col"]}</th><th>{b["dur_th"]}</th></tr>{"".join(rows)}</table></div>
 <p class="sub" style="margin-top:14px">{html.escape(b["legend"])}</p>{_rule_html(s, b, pct)}
 </main></body></html>"""
@@ -462,6 +524,8 @@ def _rule_html(s: dict, b: dict, pct) -> str:
     body = "".join("<tr>" + "".join(f"<td>{html.escape(str(x))}</td>" for x in r) + "</tr>" for r in rows)
     acct = (f'<p class="sub">{html.escape(_acct_text(s["accounts_generic"], b, pct))}</p>'
             if s.get("accounts_generic") else "")
+    if s.get("offenders"):
+        acct += f'<p class="sub">{html.escape(_off_text(s["offenders"], pct))}</p>'
     return (f'<h2 style="font:600 18px Georgia,serif;margin:22px 0 8px">{html.escape(b["per_rule"])}</h2>'
             f'<div class="t"><table><tr>{head}</tr>{body}</table></div>'
             f'<p class="sub" style="margin-top:8px">{html.escape(b["rule_note"])}</p>{acct}')

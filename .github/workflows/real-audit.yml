@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       kind:
-        description: "bench | iam | code | studio-iam | injection | keycloak | keycloak-bench"
+        description: "bench | iam | code | studio-iam | injection | keycloak | keycloak-bench | lifecycle | lifecycle-bench"
         required: true
         default: bench
       backend:

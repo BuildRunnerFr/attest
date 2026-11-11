@@ -2106,5 +2106,19 @@
  },
  "expected_generic_admins": [
   "support-n2"
- ]
+ ],
+ "expected_offenders": {
+  "PSI-4.1": [
+   "a.abgrall",
+   "b.cariou",
+   "c.denis",
+   "e.floch",
+   "g.herve",
+   "j.kermarrec",
+   "support-n2"
+  ],
+  "PSI-4.7": [
+   "support-n2"
+  ]
+ }
 }

@@ -1,0 +1,49 @@
+# Lettre de mission : cycle de vie des accès (rapprochement registre RH ↔ comptes), sur la console de démonstration.
+# Lancement : python -m lab.app puis python -m attest run mission/lifecycle.toml
+
+[mission]
+id = "AUD-2026-JML-01"
+target = "iam-lifecycle"
+title_fr = "Cycle de vie des accès — arrivées, mutations, départs"
+title_en = "Access lifecycle — joiners, movers, leavers"
+entity = "Banque Kerlann (fictive)"
+system = "Registre RH et habilitations applicatives"
+system_criticality = "Supporte des fonctions critiques ou importantes (DORA)"
+environment = "Extraction de démonstration (données fictives)"
+owner = "DSI — équipe IAM ; DRH pour le registre"
+entity_en = "Banque Kerlann (fictitious)"
+system_en = "HR register and application entitlements"
+system_criticality_en = "Supports critical or important functions (DORA)"
+environment_en = "Demonstration extract (fictitious data)"
+owner_en = "IT department — IAM team; HR for the register"
+lead_auditor = "A. Auditeur"
+classification = "TLP:AMBER+STRICT"
+requirement = "exigences/cycle_de_vie_acces.md"
+framework_label = "DORA art. 9(4)(c) · RTS (UE) 2024/1774 art. 21 · PSI-5"
+lab_url = "http://127.0.0.1:5050"
+
+[scope]
+in = [
+  "Rapprochement du registre RH et des comptes à la date de situation",
+  "Droits détenus par les comptes actifs (séparation des tâches, mutations, privilèges)",
+]
+out = [
+  "Exactitude du registre RH lui-même",
+  "Processus d'attribution des droits (demandes, approbations)",
+  "Comptes d'autres applications",
+]
+in_en = [
+  "Reconciliation of the HR register with accounts at the reference date",
+  "Entitlements held by enabled accounts (segregation of duties, movers, privileges)",
+]
+out_en = [
+  "Accuracy of the HR register itself",
+  "Entitlement granting process (requests, approvals)",
+  "Accounts of other applications",
+]
+
+[sla_days]
+critique = 30
+elevee = 90
+moyenne = 180
+faible = 365

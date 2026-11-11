@@ -33,6 +33,19 @@ TARGETS = {
         "probe": "/api/repos",
         "remediable": False,                 # le code est corrigé par l'équipe de développement
     },
+    "iam-lifecycle": {
+        "kind": "app",
+        "label": {"fr": "Registre RH ↔ habilitations (départs, mutations, droits incompatibles)",
+                  "en": "HR register ↔ entitlements (leavers, movers, conflicting rights)"},
+        "system": "Registre RH et habilitations applicatives",
+        "owner": "DSI — équipe IAM ; DRH pour le registre",
+        "system_en": "HR register and application entitlements",
+        "owner_en": "IT department — IAM team; HR for the register",
+        "doc": "lab/LIFECYCLE_API.md",
+        "default_page": "/lifecycle/accounts",
+        "probe": "/api/lifecycle/meta",
+        "remediable": False,                 # retraits de droits et désactivations : décision des propriétaires
+    },
     "keycloak": {
         "kind": "app",
         "label": {"fr": "Keycloak (fournisseur d'identité open source), via la passerelle en lecture seule",

@@ -37,7 +37,7 @@ def main():
 
     b = sub.add_parser("bench", help="évaluer Attest sur les scénarios synthétiques (vérité terrain)")
     b.add_argument("--only", help="préfixes de scénarios, séparés par des virgules (ex. 02,05)")
-    b.add_argument("--target", default="iam-console", choices=["iam-console", "keycloak"],
+    b.add_argument("--target", default="iam-console", choices=["iam-console", "iam-lifecycle", "keycloak"],
                    help="jeu de scénarios : console fictive (défaut) ou vrai Keycloak (bash ops/keycloak_up.sh)")
     b.add_argument("--lang", choices=["fr", "en"])
     b.add_argument("--out", type=Path)

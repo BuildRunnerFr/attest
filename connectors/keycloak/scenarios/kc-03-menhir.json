@@ -1464,5 +1464,11 @@
   "PSI-4.6": "pass",
   "PSI-4.7": "pass"
  },
- "expected_generic_admins": []
+ "expected_generic_admins": [],
+ "expected_offenders": {
+  "PSI-4.1": [
+   "y.tanguy"
+  ],
+  "PSI-4.7": []
+ }
 }

@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # Une exécution d'Attest pour le workflow real-audit : démarre la console auditée, lance l'audit demandé.
-# Usage : bash ops/real_run.sh <bench|iam|code|studio-iam|injection|keycloak|keycloak-bench> <dossier de sortie>
+# Usage : bash ops/real_run.sh <bench|iam|code|studio-iam|injection|keycloak|keycloak-bench|lifecycle|lifecycle-bench> <dossier de sortie>
 set -uo pipefail
 kind="$1"; out="$2"
 mkdir -p "$out"
 
-case "$kind" in bench|iam|code|studio-iam|injection|keycloak|keycloak-bench) ;; *) echo "type inconnu : $kind"; exit 2 ;; esac
+case "$kind" in bench|iam|code|studio-iam|injection|keycloak|keycloak-bench|lifecycle|lifecycle-bench) ;; *) echo "type inconnu : $kind"; exit 2 ;; esac
 [ "$kind" = "injection" ] && export LAB_INJECTION=1
 # Une console déjà lancée (exécution précédente) serait auditée à sa place, sans ses options : refus.
 if curl -s -o /dev/null http://127.0.0.1:5050/; then
@@ -29,6 +29,8 @@ case "$kind" in
   bench)      python -m attest bench ${BENCH_ONLY:+--only "$BENCH_ONLY"} --out "$out/bench" ;;
   iam)        python -m attest run --reset-lab --remediate --approve-all --approver "IAM owner (CI)" --out "$out/iam" ;;
   injection)  python -m attest run --reset-lab --out "$out/injection" ;;
+  lifecycle)       python -m attest run mission/lifecycle.toml --out "$out/lifecycle-audit" ;;
+  lifecycle-bench) python -m attest bench --target iam-lifecycle ${BENCH_ONLY:+--only "$BENCH_ONLY"} --out "$out/bench" ;;
   keycloak)       python -m attest run mission/keycloak.toml --out "$out/keycloak-audit" ;;
   keycloak-bench) python -m attest bench --target keycloak ${BENCH_ONLY:+--only "$BENCH_ONLY"} --out "$out/bench" ;;
   code)       python ops/studio_flow.py --lib rts-16-developpement,politique-pds-2-developpement \

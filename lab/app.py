@@ -279,11 +279,16 @@ def reset():
         abort(403)
     sid = (request.get_json(silent=True) or {}).get("scenario") or request.args.get("scenario") \
         or os.getenv("LAB_SCENARIO")
+    if sid and sid.startswith("lc-"):                # scénario de cycle de vie des accès : rien d'autre ne change
+        if not lifecycle_api.select(sid):
+            abort(404, f"scénario inconnu : {sid}")
+        return jsonify(ok=True, scenario=sid)
     try:
         state = scenario_state(sid) if sid else copy.deepcopy(DEFAULT_STATE)
     except KeyError:
         abort(404, f"scénario inconnu : {sid}")
     save(state)
+    lifecycle_api.select(None)
     return jsonify(ok=True, scenario=state.get("scenario"))
 
 
@@ -292,6 +297,13 @@ def get_scenario():
     caller()
     s = load()
     return jsonify(scenario=s.get("scenario"), brand=s.get("brand"))
+
+
+# ---------- cycle de vie des accès : registre RH ↔ comptes (lecture seule) ----------
+
+from . import lifecycle_api  # noqa: E402
+
+lifecycle_api.register(app, caller, PAGE)
 
 
 # ---------- dépôts de code (passerelle en lecture seule) ----------
