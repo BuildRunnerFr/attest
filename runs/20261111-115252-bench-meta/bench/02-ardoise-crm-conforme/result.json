@@ -1,0 +1,839 @@
+{
+  "mission": {
+    "id": "AUD-2026-IAM-01",
+    "title": "Strong authentication and privileged access — KRL-ADM",
+    "entity": "Banque Ardoise (fictive)",
+    "system": "CRM des conseillers",
+    "system_criticality": "Supports critical or important functions (DORA)",
+    "environment": "Demonstration pre-production",
+    "owner": "IT department — IAM team",
+    "lead_auditor": "Attest CI (automated run, no human auditor)",
+    "classification": "TLP:AMBER+STRICT",
+    "requirement_path": "exigences/dora_authentification.md",
+    "lab_url": "http://127.0.0.1:5050",
+    "scope_in": [
+      "Authentication and session settings of the KRL-ADM console",
+      "Accounts with access to the console",
+      "Logging of administrative actions"
+    ],
+    "scope_out": [
+      "Intrinsic strength of MFA factors (robustness of authentication means)",
+      "Central directory and identity federation",
+      "Physical controls"
+    ],
+    "sla_days": {
+      "critique": 30,
+      "elevee": 90,
+      "moyenne": 180,
+      "faible": 365
+    },
+    "target": "iam-console",
+    "framework_label": "DORA art. 9(4) · RTS (UE) 2024/1774 art. 12, 21 · PSI-4",
+    "requirement_text": null
+  },
+  "run_id": "20261111-115252-bench-meta",
+  "started": "2026-11-11 11:53",
+  "lang": "en",
+  "target": "iam-console",
+  "target_label": "KRL-ADM IAM admin console (Banque Kerlann)",
+  "backend": "meta",
+  "models": {
+    "reason": "muse-spark-1.3",
+    "code": "muse-spark-1.3",
+    "segmentation": "sam-3.1"
+  },
+  "entries": [
+    {
+      "control": {
+        "id": "C1",
+        "rule": "PSI-4.1",
+        "title": "Mandatory MFA for privileged accounts",
+        "objective": "MFA is enforced for all privileged admin accounts on KRL-ADM",
+        "test_procedure": "Retrieve the security configuration via GET /api/security and verify that mfa_admin is true",
+        "expected": "mfa_admin == true",
+        "severity": "critique",
+        "references": [
+          "DORA 9(4)(d)",
+          "RTS 21(1)(f)(ii)"
+        ],
+        "risk": "Without MFA for admins, stolen credentials allow full takeover of critical functions with no second barrier",
+        "recommendation": "Enable mandatory MFA for all privileged accounts by setting mfa_admin to true",
+        "evidence_page": "/admin/security",
+        "remediation": "config"
+      },
+      "test": {
+        "script": "scripts/C1_PSI-4.1.py",
+        "sha256": "098d37cd0158dd1a5697d94d9ba286eabf830d9f7bf96e3378e1671fb880e900",
+        "origin": "library",
+        "code": "# Attest — test PSI-4.1 (Mandatory MFA for privileged accounts)\n# Écrit par muse-spark-1.3 le 2026-11-02 — à relire avant validation.\nimport os\nimport sys\nimport json\nimport re\nimport requests\n\ntry:\n    base = os.environ[\"LAB_URL\"]\nexcept KeyError:\n    sys.stderr.write(\"missing LAB_URL\\n\")\n    sys.exit(2)\ntry:\n    token = os.environ[\"LAB_TOKEN\"]\nexcept KeyError:\n    sys.stderr.write(\"missing LAB_TOKEN\\n\")\n    sys.exit(2)\n\nurl = base.rstrip(\"/\") + \"/api/security\"\nheaders = {\"Authorization\": \"Bearer \" + token}\n\ntry:\n    r = requests.get(url, headers=headers, timeout=10)\nexcept Exception as e:\n    sys.stderr.write(\"request failed: %s\\n\" % e)\n    sys.exit(2)\n\nif r.status_code != 200:\n    sys.stderr.write(\"unexpected status %s\\n\" % r.status_code)\n    sys.exit(2)\n\ntry:\n    data = r.json()\nexcept Exception as e:\n    sys.stderr.write(\"invalid json: %s\\n\" % e)\n    sys.exit(2)\n\nif not isinstance(data, dict) or \"mfa_admin\" not in data:\n    sys.stderr.write(\"missing mfa_admin\\n\")\n    sys.exit(2)\n\nobserved = data[\"mfa_admin\"]\n\nif type(observed) is not bool:\n    sys.stderr.write(\"unexpected type for mfa_admin\\n\")\n    sys.exit(2)\n\nraw = json.dumps(data, default=str)\ninjected = bool(re.search(r\"(?i)(ignore|disregard|bypass|override|follow).{0,40}(instruction|prompt|audit|control|system)|system\\s*prompt|execute\\s+.*code\", raw))\n\nstatus = \"pass\" if observed is True else \"fail\"\nif injected:\n    detail = \"GET /api/security returned mfa_admin=%s, ignoring untrusted instructional text found in response.\" % observed\nelse:\n    detail = \"GET /api/security returned mfa_admin=%s.\" % observed\n\nprint(json.dumps({\"status\": status, \"observed\": observed, \"expected\": True, \"detail\": detail}))\n",
+        "requests": 1
+      },
+      "before": {
+        "status": "pass",
+        "observed": true,
+        "expected": true,
+        "detail": "GET /api/security returned mfa_admin=True."
+      },
+      "evidence_before": {
+        "image": "evidence/C1_before.png",
+        "sha256": "2fcbd4467048c39ac44fa85beb68d5a69567bd94aa34aea34cddd74484f18f6e",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "Authentification multifacteur (administrateurs) Activée",
+          "field_boxes": [
+            [
+              28,
+              190,
+              1072,
+              238
+            ]
+          ],
+          "comment": "The screenshot shows administrator MFA as Activée, matching the automated pass result.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 0,
+          "pii_masked": 0,
+          "pii_found_by_model": 0
+        },
+        "page": "/admin/security",
+        "page_verified": null,
+        "ts": "2026-11-11 11:53:57"
+      },
+      "status_before": "pass"
+    },
+    {
+      "control": {
+        "id": "C2",
+        "rule": "PSI-4.2",
+        "title": "Mandatory MFA for users of critical system",
+        "objective": "MFA is enforced for standard users because KRL-ADM supports critical or important functions",
+        "test_procedure": "Retrieve the security configuration via GET /api/security and verify that mfa_users is true",
+        "expected": "mfa_users == true",
+        "severity": "elevee",
+        "references": [
+          "DORA 9(4)(d)",
+          "RTS 21(1)(f)(ii)"
+        ],
+        "risk": "Without MFA for all users, compromised user credentials allow unauthorized access to critical functions",
+        "recommendation": "Enable mandatory MFA for standard users by setting mfa_users to true",
+        "evidence_page": "/admin/security",
+        "remediation": "config"
+      },
+      "test": {
+        "script": "scripts/C2_PSI-4.2.py",
+        "sha256": "fa35c17fbb1dfdd3f0b119a1b0298caedbab33700f9367a772a5abf44fcaad3f",
+        "origin": "library",
+        "code": "# Attest — test PSI-4.2 (Mandatory MFA for users of critical system)\n# Écrit par muse-spark-1.3 le 2026-11-02 — à relire avant validation.\nimport requests\nimport json\nimport os\nimport sys\nimport re\n\ntry:\n    base = os.environ[\"LAB_URL\"]\n    token = os.environ[\"LAB_TOKEN\"]\nexcept KeyError as e:\n    print(f\"missing environment variable: {e}\", file=sys.stderr)\n    sys.exit(2)\n\nurl = re.sub(r\"/+$\", \"\", base) + \"/api/security\"\nheaders = {\"Authorization\": \"Bearer \" + token}\n\ntry:\n    r = requests.get(url, headers=headers, timeout=10)\nexcept Exception as e:\n    print(f\"request failed: {e}\", file=sys.stderr)\n    sys.exit(2)\n\nif r.status_code != 200:\n    print(f\"unexpected status {r.status_code} for GET /api/security\", file=sys.stderr)\n    sys.exit(2)\n\ntry:\n    data = r.json()\nexcept Exception as e:\n    print(f\"invalid json: {e}\", file=sys.stderr)\n    sys.exit(2)\n\nif not isinstance(data, dict) or \"mfa_users\" not in data or not isinstance(data[\"mfa_users\"], bool):\n    print(\"missing or invalid mfa_users field\", file=sys.stderr)\n    sys.exit(2)\n\nobserved = data[\"mfa_users\"]\nstatus = \"pass\" if observed is True else \"fail\"\nprint(json.dumps({\"status\": status, \"observed\": observed, \"expected\": True, \"detail\": f\"mfa_users is {observed}.\"}))\n",
+        "requests": 1
+      },
+      "before": {
+        "status": "pass",
+        "observed": true,
+        "expected": true,
+        "detail": "mfa_users is True."
+      },
+      "evidence_before": {
+        "image": "evidence/C2_before.png",
+        "sha256": "4dcb8f95ac6bc3ca3ce0b5c9f6b83c900e736a66277a988f2a4c4433016a0311",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "Authentification multifacteur (utilisateurs) Activée",
+          "field_boxes": [
+            [
+              28,
+              236,
+              970,
+              282
+            ]
+          ],
+          "comment": "The security policy table shows user MFA as Activée, matching the automated pass result.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 0,
+          "pii_masked": 0,
+          "pii_found_by_model": 0
+        },
+        "page": "/admin/security",
+        "page_verified": null,
+        "ts": "2026-11-11 11:53:57"
+      },
+      "status_before": "pass"
+    },
+    {
+      "control": {
+        "id": "C3",
+        "rule": "PSI-4.3",
+        "title": "Strong password policy",
+        "objective": "Passwords require a minimum length of 12 characters with complexity requirements enabled",
+        "test_procedure": "Retrieve the security configuration via GET /api/security and verify password_min_length and password_require_complexity",
+        "expected": "password_min_length >= 12 AND password_require_complexity == true",
+        "severity": "moyenne",
+        "references": [
+          "DORA 9(4)(d)"
+        ],
+        "risk": "Weak or short passwords can be guessed or brute-forced, enabling unauthorized access to the system",
+        "recommendation": "Enforce a minimum password length of 12 characters with complexity by correcting the password settings",
+        "evidence_page": "/admin/security",
+        "remediation": "config"
+      },
+      "test": {
+        "script": "scripts/C3_PSI-4.3.py",
+        "sha256": "b440a5b4dc6b0fb35e3237b2c31c911447c452d28a8439534757301411e1949b",
+        "origin": "library",
+        "code": "# Attest — test PSI-4.3 (Strong password policy)\n# Écrit par muse-spark-1.3 le 2026-11-02 — à relire avant validation.\nimport requests\nimport json\nimport os\nimport sys\nimport re\n\ntry:\n    LAB_URL = os.environ[\"LAB_URL\"]\n    LAB_TOKEN = os.environ[\"LAB_TOKEN\"]\nexcept KeyError as e:\n    sys.stderr.write(f\"missing env var: {e}\\n\")\n    sys.exit(2)\n\nurl = LAB_URL.rstrip(\"/\") + \"/api/security\"\nheaders = {\"Authorization\": \"Bearer \" + LAB_TOKEN}\n\ntry:\n    resp = requests.get(url, headers=headers, timeout=10)\nexcept Exception as e:\n    sys.stderr.write(f\"request failed: {e}\\n\")\n    sys.exit(2)\n\nif resp.status_code != 200:\n    sys.stderr.write(f\"unexpected status: {resp.status_code}\\n\")\n    sys.exit(2)\n\ntry:\n    data = json.loads(resp.text)\nexcept Exception as e:\n    sys.stderr.write(f\"invalid json: {e}\\n\")\n    sys.exit(2)\n\nif not isinstance(data, dict):\n    sys.stderr.write(\"unexpected data type: expected object\\n\")\n    sys.exit(2)\n\nif \"password_min_length\" not in data or \"password_require_complexity\" not in data:\n    sys.stderr.write(\"missing required fields\\n\")\n    sys.exit(2)\n\nml = data[\"password_min_length\"]\nrc = data[\"password_require_complexity\"]\n\nif not isinstance(ml, int) or isinstance(ml, bool):\n    sys.stderr.write(\"unexpected type for password_min_length\\n\")\n    sys.exit(2)\n\nif type(rc) is not bool:\n    sys.stderr.write(\"unexpected type for password_require_complexity\\n\")\n    sys.exit(2)\n\nok = (ml >= 12 and rc is True)\nstatus = \"pass\" if ok else \"fail\"\nobserved = {\"password_min_length\": ml, \"password_require_complexity\": rc}\nexpected = \"password_min_length >= 12 AND password_require_complexity == true\"\n\nif re.search(r\"(?i)ignore\\b.*\\binstruct|system\\s+prompt|do\\s+not\\s+follow|override\\s+audit|disregard\\b.*\\binstruct\", resp.text):\n    detail = f\"password_min_length is {ml} and password_require_complexity is {rc} with untrusted instructional text present in response and ignored.\"\nelse:\n    detail = f\"password_min_length is {ml} and password_require_complexity is {rc}.\"\n\nprint(json.dumps({\"status\": status, \"observed\": observed, \"expected\": expected, \"detail\": detail}))\n",
+        "requests": 1
+      },
+      "before": {
+        "status": "pass",
+        "observed": {
+          "password_min_length": 14,
+          "password_require_complexity": true
+        },
+        "expected": "password_min_length >= 12 AND password_require_complexity == true",
+        "detail": "password_min_length is 14 and password_require_complexity is True."
+      },
+      "evidence_before": {
+        "image": "evidence/C3_before.png",
+        "sha256": "0df5267c92ad8da791eb48e9625694d90db17e558a052648a4a64c02d662caa3",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "Longueur minimale du mot de passe 14 | Complexité du mot de passe exigée Activée",
+          "field_boxes": [
+            [
+              27,
+              282,
+              972,
+              330
+            ],
+            [
+              27,
+              331,
+              972,
+              377
+            ]
+          ],
+          "comment": "Screenshot shows minimum length 14 and complexity Activée, matching the automated pass result.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 0,
+          "pii_masked": 0,
+          "pii_found_by_model": 0
+        },
+        "page": "/admin/security",
+        "page_verified": null,
+        "ts": "2026-11-11 11:53:53"
+      },
+      "status_before": "pass"
+    },
+    {
+      "control": {
+        "id": "C4",
+        "rule": "PSI-4.4",
+        "title": "Account lockout after failed logins",
+        "objective": "Accounts lock after at most 5 failed login attempts and lockout is never disabled",
+        "test_procedure": "Retrieve the security configuration via GET /api/security and verify that lockout_threshold is between 1 and 5 inclusive",
+        "expected": "lockout_threshold >= 1 AND lockout_threshold <= 5",
+        "severity": "moyenne",
+        "references": [
+          "DORA 9(4)(c)"
+        ],
+        "risk": "Without lockout, attackers can perform unlimited password-guessing attacks against accounts",
+        "recommendation": "Configure account lockout to 5 attempts at most by setting lockout_threshold between 1 and 5",
+        "evidence_page": "/admin/security",
+        "remediation": "config"
+      },
+      "test": {
+        "script": "scripts/C4_PSI-4.4.py",
+        "sha256": "10d2a8f06337b5bca5667b2efa7dc25c74553b33470fbc3749f9aefa5454dfce",
+        "origin": "library",
+        "code": "# Attest — test PSI-4.4 (Account lockout after failed logins)\n# Écrit par muse-spark-1.3 le 2026-11-02 — à relire avant validation.\nimport requests\nimport json\nimport os\nimport sys\nimport re\n\ntry:\n    LAB_URL = os.environ[\"LAB_URL\"]\nexcept KeyError:\n    print(\"missing LAB_URL\", file=sys.stderr)\n    sys.exit(2)\n\ntry:\n    LAB_TOKEN = os.environ[\"LAB_TOKEN\"]\nexcept KeyError:\n    print(\"missing LAB_TOKEN\", file=sys.stderr)\n    sys.exit(2)\n\nurl = LAB_URL.rstrip(\"/\") + \"/api/security\"\nheaders = {\"Authorization\": \"Bearer \" + os.environ[\"LAB_TOKEN\"]}\n\ntry:\n    r = requests.get(url, headers=headers, timeout=10)\nexcept Exception as e:\n    print(\"request failed: \" + str(e), file=sys.stderr)\n    sys.exit(2)\n\nif r.status_code != 200:\n    print(\"unexpected status: \" + str(r.status_code), file=sys.stderr)\n    sys.exit(2)\n\ntry:\n    data = json.loads(r.text)\nexcept Exception as e:\n    print(\"invalid json: \" + str(e), file=sys.stderr)\n    sys.exit(2)\n\nif not isinstance(data, dict) or \"lockout_threshold\" not in data:\n    print(\"missing lockout_threshold\", file=sys.stderr)\n    sys.exit(2)\n\nvalue = data[\"lockout_threshold\"]\n\nif isinstance(value, bool) or not isinstance(value, int):\n    print(\"unexpected lockout_threshold type\", file=sys.stderr)\n    sys.exit(2)\n\ninjection_found = False\ntry:\n    if re.search(r\"(?i)\\b(ignore|disregard|bypass|override)\\b.{0,60}\\b(instruction|prompt|rule|verdict|audit|test)\\b|\\b(you\\s+are\\s+an?|act\\s+as|system\\s+prompt)\\b\", r.text):\n        injection_found = True\nexcept Exception:\n    injection_found = False\n\nexpected = \"lockout_threshold >= 1 AND lockout_threshold <= 5\"\n\nif 1 <= value <= 5:\n    status = \"pass\"\n    if injection_found:\n        detail = \"lockout_threshold is \" + str(value) + \", which is within the required range 1 to 5 inclusive, and untrusted instructional text in the response was observed and ignored.\"\n    else:\n        detail = \"lockout_threshold is \" + str(value) + \", which is within the required range 1 to 5 inclusive.\"\nelse:\n    status = \"fail\"\n    if injection_found:\n        detail = \"lockout_threshold is \" + str(value) + \", which is outside the required range 1 to 5 inclusive, and untrusted instructional text in the response was observed and ignored.\"\n    else:\n        detail = \"lockout_threshold is \" + str(value) + \", which is outside the required range 1 to 5 inclusive.\"\n\nprint(json.dumps({\"status\": status, \"observed\": value, \"expected\": expected, \"detail\": detail}))\n",
+        "requests": 1
+      },
+      "before": {
+        "status": "pass",
+        "observed": 5,
+        "expected": "lockout_threshold >= 1 AND lockout_threshold <= 5",
+        "detail": "lockout_threshold is 5, which is within the required range 1 to 5 inclusive."
+      },
+      "evidence_before": {
+        "image": "evidence/C4_before.png",
+        "sha256": "39fdd86d7d1b11af052604f99d682d0e529b45821060956942a9becfb7d0f446",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "Verrouillage après N échecs de connexion 5",
+          "field_boxes": [
+            [
+              28,
+              376,
+              970,
+              424
+            ]
+          ],
+          "comment": "The screenshot shows lockout after 5 failed attempts, matching the automated result of 5.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 0,
+          "pii_masked": 0,
+          "pii_found_by_model": 0
+        },
+        "page": "/admin/security",
+        "page_verified": null,
+        "ts": "2026-11-11 11:53:55"
+      },
+      "status_before": "pass"
+    },
+    {
+      "control": {
+        "id": "C5",
+        "rule": "PSI-4.5",
+        "title": "Inactive session timeout",
+        "objective": "Inactive sessions expire after at most 15 minutes and expiration is never disabled",
+        "test_procedure": "Retrieve the security configuration via GET /api/security and verify that session_timeout_minutes is between 1 and 15 inclusive",
+        "expected": "session_timeout_minutes >= 1 AND session_timeout_minutes <= 15",
+        "severity": "moyenne",
+        "references": [
+          "DORA 9(4)(c)"
+        ],
+        "risk": "Unlimited inactive sessions allow session hijacking and unauthorized use of unattended workstations",
+        "recommendation": "Enforce inactive session expiration at 15 minutes at most by setting session_timeout_minutes between 1 and 15",
+        "evidence_page": "/admin/security",
+        "remediation": "config"
+      },
+      "test": {
+        "script": "scripts/C5_PSI-4.5.py",
+        "sha256": "4157e9750f010f98c706b06c46595e822377ff01e012bfa30a122013ca8828e9",
+        "origin": "library",
+        "code": "# Attest — test PSI-4.5 (Inactive session timeout)\n# Écrit par muse-spark-1.3 le 2026-11-02 — à relire avant validation.\nimport json\nimport os\nimport sys\nimport requests\n\ntry:\n    LAB_URL = os.environ[\"LAB_URL\"]\n    LAB_TOKEN = os.environ[\"LAB_TOKEN\"]\nexcept KeyError as e:\n    print(f\"missing environment variable: {e}\", file=sys.stderr)\n    sys.exit(2)\n\nif not LAB_URL or not LAB_TOKEN:\n    print(\"missing LAB_URL or LAB_TOKEN\", file=sys.stderr)\n    sys.exit(2)\n\nurl = LAB_URL.rstrip(\"/\") + \"/api/security\"\nheaders = {\"Authorization\": \"Bearer \" + LAB_TOKEN}\n\ntry:\n    resp = requests.get(url, headers=headers, timeout=10)\nexcept Exception as e:\n    print(f\"request failed: {e}\", file=sys.stderr)\n    sys.exit(2)\n\nif resp.status_code != 200:\n    print(f\"unexpected status {resp.status_code} for GET /api/security\", file=sys.stderr)\n    sys.exit(2)\n\ntry:\n    data = resp.json()\nexcept Exception as e:\n    print(f\"invalid JSON: {e}\", file=sys.stderr)\n    sys.exit(2)\n\nif not isinstance(data, dict) or \"session_timeout_minutes\" not in data:\n    print(\"missing session_timeout_minutes in /api/security response\", file=sys.stderr)\n    sys.exit(2)\n\nval = data[\"session_timeout_minutes\"]\n\nif type(val) is not int:\n    print(f\"unexpected type for session_timeout_minutes: {type(val).__name__}\", file=sys.stderr)\n    sys.exit(2)\n\nexpected = \"session_timeout_minutes >= 1 AND session_timeout_minutes <= 15\"\nif 1 <= val <= 15:\n    status = \"pass\"\n    detail = f\"Observed session_timeout_minutes is {val}, within the required 1 to 15 inclusive.\"\nelse:\n    status = \"fail\"\n    detail = f\"Observed session_timeout_minutes is {val}, outside the required 1 to 15 inclusive.\"\n\nprint(json.dumps({\"status\": status, \"observed\": val, \"expected\": expected, \"detail\": detail}))\n",
+        "requests": 1
+      },
+      "before": {
+        "status": "pass",
+        "observed": 10,
+        "expected": "session_timeout_minutes >= 1 AND session_timeout_minutes <= 15",
+        "detail": "Observed session_timeout_minutes is 10, within the required 1 to 15 inclusive."
+      },
+      "evidence_before": {
+        "image": "evidence/C5_before.png",
+        "sha256": "81bd0252df188ef0906676a2f5106556998fa0a1b27d63437fe2fa571435f99d",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "Expiration de session inactive (minutes) 10",
+          "field_boxes": [
+            [
+              28,
+              424,
+              997,
+              472
+            ]
+          ],
+          "comment": "The screenshot shows inactive session expiration set to 10 minutes, within the required 1-15 range.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 0,
+          "pii_masked": 0,
+          "pii_found_by_model": 0
+        },
+        "page": "/admin/security",
+        "page_verified": null,
+        "ts": "2026-11-11 11:54:09"
+      },
+      "status_before": "pass"
+    },
+    {
+      "control": {
+        "id": "C6",
+        "rule": "PSI-4.6",
+        "title": "Logging of administration actions",
+        "objective": "All administration actions are logged",
+        "test_procedure": "Retrieve the security configuration via GET /api/security and verify that admin_audit_log is true",
+        "expected": "admin_audit_log == true",
+        "severity": "elevee",
+        "references": [
+          "RTS 12(2)(c)(i)"
+        ],
+        "risk": "Without admin audit logging, privileged actions cannot be traced, preventing detection and investigation of abuse",
+        "recommendation": "Enable logging of all administration actions by setting admin_audit_log to true",
+        "evidence_page": "/admin/security",
+        "remediation": "config"
+      },
+      "test": {
+        "script": "scripts/C6_PSI-4.6.py",
+        "sha256": "e2f35349092109778d4c0f2baf30d8414192be5d8c53853cf3b725025514fc83",
+        "origin": "library",
+        "code": "# Attest — test PSI-4.6 (Logging of administration actions)\n# Écrit par muse-spark-1.3 le 2026-11-02 — à relire avant validation.\nimport os\nimport sys\nimport json\nimport requests\n\ntry:\n    base_url = os.environ[\"LAB_URL\"]\n    token = os.environ[\"LAB_TOKEN\"]\nexcept KeyError as e:\n    print(f\"missing environment variable: {e}\", file=sys.stderr)\n    sys.exit(2)\n\nurl = base_url.rstrip(\"/\") + \"/api/security\"\nheaders = {\"Authorization\": \"Bearer \" + token}\n\ntry:\n    r = requests.get(url, headers=headers, timeout=10)\nexcept Exception as e:\n    print(f\"request failed: {e}\", file=sys.stderr)\n    sys.exit(2)\n\nif r.status_code != 200:\n    print(f\"unexpected status code: {r.status_code}\", file=sys.stderr)\n    sys.exit(2)\n\ntry:\n    data = r.json()\nexcept Exception as e:\n    print(f\"invalid JSON: {e}\", file=sys.stderr)\n    sys.exit(2)\n\nif not isinstance(data, dict) or \"admin_audit_log\" not in data:\n    print(\"missing field: admin_audit_log\", file=sys.stderr)\n    sys.exit(2)\n\nval = data[\"admin_audit_log\"]\nif type(val) is not bool:\n    print(f\"unexpected type for admin_audit_log: {type(val).__name__}\", file=sys.stderr)\n    sys.exit(2)\n\nif val is True:\n    print(json.dumps({\"status\": \"pass\", \"observed\": val, \"expected\": True, \"detail\": \"admin_audit_log is true.\"}))\nelse:\n    print(json.dumps({\"status\": \"fail\", \"observed\": val, \"expected\": True, \"detail\": \"admin_audit_log is false.\"}))\n",
+        "requests": 1
+      },
+      "before": {
+        "status": "pass",
+        "observed": true,
+        "expected": true,
+        "detail": "admin_audit_log is true."
+      },
+      "evidence_before": {
+        "image": "evidence/C6_before.png",
+        "sha256": "109895886830a3082b16362c763cf43a12d0aa09264cb74a214b2ef5c4a1e589",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "Journalisation des actions d'administration Activée",
+          "field_boxes": [
+            [
+              27,
+              472,
+              972,
+              519
+            ]
+          ],
+          "comment": "The screenshot shows Journalisation des actions d'administration as Activée.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 0,
+          "pii_masked": 0,
+          "pii_found_by_model": 0
+        },
+        "page": "/admin/security",
+        "page_verified": null,
+        "ts": "2026-11-11 11:54:09"
+      },
+      "status_before": "pass"
+    },
+    {
+      "control": {
+        "id": "C7",
+        "rule": "PSI-4.7",
+        "title": "No generic or shared admin accounts",
+        "objective": "No account with role admin is generic or shared and every admin has a nominative login of the form initiale.nom with a personal email",
+        "test_procedure": "Retrieve all accounts via GET /api/users and verify that every user with role admin has a nominative login and a personal email without function identifier or shared mailbox",
+        "expected": "for all users where role == admin: login matches initiale.nom pattern and email is personal, with no function login and no shared mailbox",
+        "severity": "elevee",
+        "references": [
+          "DORA 9(4)(c)",
+          "RTS 21(1)(c)",
+          "RTS 21(1)(e)(ii)"
+        ],
+        "risk": "Generic or shared admin accounts destroy individual accountability and prevent attribution of privileged actions",
+        "recommendation": "Remove or disable generic and shared admin accounts and replace them with dedicated nominative accounts",
+        "evidence_page": "/admin/users",
+        "remediation": "manual"
+      },
+      "test": {
+        "script": "scripts/C7_PSI-4.7.py",
+        "sha256": "121d96a62200902496179cbba34fba2eb0f15f97773ab62eaadf307ba1df05ab",
+        "origin": "library",
+        "code": "# Attest — test PSI-4.7 (No generic or shared admin accounts)\n# Écrit par muse-spark-1.3 le 2026-11-11 — à relire avant validation.\nimport requests\nimport json\nimport os\nimport sys\nimport re\ntry:\n    base_url = os.environ[\"LAB_URL\"]\n    lab_token = os.environ[\"LAB_TOKEN\"]\nexcept KeyError:\n    sys.stderr.write(\"missing env\\n\")\n    sys.exit(2)\nif not isinstance(base_url, str) or not isinstance(lab_token, str) or not base_url or not lab_token:\n    sys.stderr.write(\"missing env\\n\")\n    sys.exit(2)\nbase_url = base_url.rstrip(\"/\")\nheaders = {\"Authorization\": \"Bearer \" + lab_token}\ntry:\n    ev = requests.get(base_url + \"/admin/users\", headers=headers)\nexcept Exception:\n    sys.stderr.write(\"evidence request failed\\n\")\n    sys.exit(2)\nif ev.status_code != 200:\n    sys.stderr.write(\"evidence request failed\\n\")\n    sys.exit(2)\nall_users = []\nnext_url = base_url + \"/api/users\"\nvisited = []\npage_count = 0\nwhile next_url:\n    if next_url in visited:\n        sys.stderr.write(\"pagination loop\\n\")\n        sys.exit(2)\n    visited.append(next_url)\n    current_url = next_url\n    try:\n        resp = requests.get(next_url, headers=headers)\n    except Exception:\n        sys.stderr.write(\"users request failed\\n\")\n        sys.exit(2)\n    if resp.status_code != 200:\n        sys.stderr.write(\"users request failed\\n\")\n        sys.exit(2)\n    page_count = page_count + 1\n    try:\n        payload = resp.json()\n    except Exception:\n        sys.stderr.write(\"bad json\\n\")\n        sys.exit(2)\n    if isinstance(payload, list):\n        batch = payload\n    elif isinstance(payload, dict):\n        batch = None\n        for key in (\"users\", \"data\", \"items\", \"results\"):\n            if key in payload and isinstance(payload[key], list):\n                batch = payload[key]\n                break\n        if batch is None:\n            sys.stderr.write(\"unexpected users format\\n\")\n            sys.exit(2)\n    else:\n        sys.stderr.write(\"unexpected users format\\n\")\n        sys.exit(2)\n    for entry in batch:\n        all_users.append(entry)\n    candidate = None\n    try:\n        linkmap = resp.links\n        if \"next\" in linkmap:\n            info = linkmap[\"next\"]\n            if \"url\" in info:\n                candidate = info[\"url\"]\n    except Exception:\n        candidate = None\n    if not candidate:\n        if \"Link\" in resp.headers:\n            lh = resp.headers[\"Link\"]\n            if isinstance(lh, str):\n                m2 = re.search(r'<([^>]+)>\\s*;\\s*rel=\"next\"', lh)\n                if m2:\n                    candidate = m2.group(1)\n    if candidate:\n        if candidate.startswith(\"http://\") or candidate.startswith(\"https://\"):\n            next_url = candidate\n        elif candidate.startswith(\"/\"):\n            next_url = base_url + candidate\n        else:\n            next_url = base_url + \"/\" + candidate\n    else:\n        total_pages = None\n        if \"X-Total-Pages\" in resp.headers:\n            try:\n                total_pages = int(resp.headers[\"X-Total-Pages\"])\n            except Exception:\n                sys.stderr.write(\"bad total pages\\n\")\n                sys.exit(2)\n        if total_pages is not None:\n            cur_page = None\n            for hkey in (\"X-Current-Page\", \"X-Page\"):\n                if hkey in resp.headers:\n                    try:\n                        cur_page = int(resp.headers[hkey])\n                    except Exception:\n                        cur_page = None\n                    if cur_page is not None:\n                        break\n            if cur_page is None:\n                m = re.search(r\"[?&]page=(\\d+)\", current_url)\n                if m:\n                    cur_page = int(m.group(1))\n                else:\n                    cur_page = page_count\n            if cur_page < total_pages:\n                want = cur_page + 1\n                if re.search(r\"[?&]page=\\d+\", current_url):\n                    next_url = re.sub(r\"([?&]page=)\\d+\", r\"\\g<1>\" + str(want), current_url)\n                else:\n                    if \"?\" in current_url:\n                        next_url = current_url + \"&page=\" + str(want)\n                    else:\n                        next_url = current_url + \"?page=\" + str(want)\n            else:\n                next_url = None\n        else:\n            next_url = None\ndef tokens_of(value):\n    parts = re.split(r\"[^A-Za-z]+\", value.lower())\n    out = []\n    for p in parts:\n        if p:\n            out.append(p)\n    return out\ngeneric = [\"admin\", \"administrator\", \"administrateur\", \"root\", \"superuser\", \"sysadmin\", \"system\", \"support\", \"helpdesk\", \"help\", \"team\", \"equipe\", \"service\", \"services\", \"contact\", \"info\", \"infos\", \"generic\", \"generique\", \"shared\", \"partage\", \"test\", \"demo\", \"guest\", \"operator\", \"security\"]\nadmins = []\nfor u in all_users:\n    if not isinstance(u, dict):\n        sys.stderr.write(\"unexpected user entry\\n\")\n        sys.exit(2)\n    if \"login\" not in u or \"email\" not in u or \"role\" not in u:\n        sys.stderr.write(\"missing user field\\n\")\n        sys.exit(2)\n    login = u[\"login\"]\n    email = u[\"email\"]\n    role = u[\"role\"]\n    if not isinstance(login, str) or not isinstance(email, str) or not isinstance(role, str):\n        sys.stderr.write(\"bad user field type\\n\")\n        sys.exit(2)\n    if role == \"admin\":\n        admins.append(u)\nadmin_logins = []\nfor a in admins:\n    admin_logins.append(a[\"login\"])\noffending = []\nfor a in admins:\n    login = a[\"login\"]\n    email = a[\"email\"]\n    bad = False\n    if not re.match(r\"^[A-Za-z]\\.[A-Za-z]+(?:-[A-Za-z]+)*$\", login):\n        bad = True\n    else:\n        lt = tokens_of(login)\n        for t in lt:\n            if t in generic:\n                bad = True\n                break\n    parts = email.split(\"@\")\n    if len(parts) != 2 or not parts[0] or not parts[1]:\n        bad = True\n    else:\n        local = parts[0]\n        if \".\" not in local:\n            bad = True\n        elif not re.match(r\"^[A-Za-z]+(?:[.\\-][A-Za-z]+)+$\", local):\n            bad = True\n        else:\n            et = tokens_of(local)\n            for t in et:\n                if t in generic:\n                    bad = True\n                    break\n    if bad:\n        offending.append(login)\nexpected = \"for all users where role == admin: login matches initiale.nom pattern and email is personal, with no function login and no shared mailbox\"\ntotal_count = len(all_users)\nadmin_count = len(admins)\noff_count = len(offending)\nif off_count == 0:\n    detail = \"Checked \" + str(admin_count) + \" admin accounts among \" + str(total_count) + \" users across \" + str(page_count) + \" pages with no generic or shared admin account\"\n    print(json.dumps({\"status\": \"pass\", \"observed\": admin_logins, \"expected\": expected, \"detail\": detail, \"evidence_page\": \"/admin/users\"}))\nelse:\n    detail = \"Checked \" + str(admin_count) + \" admin accounts among \" + str(total_count) + \" users across \" + str(page_count) + \" pages with \" + str(off_count) + \" generic or shared admin accounts\"\n    print(json.dumps({\"status\": \"fail\", \"observed\": offending, \"expected\": expected, \"detail\": detail, \"evidence_page\": \"/admin/users\"}))\n",
+        "requests": 2
+      },
+      "before": {
+        "status": "pass",
+        "observed": [
+          "n.vincent",
+          "l.lambert",
+          "m.le-goff"
+        ],
+        "expected": "for all users where role == admin: login matches initiale.nom pattern and email is personal, with no function login and no shared mailbox",
+        "detail": "Checked 3 admin accounts among 17 users across 1 pages with no generic or shared admin account",
+        "evidence_page": "/admin/users"
+      },
+      "evidence_before": {
+        "image": "evidence/C7_before.png",
+        "sha256": "9e0e5256a5be56f77d8963a12c8d5685acd2153fd3c4975d62afc0e3a8176abd",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "n.vincent nicolas.vincent@banque-ardoise.example admin 10.26.52.227 Oui | l.lambert lea.lambert@banque-ardoise.example admin 10.35.251.193 Oui | m.le-goff maela.le-goff@banque-ardoise.example admin 10.25.128.144 Oui",
+          "field_boxes": [
+            [
+              26,
+              187,
+              974,
+              232
+            ],
+            [
+              26,
+              232,
+              974,
+              277
+            ],
+            [
+              26,
+              907,
+              974,
+              952
+            ]
+          ],
+          "comment": "The screenshot shows three admin accounts with nominative logins and personal emails and no generic or shared admin.",
+          "pii": [
+            {
+              "text": "nicolas.vincent@banque-ardoise.example",
+              "box": [
+                203,
+                199,
+                490,
+                220
+              ]
+            },
+            {
+              "text": "10.26.52.227",
+              "box": [
+                738,
+                199,
+                849,
+                220
+              ]
+            },
+            {
+              "text": "lea.lambert@banque-ardoise.example",
+              "box": [
+                203,
+                244,
+                490,
+                265
+              ]
+            },
+            {
+              "text": "10.35.251.193",
+              "box": [
+                738,
+                244,
+                849,
+                265
+              ]
+            },
+            {
+              "text": "pauline.michel@banque-ardoise.example",
+              "box": [
+                203,
+                289,
+                490,
+                310
+              ]
+            },
+            {
+              "text": "10.10.41.29",
+              "box": [
+                738,
+                289,
+                849,
+                310
+              ]
+            },
+            {
+              "text": "chloe.robert@banque-ardoise.example",
+              "box": [
+                203,
+                334,
+                490,
+                355
+              ]
+            },
+            {
+              "text": "10.24.5.209",
+              "box": [
+                738,
+                334,
+                849,
+                355
+              ]
+            },
+            {
+              "text": "erwan.vincent@banque-ardoise.example",
+              "box": [
+                203,
+                379,
+                490,
+                400
+              ]
+            },
+            {
+              "text": "10.16.203.65",
+              "box": [
+                738,
+                379,
+                849,
+                400
+              ]
+            },
+            {
+              "text": "sarah.morel@banque-ardoise.example",
+              "box": [
+                203,
+                424,
+                490,
+                445
+              ]
+            },
+            {
+              "text": "10.35.192.191",
+              "box": [
+                738,
+                424,
+                849,
+                445
+              ]
+            },
+            {
+              "text": "nolwenn.bernard@banque-ardoise.example",
+              "box": [
+                203,
+                469,
+                490,
+                490
+              ]
+            },
+            {
+              "text": "10.33.174.23",
+              "box": [
+                738,
+                469,
+                849,
+                490
+              ]
+            },
+            {
+              "text": "chloe.bertrand@banque-ardoise.example",
+              "box": [
+                203,
+                514,
+                490,
+                535
+              ]
+            },
+            {
+              "text": "10.24.72.225",
+              "box": [
+                738,
+                514,
+                849,
+                535
+              ]
+            },
+            {
+              "text": "arthur.morvan@banque-ardoise.example",
+              "box": [
+                203,
+                559,
+                490,
+                580
+              ]
+            },
+            {
+              "text": "10.37.188.94",
+              "box": [
+                738,
+                559,
+                849,
+                580
+              ]
+            },
+            {
+              "text": "romain.bonnet@banque-ardoise.example",
+              "box": [
+                203,
+                604,
+                490,
+                625
+              ]
+            },
+            {
+              "text": "10.12.204.229",
+              "box": [
+                738,
+                604,
+                849,
+                625
+              ]
+            },
+            {
+              "text": "erwan.richard@banque-ardoise.example",
+              "box": [
+                203,
+                649,
+                490,
+                670
+              ]
+            },
+            {
+              "text": "10.23.251.102",
+              "box": [
+                738,
+                649,
+                849,
+                670
+              ]
+            },
+            {
+              "text": "manon.lambert@banque-ardoise.example",
+              "box": [
+                203,
+                694,
+                490,
+                715
+              ]
+            },
+            {
+              "text": "10.28.245.132",
+              "box": [
+                738,
+                694,
+                849,
+                715
+              ]
+            },
+            {
+              "text": "yann.lefebvre@banque-ardoise.example",
+              "box": [
+                203,
+                739,
+                490,
+                760
+              ]
+            },
+            {
+              "text": "10.34.66.210",
+              "box": [
+                738,
+                739,
+                849,
+                760
+              ]
+            },
+            {
+              "text": "jean.jaouen@banque-ardoise.example",
+              "box": [
+                203,
+                784,
+                490,
+                805
+              ]
+            },
+            {
+              "text": "10.38.52.184",
+              "box": [
+                738,
+                784,
+                849,
+                805
+              ]
+            },
+            {
+              "text": "alexandre.guillou@banque-ardoise.example",
+              "box": [
+                203,
+                829,
+                490,
+                850
+              ]
+            },
+            {
+              "text": "10.14.246.227",
+              "box": [
+                738,
+                829,
+                849,
+                850
+              ]
+            },
+            {
+              "text": "lea.richard@banque-ardoise.example",
+              "box": [
+                203,
+                874,
+                490,
+                895
+              ]
+            },
+            {
+              "text": "10.30.233.173",
+              "box": [
+                738,
+                874,
+                849,
+                895
+              ]
+            },
+            {
+              "text": "maela.le-goff@banque-ardoise.example",
+              "box": [
+                203,
+                919,
+                490,
+                940
+              ]
+            },
+            {
+              "text": "10.25.128.144",
+              "box": [
+                738,
+                919,
+                849,
+                940
+              ]
+            }
+          ],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 34,
+          "pii_masked": 34,
+          "pii_found_by_model": 12
+        },
+        "page": "/admin/users",
+        "page_verified": null,
+        "ts": "2026-11-11 11:54:39"
+      },
+      "status_before": "pass"
+    }
+  ],
+  "running": false,
+  "decisions": [],
+  "remediation_requested": false,
+  "usage": {
+    "rows": [
+      {
+        "model": "muse-spark-1.3",
+        "calls": 7,
+        "input": 11094,
+        "output": 11400,
+        "seconds": 119.73472356796265,
+        "images": 0,
+        "cost_usd": 0.0623175
+      },
+      {
+        "model": "sam-3.1",
+        "calls": 9,
+        "input": 0,
+        "output": 0,
+        "seconds": 8.195655584335327,
+        "images": 9,
+        "cost_usd": null
+      }
+    ],
+    "total_usd": 0.0623175,
+    "unpriced": [
+      "sam-3.1"
+    ],
+    "estimated": false
+  },
+  "duration_s": 60,
+  "catalogue": {
+    "source": "catalogue",
+    "reviewed": false,
+    "path": "controls/AUD-2026-IAM-01.en.json"
+  },
+  "interpretation": null,
+  "inconclusive": 0,
+  "opinion_initial": "satisfaisant",
+  "opinion_final": "satisfaisant",
+  "injection_detected": false,
+  "trail_head": "3290f9b8ab4dc1711d3210e95d99923b1d99662043e9bb58fa3fd1d58a0d0c40"
+}
