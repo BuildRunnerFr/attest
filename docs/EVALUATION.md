@@ -61,7 +61,22 @@ the ground truth of scenarios 01–08 is unchanged.
 (`support-n2`) on page 7, so a test that reads only the first page wrongly concludes "compliant".
 `10-oceane-annuaire-presque` is its compliant twin: 720 accounts, no finding expected, admin names containing
 function words as substrings (`opsomer`, `teamson`, `rootsaert`, `kit`), and settings exactly at the limits (12, 5, 15).
-Real-model result (ledger `20261104-134329-bench-meta` and `20261104-204107-bench-meta`): on `10` the twin is judged compliant on all 7 rules (0 false findings); on `09` the PSI-4.7 test read **only the first page** and missed `support-n2` on page 7: **1 missed non-compliance out of 1**, 13/14 checks correct, $0.21 per run. Both runs executed the same reused library script (`library/PSI-4.7-…py`, written by Muse Spark 1.3 on 2 Nov 2026), so this is one defective script observed twice, not two independent generations. The verdict is still deterministic and its evidence lists only 3 admin accounts from a single request, but the planted failure was missed. Known limitation, not fixed before submission (code freeze): the fix is to require full pagination in the script prompt, re-generate the library script, and make the verdict inconclusive when the observed population is smaller than the declared total (`X-Total-Count: 721`). The headline bench (scenarios 01–08) is not affected.
+Real-model result (ledger `20261104-134329-bench-meta` and `20261104-204107-bench-meta`): on `10` the twin is judged compliant on all 7 rules (0 false findings); on `09` the PSI-4.7 test read **only the first page** and missed `support-n2` on page 7: **1 missed non-compliance out of 1**, 13/14 checks correct, $0.21 per run. Both runs executed the same reused library script (`library/PSI-4.7-…py`, written by Muse Spark 1.3 on 2 Nov 2026), so this is one defective script observed twice, not two independent generations. The verdict is still deterministic and its evidence lists only 3 admin accounts from a single request, but the planted failure was missed. The headline bench (scenarios 01–08) was not affected.
+
+Fixed after the submission (11 Nov 2026), in three deterministic steps rather than by trusting the next generation:
+1. **Population guard.** The sandbox request log records the pagination the target declares in its responses
+   (`X-Page` / `X-Total-Pages`, `Link rel="next"`). A "pass" concluded on a partially read list is refused
+   (control inconclusive); a "fail" stays a finding, annotated. The reason is passed to the model when the script is
+   rewritten.
+2. **Evidence on the right page.** On a paginated page, the screenshot is the page that displays the items the test
+   cites, not page 1.
+3. **Re-measured.** `20261111-111943-bench-meta` (guard only): the old script is rejected, the rewrite finds
+   `support-n2`, but both PSI-4.7 checks end "needs review" (evidence still on page 1; on the twin the rewrite
+   flagged three names by substring and the visual cross-check refused to corroborate): 12/14, 0 missed, 0 false
+   finding, 2 inconclusive. `20261111-113802-bench-meta` (evidence page + whole-token rule in the script prompt):
+   **14/14**, `support-n2` found and shown on page 7, twin compliant, per-account precision and recall 100 % on 26
+   admin accounts, $0.27 measured. The script from that run is now `library/PSI-4.7-…py`, and
+   `tests/test_population.py` replays it against the ground truth of all 10 scenarios without any model.
 
 ## Results
 

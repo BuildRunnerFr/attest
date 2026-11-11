@@ -14,6 +14,27 @@ suite prévue. Les chiffres cités viennent tous de `ledger.jsonl` (branche `rea
 - Gel du code le 4 novembre 2026 à 18:00 (Paris) : ensuite, documentation, texte de soumission et vérifications
   seulement. Soumission : 5 novembre 2026, 03:00 (Paris) = 4 novembre 21:00 (ET).
 
+## Reprise après la soumission — 11 novembre 2026 (session avec Ethan)
+
+Faux négatif du scénario 09 corrigé (laissé documenté pendant le gel) :
+- ad92da6 : garde de population dans le bac à sable (pagination déclarée par la cible relevée au journal des
+  requêtes ; « pass » sur une liste lue en partie → non concluant ; « fail » conservé, annoté) ; motif d'échec du
+  script de bibliothèque transmis à la réécriture ; prompt : suivre la pagination.
+- 44b28a5 : preuve = page qui affiche les éléments constatés (`evidence.locate`, lien `rel="next"`) ; prompt : jetons
+  entiers, « observed » = éléments en cause.
+- Script `library/PSI-4.7-…py` remplacé par celui de l'exécution `20261111-113802-bench-meta` ; rejoué sans modèle
+  contre la vérité terrain des 10 scénarios (`tests/test_population.py`). 240 tests verts.
+
+Exécutions réelles (only=09,10) :
+- `20261111-111943-bench-meta` (ad92da6) : ancien script rejeté, 0 manqué, mais 2 « à revoir » (preuve en page 1 ;
+  3 noms du jumeau signalés par sous-chaîne, non corroborés) : 12/14.
+- `20261111-113802-bench-meta` (44b28a5) : 14/14, `support-n2` trouvé et montré en page 7, jumeau conforme,
+  précision et rappel par compte 100 %, 0,27 $ mesurés.
+- Dépense cumulée au registre (estimation prudente) : 24,52 $ / 130 $.
+
+Reste ouvert : la branche `lock-test` ; `"reviewed": true` (Ethan) ; LICENSE ; la preuve d'un « pass » sur annuaire
+paginé reste la page 1 (une seule capture pour 8 pages).
+
 ## Cycle 10 de l'équipe d'agents — 4 novembre 2026, 21:33–21:50 (Paris) — GEL
 
 Rattrapage du cycle 9 (14:14, sans entrée au journal) : il a poussé 1802c0c (scénarios de stress 09/10 : annuaire

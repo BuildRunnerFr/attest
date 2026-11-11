@@ -119,3 +119,20 @@ def test_bench_reads_named_offender_list_in_observed():
     assert bench.flagged_accounts(entry, []) == (["support-n2"], "result:observed.generic_admin_accounts")
     entry["before"]["observed"] = {"admins": 12}
     assert bench.flagged_accounts(entry, [])[1] == "no-evidence"
+
+
+def test_library_psi47_matches_ground_truth_on_every_scenario(lab):
+    """Le script PSI-4.7 de la bibliothèque (écrit par le modèle, rejoué tel quel) désigne exactement les comptes
+    génériques de la vérité terrain sur les 10 scénarios, annuaires paginés compris. Sans modèle."""
+    from pathlib import Path
+    from attest import config
+    from lab import scenarios
+    code = next(Path(config.ROOT / "library").glob("PSI-4.7-*.py")).read_text(encoding="utf-8")
+    for sc in scenarios.build():
+        _reset(lab, sc["id"])
+        want = sorted(scenarios.generic_admins(sc["users"]))
+        res = sandbox.run(code, lab, AUDIT)
+        assert res["status"] == ("fail" if want else "pass"), (sc["id"], res.get("detail"))
+        if want:
+            assert sorted(res["observed"]) == want, sc["id"]
+        assert "partial_population" not in res["requests"], sc["id"]
