@@ -99,7 +99,11 @@ def _code(cid: str) -> str:
 import json, os, re, requests
 
 H = {"Authorization": "Bearer " + os.environ["LAB_TOKEN"]}
-users = requests.get(os.environ["LAB_URL"] + "/api/users", headers=H, timeout=10).json()
+users, url = [], "/api/users"
+while url:                                   # toute la population : suit Link rel="next" jusqu'à la dernière page
+    r = requests.get(os.environ["LAB_URL"] + url, headers=H, timeout=10)
+    users += r.json()
+    url = r.links.get("next", {}).get("url")
 LOGIN = re.compile(r"^[a-z]\\.[a-z]+(?:-[a-z]+)*$")
 FUNCTIONAL = re.compile(r"partage|shared|admin|ops|support|helpdesk|svc|service|root|equipe|team|noreply|exploit|it-", re.I)
 generic = [u["login"] for u in users if u["role"] == "admin" and (

@@ -258,8 +258,19 @@ def _boot(path, logpath):
         except Exception:
             body = b""
         p = urlsplit(request.url or "")
-        rlog.write(json.dumps({"method": str(request.method), "path": p.path + ("?" + p.query if p.query else ""),
-                               "status": r.status_code, "sha256": hashlib.sha256(body).hexdigest()}) + "\n")
+        rec = {"method": str(request.method), "path": p.path + ("?" + p.query if p.query else ""),
+               "status": r.status_code, "sha256": hashlib.sha256(body).hexdigest()}
+        try:                                               # pagination déclarée par la cible (RFC 8288, X-Total-Pages)
+            pg = {k: int(r.headers[h]) for k, h in (("page", "X-Page"), ("pages", "X-Total-Pages"),
+                                                    ("total", "X-Total-Count")) if str(r.headers.get(h, "")).isdigit()}
+            nxt = (getattr(r, "links", None) or {}).get("next", {}).get("url")
+            if nxt:
+                pg["next"] = str(nxt)[:500]
+            if pg:
+                rec["pagination"] = pg
+        except Exception:
+            pass
+        rlog.write(json.dumps(rec) + "\n")
         if swap:
             clean_response(r)
         return r
@@ -377,7 +388,49 @@ def _run(code: str, lab_url: str, token: str, timeout: int) -> dict:
         why = t("sb.no2xx") if reqs else t("sb.norequest")
         return {"status": "error", "detail": f"{why} — {res.get('detail', '')}"[:800],
                 "requests": res["requests"]}
+    partial = _partial_population(reqs) if res["status"] in ("pass", "fail") else None
+    if partial is not None:
+        res["requests"]["partial_population"] = partial
+        note = t("sb.partial").format(**partial)
+        if res["status"] == "pass":
+            # « conforme » sur une population lue en partie : assurance sans fondement, contrôle non concluant
+            return {"status": "error", "detail": f"{note} — {res.get('detail', '')}"[:800],
+                    "requests": res["requests"]}
+        res["detail"] = f"{res.get('detail', '')} ({note})"[:800]   # une exception constatée reste un constat
     return res
+
+
+def _partial_population(reqs: list) -> dict | None:
+    """Liste paginée lue en partie : {path, read, pages} du premier point d'accès incomplet, sinon None.
+
+    La cible déclare sa pagination dans ses réponses (X-Page / X-Total-Pages, ou Link rel="next"). Un point
+    d'accès est lu en entier si, pour un même découpage, toutes les pages 1..N ont reçu une réponse 2xx ;
+    à défaut d'en-têtes de numérotation, si chaque lien « next » annoncé a été suivi."""
+    by_path: dict = {}
+    for r in reqs:
+        pg = r.get("pagination") if isinstance(r, dict) else None
+        if isinstance(pg, dict) and _ok(r):
+            by_path.setdefault(urlsplit(str(r.get("path", ""))).path, []).append((r, pg))
+    for path, items in by_path.items():
+        numbered = [pg for _, pg in items if "page" in pg and "pages" in pg]
+        if numbered:
+            seen: dict = {}
+            for pg in numbered:
+                seen.setdefault(pg["pages"], set()).add(pg["page"])
+            if any(set(range(1, n + 1)) <= pages for n, pages in seen.items()):
+                continue
+            n = max(seen, key=lambda k: len(seen[k]))
+            return {"path": path, "read": len(seen[n]), "pages": n}
+        asked = [_query(r.get("path")) for r in reqs
+                 if isinstance(r, dict) and _ok(r) and urlsplit(str(r.get("path", ""))).path == path]
+        missing = [pg["next"] for _, pg in items if pg.get("next") and _query(pg["next"]) not in asked]
+        if missing:
+            return {"path": path, "read": len(items), "pages": f"≥ {len(items) + 1}"}
+    return None
+
+
+def _query(url) -> tuple:
+    return tuple(sorted((k, tuple(v)) for k, v in parse_qs(urlsplit(str(url or "")).query).items()))
 
 
 def _ok(r) -> bool:

@@ -105,14 +105,14 @@ def _write_test(control: dict, error: str | None, doc: str) -> str:
 def run_test(e: dict, ctx: Ctx):
     c = e["control"]
     code = None if ctx.fresh else catalog.library_get(c, ctx.doc)
-    origin, res = "library", None
+    origin, res, lib_error = "library", None, None
     if code:
         res = _safe_run(code, ctx)
         if res["status"] == "error":
             log(f"  {c['id']} script de bibliothèque en échec, réécriture : {res['detail'][:100]}")
-            code = None
+            code, lib_error = None, res["detail"]
     if code is None:
-        origin, error = "generated", None
+        origin, error = "generated", lib_error      # la cause de l'échec guide la réécriture
         for _ in range(2):                                  # une auto-correction autorisée
             try:
                 code = _write_test(c, error, ctx.doc)
