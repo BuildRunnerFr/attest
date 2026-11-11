@@ -200,7 +200,7 @@ def users_page():
     if pag:                                       # même découpage que GET /api/users?page=N
         nav = [f'<a href="?page={pag["page"] - 1}&amp;per_page={pag["per_page"]}">← page précédente</a>'
                if pag["page"] > 1 else "",
-               f'<a href="?page={pag["page"] + 1}&amp;per_page={pag["per_page"]}">page suivante →</a>'
+               f'<a rel="next" href="?page={pag["page"] + 1}&amp;per_page={pag["per_page"]}">page suivante →</a>'
                if pag["next"] else ""]
         body = (f'<p class="sub" id="pagination">Page {pag["page"]} / {pag["pages"]} · {pag["total"]} comptes · '
                 f'{pag["per_page"]} par page {" ".join(x for x in nav if x)}</p>' + body)

@@ -344,6 +344,19 @@ def evidence_page(control: dict, result: dict, reqlog: list | None = None) -> st
     return control["evidence_page"]
 
 
+def _strings(v, depth: int = 0) -> set:
+    """Chaînes courtes citées dans la valeur constatée (identifiants de comptes, etc.)."""
+    if isinstance(v, str):
+        return {v} if 0 < len(v) <= 120 else set()
+    if depth > 6:
+        return set()
+    if isinstance(v, dict):
+        return set().union(*(_strings(x, depth + 1) for x in v.values())) if v else set()
+    if isinstance(v, (list, tuple)):
+        return set().union(*(_strings(x, depth + 1) for x in v[:2000])) if v else set()
+    return set()
+
+
 def premask(shot: Path, boxes, out: Path) -> Path:
     """Copie de la capture où les données personnelles du filet déterministe sont noircies :
     c'est elle, et non la capture brute, qui part vers le modèle de vision
@@ -362,6 +375,10 @@ def collect_evidence(e: dict, result: dict, phase: str, ctx: Ctx, reqlog: list |
     page = evidence_page(c, result, reqlog)
     # page de dépôt jamais lue avec succès par le script : la capture illustre, elle ne prouve pas
     verified = None if not reqlog or _repo_file(page) is None else _repo_file(page) in _read_ok(reqlog)
+    if result.get("status") == "fail":
+        # liste paginée : la preuve est la page qui affiche les éléments constatés, pas la première
+        url = evidence.locate(ctx.mission.lab_url + page, config.AUDIT_TOKEN, _strings(result.get("observed")))
+        page = url[len(ctx.mission.lab_url):]
     dom = evidence.capture(ctx.mission.lab_url + page, raw, config.AUDIT_TOKEN)
     net = [tuple(p["box"]) for p in dom.get("pii", [])]
     masked = config.PREMASK

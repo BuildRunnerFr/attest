@@ -69,3 +69,43 @@ def capture(url: str, out: Path, token: str) -> dict:
         dom = page.evaluate(_JS)
         browser.close()
     return dom
+
+
+_PAGE_JS = r"""() => {
+  const a = document.querySelector('a[rel~="next"]');
+  return {ids: [...document.querySelectorAll('tr[id^="user-"]')].map(tr => tr.id.slice(5)), next: a ? a.href : null};
+}"""
+MAX_PAGES = 60
+
+
+def locate(url: str, token: str, wanted: set) -> str:
+    """Sur une page de liste paginée (lien rel="next"), l'URL de la page qui affiche le plus d'éléments cités
+    par le test (la première en cas d'égalité) ; l'URL de départ si la page n'est pas paginée ou ne cite rien.
+
+    La preuve doit montrer l'élément constaté : sur un annuaire de plusieurs pages, la première page ne prouve
+    rien d'un compte servi en page 7. Lecture seule, bornée à MAX_PAGES pages de la même origine."""
+    if not wanted:
+        return url
+    best, best_hits = url, 0
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(extra_http_headers={"Authorization": f"Bearer {token}"})
+        cur, origin, seen = url, None, set()
+        for _ in range(MAX_PAGES):
+            if cur in seen:
+                break
+            seen.add(cur)
+            resp = page.goto(cur)
+            if resp is None or resp.status != 200:
+                break
+            origin = origin or page.evaluate("location.origin")
+            info = page.evaluate(_PAGE_JS)
+            hits = len(wanted & set(info["ids"]))
+            if hits > best_hits:
+                best, best_hits = cur, hits
+            nxt = info["next"]
+            if not nxt or not nxt.startswith(origin + "/") or best_hits == len(wanted):
+                break
+            cur = nxt
+        browser.close()
+    return best

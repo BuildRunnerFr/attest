@@ -89,3 +89,33 @@ def test_library_failure_guides_the_rewrite(monkeypatch, tmp_path):
     e = {"control": {"id": "C7", "rule": "PSI-4.7", "title": "t"}}
     pipeline.run_test(e, ctx)
     assert seen == ["incomplete population: /api/users"] and e["test"]["origin"] == "generated"
+
+
+def test_evidence_is_the_page_that_shows_the_finding(lab):
+    """Annuaire paginé : la capture de preuve est la page qui affiche le compte constaté, pas la page 1."""
+    from attest import evidence
+    from lab.scenarios import build, page_of
+    _reset(lab, P09)
+    users = next(s for s in build() if s["id"] == P09)["users"]
+    n = page_of(users, "support-n2")
+    assert n > 1
+    url = evidence.locate(lab + "/admin/users", AUDIT, {"support-n2", "admin"})
+    assert url.startswith(lab + "/admin/users?") and f"page={n}" in url
+    assert evidence.locate(lab + "/admin/users", AUDIT, {"nobody-here"}) == lab + "/admin/users"
+    assert evidence.locate(lab + "/admin/security", AUDIT, {"support-n2"}) == lab + "/admin/security"
+    _reset(lab, "01-kerlann-adm")                                 # non paginé : inchangé
+    assert evidence.locate(lab + "/admin/users", AUDIT, {"support"}) == lab + "/admin/users"
+
+
+def test_strings_cited_by_the_test():
+    from attest.pipeline import _strings
+    assert _strings([{"login": "support-n2", "n": 3}, "x"]) == {"support-n2", "x"}
+    assert _strings({"generic_admin_accounts": ["a", "b"]}) == {"a", "b"} and _strings(None) == set()
+
+
+def test_bench_reads_named_offender_list_in_observed():
+    from attest import bench
+    entry = {"status_before": "fail", "before": {"status": "fail", "observed": {"generic_admin_accounts": ["support-n2"]}}}
+    assert bench.flagged_accounts(entry, []) == (["support-n2"], "result:observed.generic_admin_accounts")
+    entry["before"]["observed"] = {"admins": 12}
+    assert bench.flagged_accounts(entry, [])[1] == "no-evidence"

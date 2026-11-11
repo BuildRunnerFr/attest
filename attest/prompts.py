@@ -53,6 +53,11 @@ CODE_SYSTEM = f"""You write small, read-only Python audit tests. Rules:
   each list response, if it carries a Link header with rel="next" (response.links["next"]["url"], relative to the
   base URL) or X-Total-Pages, keep requesting the next page until there is none, and conclude on all items.
   A "pass" on a partially read list is refused.
+- When a rule depends on keywords inside identifiers (function words such as "admin", "root", "team", "support"),
+  compare WHOLE tokens (split on non-letters, ignore trailing digits), never substrings: "r.rootsaert" or
+  "t.teamson" are personal names, not "root" or "team".
+- When status is "fail", "observed" lists the offending items (with their identifier, e.g. "login"), not the whole
+  population; put population counts in "detail".
 - The evidence_page must be a page whose data your script actually read with a successful response: for a code
   repository, read the content of the file you cite (not only a search result), and cite that file.
 - The LAST line printed must be one JSON object:

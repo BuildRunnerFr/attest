@@ -84,6 +84,13 @@ def flagged_accounts(entry: dict, admins: list) -> tuple:
         got = _logins(before.get(k))
         if got is not None:
             return sorted(set(got)), "result:" + k
+    obs = before.get("observed")
+    if st == "fail" and isinstance(obs, dict):          # liste nommée dans la valeur constatée
+        for k, v in obs.items():
+            if any(w in str(k).lower() for w in ("generic", "violat", "offend", "non_compliant", "flagged")):
+                got = _logins(v)
+                if got is not None:
+                    return sorted(set(got)), "result:observed." + str(k)
     if st == "pass":
         return [], "verdict"
     if st != "fail":
