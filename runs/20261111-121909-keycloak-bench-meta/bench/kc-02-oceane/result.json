@@ -1,0 +1,2215 @@
+{
+  "mission": {
+    "id": "AUD-2026-KC-01",
+    "title": "Strong authentication and privileged access — Keycloak",
+    "entity": "Crédit Océane (fictif)",
+    "system": "Keycloak — royaume oceane (fournisseur d'identité)",
+    "system_criticality": "Supports critical or important functions (DORA)",
+    "environment": "Test Keycloak (fictitious realm)",
+    "owner": "IT department — IAM team",
+    "lead_auditor": "Attest CI (automated run, no human auditor)",
+    "classification": "TLP:AMBER+STRICT",
+    "requirement_path": "exigences/keycloak_authentification.md",
+    "lab_url": "http://127.0.0.1:5050",
+    "scope_in": [
+      "Security settings of the Keycloak realm (password, lockout, session, logging)",
+      "Realm accounts and members of the admin role"
+    ],
+    "scope_out": [
+      "Intrinsic strength of MFA factors and custom authentication flows",
+      "Clients, identity federation and connected applications",
+      "Hosting and operation of the Keycloak server"
+    ],
+    "sla_days": {
+      "critique": 30,
+      "elevee": 90,
+      "moyenne": 180,
+      "faible": 365
+    },
+    "target": "keycloak",
+    "framework_label": "DORA art. 9(4) · RTS (UE) 2024/1774 art. 12, 21 · PSI-4",
+    "requirement_text": null
+  },
+  "run_id": "20261111-121909-keycloak-bench-meta",
+  "started": "2026-11-11 12:27",
+  "lang": "en",
+  "target": "keycloak",
+  "target_label": "Keycloak (open-source identity provider), through the read-only gateway",
+  "backend": "meta",
+  "models": {
+    "reason": "muse-spark-1.3",
+    "code": "muse-spark-1.3",
+    "segmentation": "sam-3.1"
+  },
+  "entries": [
+    {
+      "control": {
+        "id": "C1",
+        "rule": "PSI-4.1",
+        "title": "MFA enforced for privileged administrator accounts",
+        "objective": "Every account holding the realm role admin must have multi-factor authentication configured.",
+        "test_procedure": "Retrieve all members of the realm role admin via GET /api/kc/roles/admin/users and verify totp is true for each account.",
+        "expected": "totp=true for all users with role admin",
+        "severity": "critique",
+        "references": [
+          "DORA 9(4)(d)",
+          "RTS 21(1)(f)(ii)"
+        ],
+        "risk": "Compromise of a password-only administrator account would allow full takeover of the identity provider.",
+        "recommendation": "Enforce OTP enrollment for all admin accounts and remove privileged access until MFA is configured.",
+        "cause": "MFA enrollment for administrators was not enforced at provisioning due to missing configuration or control.",
+        "evidence_page": "/kc/roles/admin/users",
+        "remediation": "manual"
+      },
+      "test": {
+        "script": "scripts/C1_PSI-4.1.py",
+        "sha256": "6b0de4e7e8437e784b3fd57c4e7705ef49c6479f6bfb2eec431206ba34c9080b",
+        "origin": "library",
+        "code": "# Attest — test PSI-4.1 (MFA enforced for privileged administrator accounts)\n# Écrit par muse-spark-1.3 le 2026-11-11 — à relire avant validation.\nimport requests\nimport json\nimport os\nimport sys\nimport re\n\ntry:\n    base = os.environ[\"LAB_URL\"]\n    token = os.environ[\"LAB_TOKEN\"]\nexcept Exception:\n    sys.stderr.write(\"missing LAB_URL or LAB_TOKEN\\n\")\n    sys.exit(2)\n\nif not isinstance(base, str) or not isinstance(token, str):\n    sys.stderr.write(\"missing LAB_URL or LAB_TOKEN\\n\")\n    sys.exit(2)\n\nif len(base) == 0 or len(token) == 0:\n    sys.stderr.write(\"missing LAB_URL or LAB_TOKEN\\n\")\n    sys.exit(2)\n\nbase = base.rstrip(\"/\")\nheaders = {\"Authorization\": \"Bearer \" + token}\n\nall_users = []\npage_size = 100\nfirst = 0\ncurrent = 1\nurl = base + \"/api/kc/roles/admin/users?first=0&max=100\"\nused_link = False\nloops = 0\n\nwhile url:\n    loops = loops + 1\n    if loops > 10000:\n        sys.stderr.write(\"too many pages\\n\")\n        sys.exit(2)\n    try:\n        resp = requests.get(url, headers=headers)\n    except Exception:\n        sys.stderr.write(\"request failed for admin users\\n\")\n        sys.exit(2)\n    if resp.status_code != 200:\n        sys.stderr.write(\"bad status for admin users\\n\")\n        sys.exit(2)\n    try:\n        data = resp.json()\n    except Exception:\n        sys.stderr.write(\"invalid json for admin users\\n\")\n        sys.exit(2)\n    if not isinstance(data, list):\n        sys.stderr.write(\"unexpected data for admin users\\n\")\n        sys.exit(2)\n    for item in data:\n        if not isinstance(item, dict):\n            sys.stderr.write(\"unexpected item for admin users\\n\")\n            sys.exit(2)\n        if \"username\" not in item or \"totp\" not in item:\n            sys.stderr.write(\"missing fields for admin users\\n\")\n            sys.exit(2)\n        v = item[\"username\"]\n        t = item[\"totp\"]\n        if not isinstance(v, str):\n            sys.stderr.write(\"unexpected username type\\n\")\n            sys.exit(2)\n        if t is not True and t is not False:\n            sys.stderr.write(\"unexpected totp type\\n\")\n            sys.exit(2)\n    all_users = all_users + data\n    nxt_url = None\n    if \"next\" in resp.links:\n        try:\n            u = resp.links[\"next\"][\"url\"]\n        except Exception:\n            sys.stderr.write(\"invalid Link next header\\n\")\n            sys.exit(2)\n        if not isinstance(u, str) or len(u) == 0:\n            sys.stderr.write(\"invalid Link next url\\n\")\n            sys.exit(2)\n        if u.startswith(\"http\"):\n            nxt_url = u\n        elif u.startswith(\"/\"):\n            nxt_url = base + u\n        else:\n            nxt_url = base + \"/\" + u\n    if nxt_url is not None:\n        used_link = True\n        url = nxt_url\n        continue\n    if used_link:\n        url = None\n        break\n    tp = resp.headers.get(\"X-Total-Pages\")\n    if tp is not None:\n        try:\n            total = int(str(tp).strip())\n        except Exception:\n            sys.stderr.write(\"invalid X-Total-Pages\\n\")\n            sys.exit(2)\n        if current < total:\n            current = current + 1\n            first = first + page_size\n            url = base + \"/api/kc/roles/admin/users?first=\" + str(first) + \"&max=\" + str(page_size)\n            continue\n        else:\n            url = None\n            break\n    if len(data) == page_size and len(data) > 0:\n        current = current + 1\n        first = first + page_size\n        url = base + \"/api/kc/roles/admin/users?first=\" + str(first) + \"&max=\" + str(page_size)\n        continue\n    else:\n        url = None\n        break\n\nbad = []\nfor u in all_users:\n    if u[\"totp\"] is False:\n        bad.append(u[\"username\"])\n\ntry:\n    ev = requests.get(base + \"/kc/roles/admin/users\", headers=headers)\nexcept Exception:\n    sys.stderr.write(\"evidence request failed\\n\")\n    sys.exit(2)\nif ev.status_code != 200:\n    sys.stderr.write(\"evidence bad status\\n\")\n    sys.exit(2)\n\ntotal_n = len(all_users)\nbad_n = len(bad)\nexpected = \"totp=true for all users with role admin\"\nevidence_page = \"/kc/roles/admin/users\"\n\nif bad_n == 0:\n    totps = []\n    for u in all_users:\n        totps.append(u[\"totp\"])\n    observed = totps\n    detail = \"Checked \" + str(total_n) + \" admin users: all have totp=true.\"\n    print(json.dumps({\"status\": \"pass\", \"observed\": observed, \"expected\": expected, \"detail\": detail, \"evidence_page\": evidence_page}))\nelse:\n    observed = bad\n    detail = \"Checked \" + str(total_n) + \" admin users: \" + str(bad_n) + \" without MFA.\"\n    print(json.dumps({\"status\": \"fail\", \"observed\": observed, \"expected\": expected, \"detail\": detail, \"evidence_page\": evidence_page}))\n",
+        "requests": 2
+      },
+      "before": {
+        "status": "pass",
+        "observed": [
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true
+        ],
+        "expected": "totp=true for all users with role admin",
+        "detail": "Checked 8 admin users: all have totp=true.",
+        "evidence_page": "/kc/roles/admin/users"
+      },
+      "evidence_before": {
+        "image": "evidence/C1_before.png",
+        "sha256": "82a1d5916646424f8475020d187d7e9546c0fcaa692691af2bc20be931b06e8f",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "a.kerbrat anne-sophie.kerbrat@credit-oceane.example admin yes yes; c.itier claire.itier@credit-oceane.example admin yes yes; j.opsomer jean.opsomer@credit-oceane.example admin yes yes; k.morvan kit.morvan@credit-oceane.example admin yes yes; l.servien louis.servien@credit-oceane.example admin yes yes; m.le-bihan-riou maela.le-bihan-riou@credit-oceane.example admin yes yes; r.rootsaert rose.rootsaert@credit-oceane.example admin yes yes; t.teamson tom.teamson@credit-oceane.example admin yes yes",
+          "field_boxes": [
+            [
+              28,
+              163,
+              1071,
+              194
+            ],
+            [
+              28,
+              194,
+              1071,
+              224
+            ],
+            [
+              28,
+              224,
+              1071,
+              254
+            ],
+            [
+              28,
+              254,
+              1071,
+              284
+            ],
+            [
+              28,
+              284,
+              1071,
+              315
+            ],
+            [
+              28,
+              315,
+              1071,
+              345
+            ],
+            [
+              28,
+              345,
+              1071,
+              376
+            ],
+            [
+              28,
+              376,
+              1071,
+              407
+            ]
+          ],
+          "comment": "All eight listed admin accounts show MFA (OTP configured) as yes.",
+          "pii": [
+            {
+              "text": "anne-sophie.kerbrat@credit-oceane.example",
+              "box": [
+                200,
+                167,
+                498,
+                186
+              ]
+            },
+            {
+              "text": "claire.itier@credit-oceane.example",
+              "box": [
+                200,
+                198,
+                424,
+                216
+              ]
+            },
+            {
+              "text": "jean.opsomer@credit-oceane.example",
+              "box": [
+                200,
+                228,
+                428,
+                246
+              ]
+            },
+            {
+              "text": "kit.morvan@credit-oceane.example",
+              "box": [
+                200,
+                258,
+                398,
+                277
+              ]
+            },
+            {
+              "text": "louis.servien@credit-oceane.example",
+              "box": [
+                200,
+                289,
+                404,
+                308
+              ]
+            },
+            {
+              "text": "maela.le-bihan-riou@credit-oceane.example",
+              "box": [
+                200,
+                319,
+                484,
+                338
+              ]
+            },
+            {
+              "text": "rose.rootsaert@credit-oceane.example",
+              "box": [
+                200,
+                350,
+                454,
+                369
+              ]
+            },
+            {
+              "text": "tom.teamson@credit-oceane.example",
+              "box": [
+                200,
+                381,
+                440,
+                399
+              ]
+            }
+          ],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 8,
+          "pii_masked": 8,
+          "pii_found_by_model": 7
+        },
+        "page": "/kc/roles/admin/users",
+        "page_verified": null,
+        "ts": "2026-11-11 12:28:15"
+      },
+      "status_before": "pass"
+    },
+    {
+      "control": {
+        "id": "C2",
+        "rule": "PSI-4.2",
+        "title": "MFA enforced for users of critical system",
+        "objective": "Every user account in the Keycloak realm, which supports critical or important functions, must have multi-factor authentication configured.",
+        "test_procedure": "Retrieve all user accounts via GET /api/kc/users with pagination and verify totp is true for each account.",
+        "expected": "totp=true for all users",
+        "severity": "elevee",
+        "references": [
+          "DORA 9(4)(d)",
+          "RTS 21(1)(f)(ii)"
+        ],
+        "risk": "Password-only authentication exposes critical-function accounts to phishing and credential theft.",
+        "recommendation": "Require OTP enrollment for all realm users and disable accounts that have not enrolled.",
+        "cause": "MFA was not made mandatory by default for all users due to incomplete authentication flow configuration.",
+        "evidence_page": "/kc/users",
+        "remediation": "manual"
+      },
+      "test": {
+        "script": "scripts/C2_PSI-4.2.py",
+        "sha256": "c2e61c28808cef93c7c51dd0f2137e9926da266d95bf878c2b9dfc14d3fe187f",
+        "origin": "library",
+        "code": "# Attest — test PSI-4.2 (MFA enforced for users of critical system)\n# Écrit par muse-spark-1.3 le 2026-11-11 — à relire avant validation.\nimport requests\nimport json\nimport os\nimport sys\ntry:\n    base = os.environ[\"LAB_URL\"]\n    tok = os.environ[\"LAB_TOKEN\"]\nexcept Exception as e:\n    sys.stderr.write(\"missing environment: \" + str(e) + \"\\n\")\n    sys.exit(2)\nbase = base.rstrip(\"/\")\nheaders = {\"Authorization\": \"Bearer \" + tok}\nusers = []\nfirst = 0\nsize = 100\ncurrent = base + \"/api/kc/users?first=0&max=100\"\nseen = []\nwhile current is not None:\n    try:\n        resp = requests.get(current, headers=headers)\n    except Exception as e:\n        sys.stderr.write(\"request failed: \" + str(e) + \"\\n\")\n        sys.exit(2)\n    if resp.status_code != 200:\n        sys.stderr.write(\"unexpected status \" + str(resp.status_code) + \" for users list\\n\")\n        sys.exit(2)\n    try:\n        data = resp.json()\n    except Exception as e:\n        sys.stderr.write(\"invalid json: \" + str(e) + \"\\n\")\n        sys.exit(2)\n    if not isinstance(data, list):\n        sys.stderr.write(\"unexpected data type, expected list\\n\")\n        sys.exit(2)\n    for entry in data:\n        if not isinstance(entry, dict):\n            sys.stderr.write(\"unexpected entry type\\n\")\n            sys.exit(2)\n        if \"username\" not in entry:\n            sys.stderr.write(\"missing username field\\n\")\n            sys.exit(2)\n        if \"totp\" not in entry:\n            sys.stderr.write(\"missing totp field\\n\")\n            sys.exit(2)\n        if not isinstance(entry[\"totp\"], bool):\n            sys.stderr.write(\"unexpected totp type for user \" + str(entry[\"username\"]) + \"\\n\")\n            sys.exit(2)\n        if not isinstance(entry[\"username\"], str):\n            sys.stderr.write(\"unexpected username type\\n\")\n            sys.exit(2)\n    for entry in data:\n        users.append(entry)\n    seen.append(current)\n    nxt = None\n    try:\n        links = resp.links\n    except Exception as e:\n        sys.stderr.write(\"cannot read pagination links: \" + str(e) + \"\\n\")\n        sys.exit(2)\n    if isinstance(links, dict) and \"next\" in links:\n        try:\n            raw = links[\"next\"][\"url\"]\n        except Exception:\n            sys.stderr.write(\"invalid next link structure\\n\")\n            sys.exit(2)\n        if not isinstance(raw, str):\n            sys.stderr.write(\"invalid next link type\\n\")\n            sys.exit(2)\n        if len(raw) == 0:\n            sys.stderr.write(\"empty next link\\n\")\n            sys.exit(2)\n        if raw.startswith(\"http://\") or raw.startswith(\"https://\"):\n            nxt = raw\n        elif raw.startswith(\"/\"):\n            nxt = base + raw\n        else:\n            nxt = base + \"/\" + raw\n    if nxt is not None:\n        if nxt in seen:\n            sys.stderr.write(\"pagination loop detected\\n\")\n            sys.exit(2)\n        current = nxt\n        first = first + size\n        continue\n    totalpages = None\n    try:\n        if \"X-Total-Pages\" in resp.headers:\n            totalpages = resp.headers[\"X-Total-Pages\"]\n    except Exception as e:\n        sys.stderr.write(\"cannot read headers: \" + str(e) + \"\\n\")\n        sys.exit(2)\n    if totalpages is not None:\n        try:\n            need = int(str(totalpages).strip())\n        except Exception:\n            sys.stderr.write(\"invalid X-Total-Pages value\\n\")\n            sys.exit(2)\n        curpage = first // size + 1\n        if curpage < need:\n            first = first + size\n            current = base + \"/api/kc/users?first=\" + str(first) + \"&max=\" + str(size)\n            if current in seen:\n                sys.stderr.write(\"pagination loop detected\\n\")\n                sys.exit(2)\n            continue\n        else:\n            current = None\n    else:\n        if len(data) < size:\n            current = None\n        else:\n            if len(data) == 0:\n                current = None\n            else:\n                first = first + size\n                current = base + \"/api/kc/users?first=\" + str(first) + \"&max=\" + str(size)\n                if current in seen:\n                    sys.stderr.write(\"pagination loop detected\\n\")\n                    sys.exit(2)\n                continue\ntry:\n    ev = requests.get(base + \"/kc/users\", headers=headers)\nexcept Exception as e:\n    sys.stderr.write(\"evidence request failed: \" + str(e) + \"\\n\")\n    sys.exit(2)\nif ev.status_code != 200:\n    sys.stderr.write(\"evidence page unexpected status \" + str(ev.status_code) + \"\\n\")\n    sys.exit(2)\nbad = []\nfor entry in users:\n    if entry[\"totp\"] == False:\n        bad.append(entry[\"username\"])\ntotal = len(users)\ncountbad = len(bad)\nif countbad == 0:\n    observed = []\n    detail = \"Checked \" + str(total) + \" users, all have totp=true.\"\n    result = {\"status\": \"pass\", \"observed\": observed, \"expected\": \"totp=true for all users\", \"detail\": detail, \"evidence_page\": \"/kc/users\"}\nelse:\n    detail = \"Checked \" + str(total) + \" users, \" + str(countbad) + \" without MFA.\"\n    result = {\"status\": \"fail\", \"observed\": bad, \"expected\": \"totp=true for all users\", \"detail\": detail, \"evidence_page\": \"/kc/users\"}\nprint(json.dumps(result))\n",
+        "requests": 4
+      },
+      "before": {
+        "status": "pass",
+        "observed": [],
+        "expected": "totp=true for all users",
+        "detail": "Checked 243 users, all have totp=true.",
+        "evidence_page": "/kc/users"
+      },
+      "evidence_before": {
+        "image": "evidence/C2_before.png",
+        "sha256": "63e46bef1b3d66d3fef12173f38b5d8c10d66987b392af82bf9450319a9d1584",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "a.allain yes; a.daniel yes; a.dubois yes; a.girard yes; a.guillou yes; a.henaff yes; a.jegou yes; a.kerbrat yes; a.kerbrat2 yes; a.le-bihan yes; a.le-gall yes; a.martin yes; a.pennec yes; a.raoul yes; a.richard yes; b.gourmelen yes; b.le-corre yes; b.martin yes; b.olier yes; b.richard yes; b.robert yes; b.uguen yes; c.bonnet yes; c.briand yes; c.cloarec yes; c.derrien yes; c.dupont yes; c.fournier yes; c.garcia yes; c.girard yes; c.hamon yes; c.hamon2 yes; c.itier yes; c.kerbrat yes; c.kerjean yes; c.kervella yes; c.kervella2 yes; c.lagadec yes; c.lagadec2 yes; c.lambert yes; c.le-goff yes; c.le-meur yes; c.pennec yes; c.roux yes; c.thepaut yes; c.uguen yes; d.dubois yes; d.lambert yes; d.le-corre yes; d.raoul yes; d.uguen yes; d.vincent yes; e.floch yes; e.lagadec yes; e.le-gall yes; e.quillien yes; e.riou yes; e.tanguy yes; f.bernard yes; f.jegou yes; g.bonnet yes; g.briand yes; g.girard yes; g.laurent yes; g.le-corre yes; g.le-gall yes; g.le-goff yes; g.le-goff2 yes; g.martin yes; g.martin2 yes; g.michel yes; g.morvan yes; g.uguen yes; h.guillou yes; h.laurent yes; h.mercier yes; h.mercier2 yes; h.petit yes; h.prigent yes; h.richard yes; h.salaun yes; h.thepaut yes; helpdesk yes; i.bertrand yes; i.david yes; i.hamon yes; i.jacq yes; i.jaouen yes; i.le-bihan yes; i.le-meur yes; i.martin yes; i.morvan yes; i.roux yes; i.salaun yes; i.simon yes; i.uguen yes; i.yvinec yes; j.bertrand yes; j.cloarec yes; j.garcia yes",
+          "field_boxes": [
+            [
+              22,
+              168,
+              1078,
+              198
+            ],
+            [
+              22,
+              199,
+              1078,
+              229
+            ],
+            [
+              22,
+              230,
+              1078,
+              260
+            ],
+            [
+              22,
+              261,
+              1078,
+              291
+            ],
+            [
+              22,
+              292,
+              1078,
+              322
+            ],
+            [
+              22,
+              323,
+              1078,
+              353
+            ],
+            [
+              22,
+              354,
+              1078,
+              384
+            ],
+            [
+              22,
+              385,
+              1078,
+              415
+            ],
+            [
+              22,
+              416,
+              1078,
+              446
+            ],
+            [
+              22,
+              447,
+              1078,
+              477
+            ],
+            [
+              22,
+              478,
+              1078,
+              508
+            ],
+            [
+              22,
+              509,
+              1078,
+              539
+            ],
+            [
+              22,
+              540,
+              1078,
+              570
+            ],
+            [
+              22,
+              571,
+              1078,
+              601
+            ],
+            [
+              22,
+              602,
+              1078,
+              632
+            ],
+            [
+              22,
+              633,
+              1078,
+              663
+            ],
+            [
+              22,
+              664,
+              1078,
+              694
+            ],
+            [
+              22,
+              695,
+              1078,
+              725
+            ],
+            [
+              22,
+              726,
+              1078,
+              756
+            ],
+            [
+              22,
+              757,
+              1078,
+              787
+            ],
+            [
+              22,
+              788,
+              1078,
+              818
+            ],
+            [
+              22,
+              819,
+              1078,
+              849
+            ],
+            [
+              22,
+              850,
+              1078,
+              880
+            ],
+            [
+              22,
+              881,
+              1078,
+              911
+            ],
+            [
+              22,
+              912,
+              1078,
+              942
+            ],
+            [
+              22,
+              943,
+              1078,
+              973
+            ],
+            [
+              22,
+              974,
+              1078,
+              1004
+            ],
+            [
+              22,
+              1005,
+              1078,
+              1035
+            ],
+            [
+              22,
+              1036,
+              1078,
+              1066
+            ],
+            [
+              22,
+              1067,
+              1078,
+              1097
+            ],
+            [
+              22,
+              1098,
+              1078,
+              1128
+            ],
+            [
+              22,
+              1129,
+              1078,
+              1159
+            ],
+            [
+              22,
+              1160,
+              1078,
+              1190
+            ],
+            [
+              22,
+              1191,
+              1078,
+              1221
+            ],
+            [
+              22,
+              1222,
+              1078,
+              1252
+            ],
+            [
+              22,
+              1253,
+              1078,
+              1283
+            ],
+            [
+              22,
+              1284,
+              1078,
+              1314
+            ],
+            [
+              22,
+              1315,
+              1078,
+              1345
+            ],
+            [
+              22,
+              1346,
+              1078,
+              1376
+            ],
+            [
+              22,
+              1377,
+              1078,
+              1407
+            ],
+            [
+              22,
+              1408,
+              1078,
+              1438
+            ],
+            [
+              22,
+              1439,
+              1078,
+              1469
+            ],
+            [
+              22,
+              1470,
+              1078,
+              1500
+            ],
+            [
+              22,
+              1501,
+              1078,
+              1531
+            ],
+            [
+              22,
+              1532,
+              1078,
+              1562
+            ],
+            [
+              22,
+              1563,
+              1078,
+              1593
+            ],
+            [
+              22,
+              1594,
+              1078,
+              1624
+            ],
+            [
+              22,
+              1625,
+              1078,
+              1655
+            ],
+            [
+              22,
+              1656,
+              1078,
+              1686
+            ],
+            [
+              22,
+              1687,
+              1078,
+              1717
+            ],
+            [
+              22,
+              1718,
+              1078,
+              1748
+            ],
+            [
+              22,
+              1749,
+              1078,
+              1779
+            ],
+            [
+              22,
+              1780,
+              1078,
+              1810
+            ],
+            [
+              22,
+              1811,
+              1078,
+              1841
+            ],
+            [
+              22,
+              1842,
+              1078,
+              1872
+            ],
+            [
+              22,
+              1873,
+              1078,
+              1903
+            ],
+            [
+              22,
+              1904,
+              1078,
+              1934
+            ],
+            [
+              22,
+              1935,
+              1078,
+              1965
+            ],
+            [
+              22,
+              1966,
+              1078,
+              1996
+            ],
+            [
+              22,
+              1997,
+              1078,
+              2027
+            ],
+            [
+              22,
+              2028,
+              1078,
+              2058
+            ],
+            [
+              22,
+              2059,
+              1078,
+              2089
+            ],
+            [
+              22,
+              2090,
+              1078,
+              2120
+            ],
+            [
+              22,
+              2121,
+              1078,
+              2151
+            ],
+            [
+              22,
+              2152,
+              1078,
+              2182
+            ],
+            [
+              22,
+              2183,
+              1078,
+              2213
+            ],
+            [
+              22,
+              2214,
+              1078,
+              2244
+            ],
+            [
+              22,
+              2245,
+              1078,
+              2275
+            ],
+            [
+              22,
+              2276,
+              1078,
+              2306
+            ],
+            [
+              22,
+              2307,
+              1078,
+              2337
+            ],
+            [
+              22,
+              2338,
+              1078,
+              2368
+            ],
+            [
+              22,
+              2369,
+              1078,
+              2399
+            ],
+            [
+              22,
+              2400,
+              1078,
+              2430
+            ],
+            [
+              22,
+              2431,
+              1078,
+              2461
+            ],
+            [
+              22,
+              2462,
+              1078,
+              2492
+            ],
+            [
+              22,
+              2493,
+              1078,
+              2523
+            ],
+            [
+              22,
+              2524,
+              1078,
+              2554
+            ],
+            [
+              22,
+              2555,
+              1078,
+              2585
+            ],
+            [
+              22,
+              2586,
+              1078,
+              2616
+            ],
+            [
+              22,
+              2617,
+              1078,
+              2647
+            ],
+            [
+              22,
+              2648,
+              1078,
+              2678
+            ],
+            [
+              22,
+              2679,
+              1078,
+              2709
+            ],
+            [
+              22,
+              2710,
+              1078,
+              2740
+            ],
+            [
+              22,
+              2741,
+              1078,
+              2771
+            ],
+            [
+              22,
+              2772,
+              1078,
+              2802
+            ],
+            [
+              22,
+              2803,
+              1078,
+              2833
+            ],
+            [
+              22,
+              2834,
+              1078,
+              2864
+            ],
+            [
+              22,
+              2865,
+              1078,
+              2895
+            ],
+            [
+              22,
+              2896,
+              1078,
+              2926
+            ],
+            [
+              22,
+              2927,
+              1078,
+              2957
+            ],
+            [
+              22,
+              2958,
+              1078,
+              2988
+            ],
+            [
+              22,
+              2989,
+              1078,
+              3019
+            ],
+            [
+              22,
+              3020,
+              1078,
+              3050
+            ],
+            [
+              22,
+              3051,
+              1078,
+              3081
+            ],
+            [
+              22,
+              3082,
+              1078,
+              3112
+            ],
+            [
+              22,
+              3113,
+              1078,
+              3143
+            ],
+            [
+              22,
+              3144,
+              1078,
+              3174
+            ],
+            [
+              22,
+              3175,
+              1078,
+              3205
+            ],
+            [
+              22,
+              3206,
+              1078,
+              3236
+            ],
+            [
+              22,
+              3237,
+              1078,
+              3267
+            ]
+          ],
+          "comment": "All 100 visible user rows from a.allain to j.garcia show MFA (OTP configured) as yes, consistent with the pass result.",
+          "pii": [
+            {
+              "text": "arthur.allain@credit-oceane.example",
+              "box": [
+                192,
+                176,
+                525,
+                191
+              ]
+            },
+            {
+              "text": "adele.daniel@credit-oceane.example",
+              "box": [
+                192,
+                207,
+                525,
+                222
+              ]
+            },
+            {
+              "text": "arthur.dubois@credit-oceane.example",
+              "box": [
+                192,
+                238,
+                525,
+                253
+              ]
+            },
+            {
+              "text": "alexandre.girard@credit-oceane.example",
+              "box": [
+                192,
+                269,
+                525,
+                284
+              ]
+            },
+            {
+              "text": "antoine.guillou@credit-oceane.example",
+              "box": [
+                192,
+                300,
+                525,
+                315
+              ]
+            },
+            {
+              "text": "anne.henaff@credit-oceane.example",
+              "box": [
+                192,
+                331,
+                525,
+                346
+              ]
+            },
+            {
+              "text": "antoine.jegou@credit-oceane.example",
+              "box": [
+                192,
+                362,
+                525,
+                377
+              ]
+            },
+            {
+              "text": "anne-sophie.kerbrat@credit-oceane.example",
+              "box": [
+                192,
+                393,
+                525,
+                408
+              ]
+            },
+            {
+              "text": "adele.kerbrat2@credit-oceane.example",
+              "box": [
+                192,
+                424,
+                525,
+                439
+              ]
+            },
+            {
+              "text": "arthur.le-bihan@credit-oceane.example",
+              "box": [
+                192,
+                455,
+                525,
+                470
+              ]
+            },
+            {
+              "text": "anne.le-gall@credit-oceane.example",
+              "box": [
+                192,
+                486,
+                525,
+                501
+              ]
+            },
+            {
+              "text": "anne.martin@credit-oceane.example",
+              "box": [
+                192,
+                517,
+                525,
+                532
+              ]
+            },
+            {
+              "text": "anne.pennec@credit-oceane.example",
+              "box": [
+                192,
+                548,
+                525,
+                563
+              ]
+            },
+            {
+              "text": "anne.raoul@credit-oceane.example",
+              "box": [
+                192,
+                579,
+                525,
+                594
+              ]
+            },
+            {
+              "text": "antoine.richard@credit-oceane.example",
+              "box": [
+                192,
+                610,
+                525,
+                625
+              ]
+            },
+            {
+              "text": "bleuenn.gourmelen@credit-oceane.example",
+              "box": [
+                192,
+                641,
+                525,
+                656
+              ]
+            },
+            {
+              "text": "bleuenn.le-corre@credit-oceane.example",
+              "box": [
+                192,
+                672,
+                525,
+                687
+              ]
+            },
+            {
+              "text": "bleuenn.martin@credit-oceane.example",
+              "box": [
+                192,
+                703,
+                525,
+                718
+              ]
+            },
+            {
+              "text": "bleuenn.olier@credit-oceane.example",
+              "box": [
+                192,
+                734,
+                525,
+                749
+              ]
+            },
+            {
+              "text": "bastien.richard@credit-oceane.example",
+              "box": [
+                192,
+                765,
+                525,
+                780
+              ]
+            },
+            {
+              "text": "bastien.robert@credit-oceane.example",
+              "box": [
+                192,
+                796,
+                525,
+                811
+              ]
+            },
+            {
+              "text": "bleuenn.uguen@credit-oceane.example",
+              "box": [
+                192,
+                827,
+                525,
+                842
+              ]
+            },
+            {
+              "text": "corentin.bonnet@credit-oceane.example",
+              "box": [
+                192,
+                858,
+                525,
+                873
+              ]
+            },
+            {
+              "text": "chloe.briand@credit-oceane.example",
+              "box": [
+                192,
+                889,
+                525,
+                904
+              ]
+            },
+            {
+              "text": "corentin.cloarec@credit-oceane.example",
+              "box": [
+                192,
+                920,
+                525,
+                935
+              ]
+            },
+            {
+              "text": "chloe.derrien@credit-oceane.example",
+              "box": [
+                192,
+                951,
+                525,
+                966
+              ]
+            },
+            {
+              "text": "celine.dupont@credit-oceane.example",
+              "box": [
+                192,
+                982,
+                525,
+                997
+              ]
+            },
+            {
+              "text": "corentin.fournier@credit-oceane.example",
+              "box": [
+                192,
+                1013,
+                525,
+                1028
+              ]
+            },
+            {
+              "text": "chloe.garcia@credit-oceane.example",
+              "box": [
+                192,
+                1044,
+                525,
+                1059
+              ]
+            },
+            {
+              "text": "chloe.girard@credit-oceane.example",
+              "box": [
+                192,
+                1075,
+                525,
+                1090
+              ]
+            },
+            {
+              "text": "camille.hamon@credit-oceane.example",
+              "box": [
+                192,
+                1106,
+                525,
+                1121
+              ]
+            },
+            {
+              "text": "celine.hamon2@credit-oceane.example",
+              "box": [
+                192,
+                1137,
+                525,
+                1152
+              ]
+            },
+            {
+              "text": "claire.itier@credit-oceane.example",
+              "box": [
+                192,
+                1168,
+                525,
+                1183
+              ]
+            },
+            {
+              "text": "chloe.kerbrat@credit-oceane.example",
+              "box": [
+                192,
+                1199,
+                525,
+                1214
+              ]
+            },
+            {
+              "text": "corentin.kerjean@credit-oceane.example",
+              "box": [
+                192,
+                1230,
+                525,
+                1245
+              ]
+            },
+            {
+              "text": "corentin.kervella@credit-oceane.example",
+              "box": [
+                192,
+                1261,
+                525,
+                1276
+              ]
+            },
+            {
+              "text": "corentin.kervella2@credit-oceane.example",
+              "box": [
+                192,
+                1292,
+                525,
+                1307
+              ]
+            },
+            {
+              "text": "chloe.lagadec@credit-oceane.example",
+              "box": [
+                192,
+                1323,
+                525,
+                1338
+              ]
+            },
+            {
+              "text": "celine.lagadec2@credit-oceane.example",
+              "box": [
+                192,
+                1354,
+                525,
+                1369
+              ]
+            },
+            {
+              "text": "camille.lambert@credit-oceane.example",
+              "box": [
+                192,
+                1385,
+                525,
+                1400
+              ]
+            },
+            {
+              "text": "claire.le-goff@credit-oceane.example",
+              "box": [
+                192,
+                1416,
+                525,
+                1431
+              ]
+            },
+            {
+              "text": "corentin.le-meur@credit-oceane.example",
+              "box": [
+                192,
+                1447,
+                525,
+                1462
+              ]
+            },
+            {
+              "text": "claire.pennec@credit-oceane.example",
+              "box": [
+                192,
+                1478,
+                525,
+                1493
+              ]
+            },
+            {
+              "text": "celine.roux@credit-oceane.example",
+              "box": [
+                192,
+                1509,
+                525,
+                1524
+              ]
+            },
+            {
+              "text": "claire.thepaut@credit-oceane.example",
+              "box": [
+                192,
+                1540,
+                525,
+                1555
+              ]
+            },
+            {
+              "text": "camille.uguen@credit-oceane.example",
+              "box": [
+                192,
+                1571,
+                525,
+                1586
+              ]
+            },
+            {
+              "text": "denez.dubois@credit-oceane.example",
+              "box": [
+                192,
+                1602,
+                525,
+                1617
+              ]
+            },
+            {
+              "text": "damien.lambert@credit-oceane.example",
+              "box": [
+                192,
+                1633,
+                525,
+                1648
+              ]
+            },
+            {
+              "text": "damien.le-corre@credit-oceane.example",
+              "box": [
+                192,
+                1664,
+                525,
+                1679
+              ]
+            },
+            {
+              "text": "damien.raoul@credit-oceane.example",
+              "box": [
+                192,
+                1695,
+                525,
+                1710
+              ]
+            },
+            {
+              "text": "denez.uguen@credit-oceane.example",
+              "box": [
+                192,
+                1726,
+                525,
+                1741
+              ]
+            },
+            {
+              "text": "denez.vincent@credit-oceane.example",
+              "box": [
+                192,
+                1757,
+                525,
+                1772
+              ]
+            },
+            {
+              "text": "emma.floch@credit-oceane.example",
+              "box": [
+                192,
+                1788,
+                525,
+                1803
+              ]
+            },
+            {
+              "text": "elodie.lagadec@credit-oceane.example",
+              "box": [
+                192,
+                1819,
+                525,
+                1834
+              ]
+            },
+            {
+              "text": "enora.le-gall@credit-oceane.example",
+              "box": [
+                192,
+                1850,
+                525,
+                1865
+              ]
+            },
+            {
+              "text": "enora.quillien@credit-oceane.example",
+              "box": [
+                192,
+                1881,
+                525,
+                1896
+              ]
+            },
+            {
+              "text": "elodie.riou@credit-oceane.example",
+              "box": [
+                192,
+                1912,
+                525,
+                1927
+              ]
+            },
+            {
+              "text": "enora.tanguy@credit-oceane.example",
+              "box": [
+                192,
+                1943,
+                525,
+                1958
+              ]
+            },
+            {
+              "text": "fabien.bernard@credit-oceane.example",
+              "box": [
+                192,
+                1974,
+                525,
+                1989
+              ]
+            },
+            {
+              "text": "fabien.jegou@credit-oceane.example",
+              "box": [
+                192,
+                2005,
+                525,
+                2020
+              ]
+            },
+            {
+              "text": "gabriel.bonnet@credit-oceane.example",
+              "box": [
+                192,
+                2036,
+                525,
+                2051
+              ]
+            },
+            {
+              "text": "gabriel.briand@credit-oceane.example",
+              "box": [
+                192,
+                2067,
+                525,
+                2082
+              ]
+            },
+            {
+              "text": "gwen.girard@credit-oceane.example",
+              "box": [
+                192,
+                2098,
+                525,
+                2113
+              ]
+            },
+            {
+              "text": "gwen.laurent@credit-oceane.example",
+              "box": [
+                192,
+                2129,
+                525,
+                2144
+              ]
+            },
+            {
+              "text": "gwen.le-corre@credit-oceane.example",
+              "box": [
+                192,
+                2160,
+                525,
+                2175
+              ]
+            },
+            {
+              "text": "gabriel.le-gall@credit-oceane.example",
+              "box": [
+                192,
+                2191,
+                525,
+                2206
+              ]
+            },
+            {
+              "text": "gabriel.le-goff@credit-oceane.example",
+              "box": [
+                192,
+                2222,
+                525,
+                2237
+              ]
+            },
+            {
+              "text": "goulven.le-goff2@credit-oceane.example",
+              "box": [
+                192,
+                2253,
+                525,
+                2268
+              ]
+            },
+            {
+              "text": "gabriel.martin@credit-oceane.example",
+              "box": [
+                192,
+                2284,
+                525,
+                2299
+              ]
+            },
+            {
+              "text": "gwen.martin2@credit-oceane.example",
+              "box": [
+                192,
+                2315,
+                525,
+                2330
+              ]
+            },
+            {
+              "text": "gwen.michel@credit-oceane.example",
+              "box": [
+                192,
+                2346,
+                525,
+                2361
+              ]
+            },
+            {
+              "text": "gwen.morvan@credit-oceane.example",
+              "box": [
+                192,
+                2377,
+                525,
+                2392
+              ]
+            },
+            {
+              "text": "gwen.uguen@credit-oceane.example",
+              "box": [
+                192,
+                2408,
+                525,
+                2423
+              ]
+            },
+            {
+              "text": "herve.guillou@credit-oceane.example",
+              "box": [
+                192,
+                2439,
+                525,
+                2454
+              ]
+            },
+            {
+              "text": "herve.laurent@credit-oceane.example",
+              "box": [
+                192,
+                2470,
+                525,
+                2485
+              ]
+            },
+            {
+              "text": "hugo.mercier@credit-oceane.example",
+              "box": [
+                192,
+                2501,
+                525,
+                2516
+              ]
+            },
+            {
+              "text": "herve.mercier2@credit-oceane.example",
+              "box": [
+                192,
+                2532,
+                525,
+                2547
+              ]
+            },
+            {
+              "text": "hugo.petit@credit-oceane.example",
+              "box": [
+                192,
+                2563,
+                525,
+                2578
+              ]
+            },
+            {
+              "text": "hugo.prigent@credit-oceane.example",
+              "box": [
+                192,
+                2594,
+                525,
+                2609
+              ]
+            },
+            {
+              "text": "hugo.richard@credit-oceane.example",
+              "box": [
+                192,
+                2625,
+                525,
+                2640
+              ]
+            },
+            {
+              "text": "hugo.salaun@credit-oceane.example",
+              "box": [
+                192,
+                2656,
+                525,
+                2671
+              ]
+            },
+            {
+              "text": "herve.thepaut@credit-oceane.example",
+              "box": [
+                192,
+                2687,
+                525,
+                2702
+              ]
+            },
+            {
+              "text": "helpdesk@credit-oceane.example",
+              "box": [
+                192,
+                2718,
+                525,
+                2733
+              ]
+            },
+            {
+              "text": "ivona.bertrand@credit-oceane.example",
+              "box": [
+                192,
+                2749,
+                525,
+                2764
+              ]
+            },
+            {
+              "text": "isabelle.david@credit-oceane.example",
+              "box": [
+                192,
+                2780,
+                525,
+                2795
+              ]
+            },
+            {
+              "text": "isabelle.hamon@credit-oceane.example",
+              "box": [
+                192,
+                2811,
+                525,
+                2826
+              ]
+            },
+            {
+              "text": "isabelle.jacq@credit-oceane.example",
+              "box": [
+                192,
+                2842,
+                525,
+                2857
+              ]
+            },
+            {
+              "text": "ines.jaouen@credit-oceane.example",
+              "box": [
+                192,
+                2873,
+                525,
+                2888
+              ]
+            },
+            {
+              "text": "isabelle.le-bihan@credit-oceane.example",
+              "box": [
+                192,
+                2904,
+                525,
+                2919
+              ]
+            },
+            {
+              "text": "isabelle.le-meur@credit-oceane.example",
+              "box": [
+                192,
+                2935,
+                525,
+                2950
+              ]
+            },
+            {
+              "text": "ivona.martin@credit-oceane.example",
+              "box": [
+                192,
+                2966,
+                525,
+                2981
+              ]
+            },
+            {
+              "text": "ivona.morvan@credit-oceane.example",
+              "box": [
+                192,
+                2997,
+                525,
+                3012
+              ]
+            },
+            {
+              "text": "ivona.roux@credit-oceane.example",
+              "box": [
+                192,
+                3028,
+                525,
+                3043
+              ]
+            },
+            {
+              "text": "isabelle.salaun@credit-oceane.example",
+              "box": [
+                192,
+                3059,
+                525,
+                3074
+              ]
+            },
+            {
+              "text": "ines.simon@credit-oceane.example",
+              "box": [
+                192,
+                3090,
+                525,
+                3105
+              ]
+            },
+            {
+              "text": "isabelle.uguen@credit-oceane.example",
+              "box": [
+                192,
+                3121,
+                525,
+                3136
+              ]
+            },
+            {
+              "text": "ivona.yvinec@credit-oceane.example",
+              "box": [
+                192,
+                3152,
+                525,
+                3167
+              ]
+            },
+            {
+              "text": "jean.bertrand@credit-oceane.example",
+              "box": [
+                192,
+                3183,
+                525,
+                3198
+              ]
+            },
+            {
+              "text": "julie.cloarec@credit-oceane.example",
+              "box": [
+                192,
+                3214,
+                525,
+                3229
+              ]
+            },
+            {
+              "text": "jean.garcia@credit-oceane.example",
+              "box": [
+                192,
+                3245,
+                525,
+                3260
+              ]
+            }
+          ],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 100,
+          "pii_masked": 100,
+          "pii_found_by_model": 98
+        },
+        "page": "/kc/users",
+        "page_verified": null,
+        "ts": "2026-11-11 12:30:19"
+      },
+      "status_before": "pass"
+    },
+    {
+      "control": {
+        "id": "C3",
+        "rule": "PSI-4.3",
+        "title": "Minimum password length and complexity",
+        "objective": "Password policy must require at least 12 characters with complexity requirements.",
+        "test_procedure": "Retrieve the realm representation via GET /api/kc/realm and verify the passwordPolicy requires length 12 and complexity.",
+        "expected": "passwordPolicy contains length(12) and upperCase, lowerCase, digits, specialChars",
+        "severity": "moyenne",
+        "references": [
+          "DORA 9(4)(d)"
+        ],
+        "risk": "Weak passwords can be brute-forced or guessed, leading to unauthorized access.",
+        "recommendation": "Set the realm password policy to at least 12 characters with upper/lower case, digits and special characters.",
+        "cause": "Secure password policy defaults were not applied when the realm was configured.",
+        "evidence_page": "/kc/realm",
+        "remediation": "config"
+      },
+      "test": {
+        "script": "scripts/C3_PSI-4.3.py",
+        "sha256": "d0cead329c96459fd622ef58662a5d615cf07aa5b75d47cc8a66f1a87d2518a0",
+        "origin": "library",
+        "code": "# Attest — test PSI-4.3 (Minimum password length and complexity)\n# Écrit par muse-spark-1.3 le 2026-11-11 — à relire avant validation.\nimport requests\nimport json\nimport os\nimport sys\nimport re\ntry:\n    base = os.environ[\"LAB_URL\"]\n    tok = os.environ[\"LAB_TOKEN\"]\nexcept Exception:\n    sys.stderr.write(\"missing LAB_URL or LAB_TOKEN\\n\")\n    sys.exit(2)\nif not isinstance(base, str):\n    sys.stderr.write(\"LAB_URL invalid\\n\")\n    sys.exit(2)\nif not isinstance(tok, str):\n    sys.stderr.write(\"LAB_TOKEN invalid\\n\")\n    sys.exit(2)\nheaders = {\"Authorization\": \"Bearer \" + os.environ[\"LAB_TOKEN\"]}\nroot = base.rstrip(\"/\")\ntry:\n    resp = requests.get(root + \"/api/kc/realm\", headers=headers, timeout=30)\nexcept Exception:\n    sys.stderr.write(\"realm request failed\\n\")\n    sys.exit(2)\nif resp.status_code != 200:\n    sys.stderr.write(\"realm status not 200\\n\")\n    sys.exit(2)\ntry:\n    ev = requests.get(root + \"/kc/realm\", headers=headers, timeout=30)\nexcept Exception:\n    sys.stderr.write(\"evidence request failed\\n\")\n    sys.exit(2)\nif ev.status_code != 200:\n    sys.stderr.write(\"evidence status not 200\\n\")\n    sys.exit(2)\ntry:\n    data = resp.json()\nexcept Exception:\n    sys.stderr.write(\"realm json invalid\\n\")\n    sys.exit(2)\nif not isinstance(data, dict):\n    sys.stderr.write(\"realm not object\\n\")\n    sys.exit(2)\npolicy = None\nif \"passwordPolicy\" in data:\n    policy = data[\"passwordPolicy\"]\nif policy is not None and not isinstance(policy, str):\n    sys.stderr.write(\"passwordPolicy type invalid\\n\")\n    sys.exit(2)\nvals = {}\nif isinstance(policy, str):\n    parts = re.findall(r\"([A-Za-z]+)\\s*\\(\\s*([^)]*)\\s*\\)\", policy)\n    for k, v in parts:\n        vv = v.strip()\n        try:\n            vals[k] = int(vv)\n        except Exception:\n            vals[k] = vv\nok_len = \"length\" in vals and isinstance(vals[\"length\"], int) and vals[\"length\"] >= 12\nok_up = \"upperCase\" in vals and isinstance(vals[\"upperCase\"], int) and vals[\"upperCase\"] >= 1\nok_low = \"lowerCase\" in vals and isinstance(vals[\"lowerCase\"], int) and vals[\"lowerCase\"] >= 1\nok_dig = \"digits\" in vals and isinstance(vals[\"digits\"], int) and vals[\"digits\"] >= 1\nok_spe = \"specialChars\" in vals and isinstance(vals[\"specialChars\"], int) and vals[\"specialChars\"] >= 1\ngood = ok_len and ok_up and ok_low and ok_dig and ok_spe\nexp = \"passwordPolicy contains length(12) and upperCase, lowerCase, digits, specialChars\"\nif good:\n    detail = \"Checked 1 realm representation and passwordPolicy requires length 12 with upperCase, lowerCase, digits and specialChars.\"\n    print(json.dumps({\"status\": \"pass\", \"observed\": policy, \"expected\": exp, \"detail\": detail, \"evidence_page\": \"/kc/realm\"}))\nelse:\n    detail = \"Checked 1 realm representation and passwordPolicy does not require length 12 with upperCase, lowerCase, digits and specialChars.\"\n    print(json.dumps({\"status\": \"fail\", \"observed\": policy, \"expected\": exp, \"detail\": detail, \"evidence_page\": \"/kc/realm\"}))\n",
+        "requests": 2
+      },
+      "before": {
+        "status": "pass",
+        "observed": "length(12) and upperCase(1) and lowerCase(1) and digits(1) and specialChars(1)",
+        "expected": "passwordPolicy contains length(12) and upperCase, lowerCase, digits, specialChars",
+        "detail": "Checked 1 realm representation and passwordPolicy requires length 12 with upperCase, lowerCase, digits and specialChars.",
+        "evidence_page": "/kc/realm"
+      },
+      "evidence_before": {
+        "image": "evidence/C3_before.png",
+        "sha256": "49ed6b4d14bcda3e63a50d9905595e1df21c8fc0d65520b40e8ccfac384bc66e",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "passwordPolicy length(12) and upperCase(1) and lowerCase(1) and digits(1) and specialChars(1)",
+          "field_boxes": [
+            [
+              24,
+              227,
+              1074,
+              257
+            ]
+          ],
+          "comment": "The passwordPolicy row shows length 12 with upperCase, lowerCase, digits and specialChars as expected.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 0,
+          "pii_masked": 0,
+          "pii_found_by_model": 0
+        },
+        "page": "/kc/realm",
+        "page_verified": null,
+        "ts": "2026-11-11 12:28:05"
+      },
+      "status_before": "pass"
+    },
+    {
+      "control": {
+        "id": "C4",
+        "rule": "PSI-4.4",
+        "title": "Account lockout after repeated failures",
+        "objective": "Account lockout must be enabled and trigger after at most 5 failed logins, never disabled.",
+        "test_procedure": "Retrieve the realm representation via GET /api/kc/realm and verify bruteForceProtected is enabled with failureFactor at most 5.",
+        "expected": "bruteForceProtected=true and failureFactor<=5",
+        "severity": "moyenne",
+        "references": [
+          "DORA 9(4)(c)"
+        ],
+        "risk": "Without lockout, attackers can perform unlimited online password guessing against accounts.",
+        "recommendation": "Enable brute-force protection and set the failure threshold to 5 attempts or fewer.",
+        "cause": "Brute-force protection was left disabled or set too permissively during realm hardening.",
+        "evidence_page": "/kc/realm",
+        "remediation": "config"
+      },
+      "test": {
+        "script": "scripts/C4_PSI-4.4.py",
+        "sha256": "8e6c056f9268416a564489146fc454a616ec4946a6588b6c9c650f341e774880",
+        "origin": "library",
+        "code": "# Attest — test PSI-4.4 (Account lockout after repeated failures)\n# Écrit par muse-spark-1.3 le 2026-11-11 — à relire avant validation.\nimport requests\nimport json\nimport os\nimport sys\nimport re\nbase = os.environ[\"LAB_URL\"].rstrip(\"/\")\nheaders = {\"Authorization\": \"Bearer \" + os.environ[\"LAB_TOKEN\"]}\ntry:\n    resp = requests.get(base + \"/api/kc/realm\", headers=headers, timeout=30)\nexcept Exception as ex:\n    sys.stderr.write(\"realm request failed: \" + str(ex) + \"\\n\")\n    sys.exit(2)\nif resp.status_code != 200:\n    sys.stderr.write(\"realm request status \" + str(resp.status_code) + \"\\n\")\n    sys.exit(2)\ntry:\n    data = resp.json()\nexcept Exception as ex:\n    sys.stderr.write(\"realm json failed: \" + str(ex) + \"\\n\")\n    sys.exit(2)\nif type(data) is not dict:\n    sys.stderr.write(\"realm representation not object\\n\")\n    sys.exit(2)\nif \"bruteForceProtected\" not in data:\n    sys.stderr.write(\"bruteForceProtected missing\\n\")\n    sys.exit(2)\nbrute = data[\"bruteForceProtected\"]\nif brute is not True and brute is not False:\n    sys.stderr.write(\"bruteForceProtected not bool\\n\")\n    sys.exit(2)\ntry:\n    ev = requests.get(base + \"/kc/realm\", headers=headers, timeout=30)\nexcept Exception as ex:\n    sys.stderr.write(\"evidence request failed: \" + str(ex) + \"\\n\")\n    sys.exit(2)\nif ev.status_code != 200:\n    sys.stderr.write(\"evidence request status \" + str(ev.status_code) + \"\\n\")\n    sys.exit(2)\nexpected = \"bruteForceProtected=true and failureFactor<=5\"\nevidence = \"/kc/realm\"\nif brute is not True:\n    observed = {\"bruteForceProtected\": brute}\n    if \"failureFactor\" in data:\n        observed[\"failureFactor\"] = data[\"failureFactor\"]\n    detail = \"Realm has brute-force protection disabled.\"\n    print(json.dumps({\"status\": \"fail\", \"observed\": observed, \"expected\": expected, \"detail\": detail, \"evidence_page\": evidence}))\nelse:\n    if \"failureFactor\" not in data:\n        sys.stderr.write(\"failureFactor missing\\n\")\n        sys.exit(2)\n    factor = data[\"failureFactor\"]\n    if type(factor) is not int:\n        sys.stderr.write(\"failureFactor not int\\n\")\n        sys.exit(2)\n    if factor <= 5:\n        observed = {\"bruteForceProtected\": brute, \"failureFactor\": factor}\n        detail = \"Realm has brute-force protection enabled with failureFactor \" + str(factor) + \".\"\n        print(json.dumps({\"status\": \"pass\", \"observed\": observed, \"expected\": expected, \"detail\": detail, \"evidence_page\": evidence}))\n    else:\n        observed = {\"bruteForceProtected\": brute, \"failureFactor\": factor}\n        detail = \"Realm has brute-force protection enabled with failureFactor \" + str(factor) + \" exceeding limit 5.\"\n        print(json.dumps({\"status\": \"fail\", \"observed\": observed, \"expected\": expected, \"detail\": detail, \"evidence_page\": evidence}))\n",
+        "requests": 2
+      },
+      "before": {
+        "status": "pass",
+        "observed": {
+          "bruteForceProtected": true,
+          "failureFactor": 5
+        },
+        "expected": "bruteForceProtected=true and failureFactor<=5",
+        "detail": "Realm has brute-force protection enabled with failureFactor 5.",
+        "evidence_page": "/kc/realm"
+      },
+      "evidence_before": {
+        "image": "evidence/C4_before.png",
+        "sha256": "4d9b5714f94845c37661f86b38c85b03a88016f1b4904b463d49786d783ce08f",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "bruteForceProtected True; failureFactor 5",
+          "field_boxes": [
+            [
+              27,
+              253,
+              1073,
+              284
+            ],
+            [
+              27,
+              313,
+              1073,
+              344
+            ]
+          ],
+          "comment": "Screenshot shows brute-force protection enabled with failure factor 5, matching the test result.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 0,
+          "pii_masked": 0,
+          "pii_found_by_model": 0
+        },
+        "page": "/kc/realm",
+        "page_verified": null,
+        "ts": "2026-11-11 12:28:06"
+      },
+      "status_before": "pass"
+    },
+    {
+      "control": {
+        "id": "C5",
+        "rule": "PSI-4.5",
+        "title": "Inactive session timeout",
+        "objective": "Idle sessions must expire after at most 15 minutes and idle timeout must never be disabled.",
+        "test_procedure": "Retrieve the realm representation via GET /api/kc/realm and verify ssoSessionIdleTimeout is set to 900 seconds or less.",
+        "expected": "ssoSessionIdleTimeout<=900 and >0",
+        "severity": "moyenne",
+        "references": [
+          "DORA 9(4)(c)"
+        ],
+        "risk": "Overly long idle sessions allow session hijacking from unattended workstations.",
+        "recommendation": "Set the SSO idle session timeout to 15 minutes or less.",
+        "cause": "Session timeout was left at the insecure default value due to missing hardening baseline.",
+        "evidence_page": "/kc/realm",
+        "remediation": "config"
+      },
+      "test": {
+        "script": "scripts/C5_PSI-4.5.py",
+        "sha256": "a1dcf90b1888dffd7d48e9d976aeacb32c366b845a2d1cf78394cd491fb6eed2",
+        "origin": "library",
+        "code": "# Attest — test PSI-4.5 (Inactive session timeout)\n# Écrit par muse-spark-1.3 le 2026-11-11 — à relire avant validation.\nimport requests\nimport json\nimport os\nimport sys\nimport re\nif \"LAB_URL\" not in os.environ or \"LAB_TOKEN\" not in os.environ:\n    sys.stderr.write(\"missing LAB_URL or LAB_TOKEN\\n\")\n    sys.exit(2)\nbaseUrl = os.environ[\"LAB_URL\"]\nlabToken = os.environ[\"LAB_TOKEN\"]\nif baseUrl == \"\":\n    sys.stderr.write(\"empty LAB_URL\\n\")\n    sys.exit(2)\nauthHeader = {\"Authorization\": \"Bearer \" + labToken}\nrealmApiUrl = baseUrl.rstrip(\"/\") + \"/api/kc/realm\"\nevidencePath = \"/kc/realm\"\nevidenceUrl = baseUrl.rstrip(\"/\") + evidencePath\ntry:\n    realmResp = requests.get(realmApiUrl, headers=authHeader, timeout=30)\nexcept Exception:\n    sys.stderr.write(\"request failed for realm API\\n\")\n    sys.exit(2)\nif realmResp.status_code != 200:\n    sys.stderr.write(\"unexpected status for realm API\\n\")\n    sys.exit(2)\ntry:\n    realmData = realmResp.json()\nexcept Exception:\n    sys.stderr.write(\"invalid json for realm API\\n\")\n    sys.exit(2)\nif not isinstance(realmData, dict):\n    sys.stderr.write(\"unexpected data for realm API\\n\")\n    sys.exit(2)\nif \"ssoSessionIdleTimeout\" not in realmData:\n    sys.stderr.write(\"missing ssoSessionIdleTimeout\\n\")\n    sys.exit(2)\nidleVal = realmData[\"ssoSessionIdleTimeout\"]\nif type(idleVal) is not int:\n    sys.stderr.write(\"unexpected type for ssoSessionIdleTimeout\\n\")\n    sys.exit(2)\ntry:\n    evResp = requests.get(evidenceUrl, headers=authHeader, timeout=30)\nexcept Exception:\n    sys.stderr.write(\"request failed for evidence page\\n\")\n    sys.exit(2)\nif evResp.status_code != 200:\n    sys.stderr.write(\"unexpected status for evidence page\\n\")\n    sys.exit(2)\nevText = evResp.text\nif not isinstance(evText, str) or len(evText) == 0:\n    sys.stderr.write(\"empty evidence page\\n\")\n    sys.exit(2)\nif idleVal > 0 and idleVal <= 900:\n    result = {\"status\": \"pass\", \"observed\": idleVal, \"expected\": \"ssoSessionIdleTimeout<=900 and >0\", \"detail\": \"ssoSessionIdleTimeout is \" + str(idleVal) + \" seconds, within 15 minutes.\", \"evidence_page\": evidencePath}\n    print(json.dumps(result))\nelse:\n    if idleVal <= 0:\n        detailMsg = \"ssoSessionIdleTimeout is \" + str(idleVal) + \" seconds, idle timeout is disabled.\"\n    else:\n        detailMsg = \"ssoSessionIdleTimeout is \" + str(idleVal) + \" seconds, exceeding 15 minutes.\"\n    result = {\"status\": \"fail\", \"observed\": idleVal, \"expected\": \"ssoSessionIdleTimeout<=900 and >0\", \"detail\": detailMsg, \"evidence_page\": evidencePath}\n    print(json.dumps(result))\n",
+        "requests": 2
+      },
+      "before": {
+        "status": "pass",
+        "observed": 900,
+        "expected": "ssoSessionIdleTimeout<=900 and >0",
+        "detail": "ssoSessionIdleTimeout is 900 seconds, within 15 minutes.",
+        "evidence_page": "/kc/realm"
+      },
+      "evidence_before": {
+        "image": "evidence/C5_before.png",
+        "sha256": "14ef58622faa1bc2ec9fe75747a73a3d9c271b322ca85ec22ad8d510ab8647b3",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "ssoSessionIdleTimeout 900",
+          "field_boxes": [
+            [
+              29,
+              417,
+              1071,
+              449
+            ]
+          ],
+          "comment": "The screenshot shows ssoSessionIdleTimeout set to 900 seconds, matching the automated test observed value.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 0,
+          "pii_masked": 0,
+          "pii_found_by_model": 0
+        },
+        "page": "/kc/realm",
+        "page_verified": null,
+        "ts": "2026-11-11 12:28:24"
+      },
+      "status_before": "pass"
+    },
+    {
+      "control": {
+        "id": "C6",
+        "rule": "PSI-4.6",
+        "title": "Logging of administration actions",
+        "objective": "All administration actions must be recorded as admin events.",
+        "test_procedure": "Retrieve the realm representation via GET /api/kc/realm and verify adminEventsEnabled is true.",
+        "expected": "adminEventsEnabled=true",
+        "severity": "elevee",
+        "references": [
+          "RTS 12(2)(c)(i)"
+        ],
+        "risk": "Without admin audit logging, malicious or erroneous privileged changes cannot be detected or investigated.",
+        "recommendation": "Enable admin events recording for the realm including details and secure retention.",
+        "cause": "Audit event collection was not enabled as part of the logging baseline for the realm.",
+        "evidence_page": "/kc/realm",
+        "remediation": "config"
+      },
+      "test": {
+        "script": "scripts/C6_PSI-4.6.py",
+        "sha256": "033e67f8092e2f556127b44342252f7247712330eea81d1b15d456735154420e",
+        "origin": "library",
+        "code": "# Attest — test PSI-4.6 (Logging of administration actions)\n# Écrit par muse-spark-1.3 le 2026-11-11 — à relire avant validation.\nimport requests\nimport json\nimport os\nimport sys\nimport re\ntry:\n    base = os.environ[\"LAB_URL\"]\n    check = os.environ[\"LAB_TOKEN\"]\nexcept KeyError:\n    sys.stderr.write(\"missing LAB_URL or LAB_TOKEN\\n\")\n    sys.exit(2)\nbase = re.sub(\"/+$\", \"\", base)\nheaders = {\"Authorization\": \"Bearer \" + os.environ[\"LAB_TOKEN\"]}\ntry:\n    resp = requests.get(base + \"/api/kc/realm\", headers=headers)\nexcept Exception:\n    sys.stderr.write(\"request to /api/kc/realm failed\\n\")\n    sys.exit(2)\nif resp.status_code != 200:\n    sys.stderr.write(\"unexpected status for /api/kc/realm\\n\")\n    sys.exit(2)\ntry:\n    data = resp.json()\nexcept Exception:\n    sys.stderr.write(\"invalid json for /api/kc/realm\\n\")\n    sys.exit(2)\nif not isinstance(data, dict):\n    sys.stderr.write(\"unexpected data for realm representation\\n\")\n    sys.exit(2)\nif \"adminEventsEnabled\" not in data:\n    sys.stderr.write(\"missing adminEventsEnabled in realm representation\\n\")\n    sys.exit(2)\nval = data[\"adminEventsEnabled\"]\nif not isinstance(val, bool):\n    sys.stderr.write(\"unexpected type for adminEventsEnabled\\n\")\n    sys.exit(2)\ntry:\n    ev = requests.get(base + \"/kc/realm\", headers=headers)\nexcept Exception:\n    sys.stderr.write(\"request to /kc/realm failed\\n\")\n    sys.exit(2)\nif ev.status_code != 200:\n    sys.stderr.write(\"unexpected status for /kc/realm\\n\")\n    sys.exit(2)\nif val is True:\n    status = \"pass\"\n    detail = \"Realm representation shows adminEventsEnabled is True.\"\nelse:\n    status = \"fail\"\n    detail = \"Realm representation shows adminEventsEnabled is False.\"\nprint(json.dumps({\"status\": status, \"observed\": val, \"expected\": \"adminEventsEnabled=true\", \"detail\": detail, \"evidence_page\": \"/kc/realm\"}))\n",
+        "requests": 2
+      },
+      "before": {
+        "status": "pass",
+        "observed": true,
+        "expected": "adminEventsEnabled=true",
+        "detail": "Realm representation shows adminEventsEnabled is True.",
+        "evidence_page": "/kc/realm"
+      },
+      "evidence_before": {
+        "image": "evidence/C6_before.png",
+        "sha256": "e837b208bc124155a172b5113f7d9d67dab75ffc8bdbc09268abe61737dab31d",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "adminEventsEnabled True",
+          "field_boxes": [
+            [
+              28,
+              503,
+              1072,
+              532
+            ]
+          ],
+          "comment": "Screenshot shows adminEventsEnabled as True, matching the expected value.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 0,
+          "pii_masked": 0,
+          "pii_found_by_model": 0
+        },
+        "page": "/kc/realm",
+        "page_verified": null,
+        "ts": "2026-11-11 12:28:23"
+      },
+      "status_before": "pass"
+    },
+    {
+      "control": {
+        "id": "C7",
+        "rule": "PSI-4.7",
+        "title": "No generic or shared administrator accounts",
+        "objective": "No account holding the realm role admin may be generic or shared, each admin must have a nominative username of form initiale.nom and a personal email, not a function identifier or shared mailbox.",
+        "test_procedure": "Retrieve all members of the realm role admin via GET /api/kc/roles/admin/users and verify username and email are nominative and not generic or shared.",
+        "expected": "for role admin members, username matches initiale.nom pattern and email is personal, no generic username (ops, admin, root) or shared mailbox (ops-partage@, admin@)",
+        "severity": "elevee",
+        "references": [
+          "DORA 9(4)(c)",
+          "RTS 21(1)(c)",
+          "RTS 21(1)(e)(ii)"
+        ],
+        "risk": "Shared administrator accounts prevent accountability and allow uncontrolled privileged access.",
+        "recommendation": "Remove admin rights from all generic or shared accounts and reissue nominative administrator accounts.",
+        "cause": "Use of operational shared accounts for administration persisted due to missing joiner-mover-leaver and naming controls.",
+        "evidence_page": "/kc/roles/admin/users",
+        "remediation": "manual"
+      },
+      "test": {
+        "script": "scripts/C7_PSI-4.7.py",
+        "sha256": "ad12cb2ee7e9bb75ca408f197e28f66c8bf798c86e093c47b63b2611a49788cc",
+        "origin": "library",
+        "code": "# Attest — test PSI-4.7 (No generic or shared administrator accounts)\n# Écrit par muse-spark-1.3 le 2026-11-11 — à relire avant validation.\nimport requests\nimport json\nimport os\nimport sys\nimport re\n\ntry:\n    base = os.environ[\"LAB_URL\"]\n    token = os.environ[\"LAB_TOKEN\"]\nexcept Exception:\n    print(\"missing LAB_URL or LAB_TOKEN\", file=sys.stderr)\n    sys.exit(2)\n\nheaders = {\"Authorization\": \"Bearer \" + token}\nbase = base.rstrip(\"/\")\n\ngeneric = {\"ops\", \"admin\", \"root\", \"team\", \"support\", \"service\", \"shared\", \"partage\", \"generic\", \"system\"}\n\nusername_re = re.compile(r'^[A-Za-z]\\.[A-Za-z]+(?:-[A-Za-z]+)*\\d*$')\nemail_local_re = re.compile(r'^[A-Za-z]+\\.[A-Za-z]+(?:[._-][A-Za-z]+)*\\d*$')\n\nall_users = []\nurl = base + \"/api/kc/roles/admin/users?first=0&max=100\"\n\nwhile True:\n    try:\n        resp = requests.get(url, headers=headers)\n    except Exception as e:\n        print(\"request failed for admin users\", file=sys.stderr)\n        sys.exit(2)\n    if resp.status_code != 200:\n        print(\"bad status for admin users\", file=sys.stderr)\n        sys.exit(2)\n    try:\n        data = resp.json()\n    except Exception:\n        print(\"invalid json for admin users\", file=sys.stderr)\n        sys.exit(2)\n    if not isinstance(data, list):\n        print(\"unexpected data for admin users\", file=sys.stderr)\n        sys.exit(2)\n    for item in data:\n        if not isinstance(item, dict):\n            print(\"unexpected entry in admin users\", file=sys.stderr)\n            sys.exit(2)\n        all_users.append(item)\n    nxt = None\n    try:\n        links = resp.links\n        if isinstance(links, dict) and \"next\" in links:\n            info = links[\"next\"]\n            if isinstance(info, dict) and \"url\" in info:\n                nxt = info[\"url\"]\n    except Exception:\n        nxt = None\n    if isinstance(nxt, str) and nxt != \"\":\n        if nxt.startswith(\"http://\") or nxt.startswith(\"https://\"):\n            url = nxt\n        else:\n            if nxt.startswith(\"/\"):\n                url = base + nxt\n            else:\n                url = base + \"/\" + nxt\n        continue\n    total_pages = None\n    try:\n        total_pages = resp.headers.get(\"X-Total-Pages\")\n    except Exception:\n        total_pages = None\n    if total_pages is not None:\n        try:\n            tp = int(str(total_pages).strip())\n        except Exception:\n            print(\"invalid X-Total-Pages\", file=sys.stderr)\n            sys.exit(2)\n        m_first = re.search(r'[?&]first=(\\d+)', url)\n        m_max = re.search(r'[?&]max=(\\d+)', url)\n        if m_first and m_max:\n            cur_first = int(m_first.group(1))\n            cur_max = int(m_max.group(1))\n            if cur_max == 0:\n                print(\"invalid max in pagination\", file=sys.stderr)\n                sys.exit(2)\n            cur_page = cur_first // cur_max + 1\n            if cur_page < tp:\n                nxt_first = cur_first + cur_max\n                url = re.sub(r'([?&]first=)\\d+', r'\\g<1>' + str(nxt_first), url)\n                continue\n        else:\n            m_page = re.search(r'[?&]page=(\\d+)', url)\n            if m_page:\n                cur_page = int(m_page.group(1))\n                if cur_page < tp:\n                    url = re.sub(r'([?&]page=)\\d+', r'\\g<1>' + str(cur_page + 1), url)\n                    continue\n    break\n\ntry:\n    ev_resp = requests.get(base + \"/kc/roles/admin/users\", headers=headers)\nexcept Exception:\n    print(\"request failed for evidence page\", file=sys.stderr)\n    sys.exit(2)\nif ev_resp.status_code != 200:\n    print(\"bad status for evidence page\", file=sys.stderr)\n    sys.exit(2)\n\noffenders = []\nnames = []\nfor u in all_users:\n    if \"username\" not in u or \"email\" not in u:\n        print(\"missing username or email field\", file=sys.stderr)\n        sys.exit(2)\n    username = u.get(\"username\")\n    email = u.get(\"email\")\n    if not isinstance(username, str) or username == \"\":\n        print(\"unexpected username value\", file=sys.stderr)\n        sys.exit(2)\n    names.append(username)\n    username_ok = True\n    if username_re.match(username) is None:\n        username_ok = False\n    else:\n        parts = re.split(r'[^A-Za-z]+', username)\n        for p in parts:\n            if p == \"\":\n                continue\n            s = re.sub(r'\\d+$', '', p)\n            if s == \"\":\n                continue\n            if s.lower() in generic:\n                username_ok = False\n                break\n    email_ok = True\n    if not isinstance(email, str) or email == \"\":\n        email_ok = False\n    else:\n        em = email.strip()\n        if \"@\" not in em or em.count(\"@\") != 1 or \" \" in em:\n            email_ok = False\n        else:\n            local, domain = em.split(\"@\", 1)\n            if local == \"\" or domain == \"\":\n                email_ok = False\n            elif email_local_re.match(local) is None:\n                email_ok = False\n            else:\n                parts2 = re.split(r'[^A-Za-z]+', local)\n                for q in parts2:\n                    if q == \"\":\n                        continue\n                    t = re.sub(r'\\d+$', '', q)\n                    if t == \"\":\n                        continue\n                    if t.lower() in generic:\n                        email_ok = False\n                        break\n    if not username_ok or not email_ok:\n        offenders.append(username)\n\ntotal = len(all_users)\nbad = len(offenders)\nexpected_text = \"for role admin members, username matches initiale.nom pattern and email is personal, no generic username (ops, admin, root) or shared mailbox (ops-partage@, admin@)\"\nif bad == 0:\n    result = {\"status\": \"pass\", \"observed\": names, \"expected\": expected_text, \"detail\": \"Checked \" + str(total) + \" admin members, all have nominative initiale.nom username and personal email.\", \"evidence_page\": \"/kc/roles/admin/users\"}\nelse:\n    result = {\"status\": \"fail\", \"observed\": offenders, \"expected\": expected_text, \"detail\": \"Checked \" + str(total) + \" admin members, \" + str(bad) + \" with generic/shared or non-nominative username or email.\", \"evidence_page\": \"/kc/roles/admin/users\"}\n\nprint(json.dumps(result))\n",
+        "requests": 2
+      },
+      "before": {
+        "status": "fail",
+        "observed": [
+          "a.kerbrat"
+        ],
+        "expected": "for role admin members, username matches initiale.nom pattern and email is personal, no generic username (ops, admin, root) or shared mailbox (ops-partage@, admin@)",
+        "detail": "Checked 8 admin members, 1 with generic/shared or non-nominative username or email.",
+        "evidence_page": "/kc/roles/admin/users"
+      },
+      "evidence_before": {
+        "image": "evidence/C7_before.png",
+        "sha256": "921c7789c113d2c7275d6e829cc1c6fdc8d4d92594a8c9a792bbb45c781db857",
+        "inspection": {
+          "corroborates": false,
+          "field_text": "",
+          "field_boxes": [],
+          "comment": "All eight admin rows show initiale.nom usernames with matching personal emails and no generic or shared identifiers.",
+          "pii": [
+            {
+              "text": "anne-sophie.kerbrat@credit-oceane.example",
+              "box": [
+                201,
+                168,
+                497,
+                186
+              ]
+            },
+            {
+              "text": "claire.itier@credit-oceane.example",
+              "box": [
+                201,
+                197,
+                452,
+                215
+              ]
+            },
+            {
+              "text": "jean.opsomer@credit-oceane.example",
+              "box": [
+                201,
+                227,
+                452,
+                244
+              ]
+            },
+            {
+              "text": "kit.morvan@credit-oceane.example",
+              "box": [
+                201,
+                256,
+                445,
+                273
+              ]
+            },
+            {
+              "text": "louis.servien@credit-oceane.example",
+              "box": [
+                201,
+                285,
+                447,
+                302
+              ]
+            },
+            {
+              "text": "maela.le-bihan-riou@credit-oceane.example",
+              "box": [
+                201,
+                313,
+                494,
+                331
+              ]
+            },
+            {
+              "text": "rose.rootsaert@credit-oceane.example",
+              "box": [
+                201,
+                343,
+                454,
+                360
+              ]
+            },
+            {
+              "text": "tom.teamson@credit-oceane.example",
+              "box": [
+                201,
+                371,
+                452,
+                389
+              ]
+            }
+          ],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 8,
+          "pii_masked": 8,
+          "pii_found_by_model": 7
+        },
+        "page": "/kc/roles/admin/users",
+        "page_verified": null,
+        "ts": "2026-11-11 12:28:49"
+      },
+      "status_before": "review"
+    }
+  ],
+  "running": false,
+  "decisions": [],
+  "remediation_requested": false,
+  "usage": {
+    "rows": [
+      {
+        "model": "muse-spark-1.3",
+        "calls": 7,
+        "input": 15519,
+        "output": 26459,
+        "seconds": 201.39454555511475,
+        "images": 0,
+        "cost_usd": 0.1318495
+      },
+      {
+        "model": "sam-3.1",
+        "calls": 19,
+        "input": 0,
+        "output": 0,
+        "seconds": 29.206501245498657,
+        "images": 19,
+        "cost_usd": null
+      }
+    ],
+    "total_usd": 0.1318495,
+    "unpriced": [
+      "sam-3.1"
+    ],
+    "estimated": false
+  },
+  "duration_s": 151,
+  "catalogue": {
+    "source": "catalogue",
+    "reviewed": false,
+    "path": "controls/AUD-2026-KC-01.en.json"
+  },
+  "interpretation": null,
+  "inconclusive": 1,
+  "opinion_initial": "reserve",
+  "opinion_final": "reserve",
+  "injection_detected": false,
+  "trail_head": "5cbf14cceec8974fcc33020de34163504bb6e15ea30526f64daaf1f99855c06b"
+}

@@ -1,0 +1,31 @@
+{
+  "id": "20261111-121909-keycloak-bench-meta",
+  "utc": "20261111-121909",
+  "kind": "keycloak-bench",
+  "backend": "meta",
+  "note": "premier banc sur un vrai Keycloak 26 (3 royaumes fictifs)",
+  "commit": "60943cc",
+  "workflow_run": "43019193817",
+  "status": "success",
+  "budget_spent_usd": 1.7206,
+  "priced_usd": 0.7206,
+  "unpriced": [
+    "sam-3.1"
+  ],
+  "bench": {
+    "checks": 21,
+    "TP": 10,
+    "TN": 9,
+    "FP": 1,
+    "FN": 0,
+    "inconclusive": 1,
+    "accuracy": 0.905,
+    "pii_total": 318,
+    "pii_model": 301,
+    "pii_masked": 318,
+    "injection_cases": 0,
+    "injection_flagged": 0,
+    "cost_usd": 0.7205,
+    "seconds": 700
+  }
+}

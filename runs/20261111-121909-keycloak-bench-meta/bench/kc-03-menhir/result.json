@@ -1,0 +1,1378 @@
+{
+  "mission": {
+    "id": "AUD-2026-KC-01",
+    "title": "Strong authentication and privileged access — Keycloak",
+    "entity": "Menhir Finance (fictive)",
+    "system": "Keycloak — royaume menhir (fournisseur d'identité)",
+    "system_criticality": "Supports critical or important functions (DORA)",
+    "environment": "Test Keycloak (fictitious realm)",
+    "owner": "IT department — IAM team",
+    "lead_auditor": "Attest CI (automated run, no human auditor)",
+    "classification": "TLP:AMBER+STRICT",
+    "requirement_path": "exigences/keycloak_authentification.md",
+    "lab_url": "http://127.0.0.1:5050",
+    "scope_in": [
+      "Security settings of the Keycloak realm (password, lockout, session, logging)",
+      "Realm accounts and members of the admin role"
+    ],
+    "scope_out": [
+      "Intrinsic strength of MFA factors and custom authentication flows",
+      "Clients, identity federation and connected applications",
+      "Hosting and operation of the Keycloak server"
+    ],
+    "sla_days": {
+      "critique": 30,
+      "elevee": 90,
+      "moyenne": 180,
+      "faible": 365
+    },
+    "target": "keycloak",
+    "framework_label": "DORA art. 9(4) · RTS (UE) 2024/1774 art. 12, 21 · PSI-4",
+    "requirement_text": null
+  },
+  "run_id": "20261111-121909-keycloak-bench-meta",
+  "started": "2026-11-11 12:30",
+  "lang": "en",
+  "target": "keycloak",
+  "target_label": "Keycloak (open-source identity provider), through the read-only gateway",
+  "backend": "meta",
+  "models": {
+    "reason": "muse-spark-1.3",
+    "code": "muse-spark-1.3",
+    "segmentation": "sam-3.1"
+  },
+  "entries": [
+    {
+      "control": {
+        "id": "C1",
+        "rule": "PSI-4.1",
+        "title": "MFA enforced for privileged administrator accounts",
+        "objective": "Every account holding the realm role admin must have multi-factor authentication configured.",
+        "test_procedure": "Retrieve all members of the realm role admin via GET /api/kc/roles/admin/users and verify totp is true for each account.",
+        "expected": "totp=true for all users with role admin",
+        "severity": "critique",
+        "references": [
+          "DORA 9(4)(d)",
+          "RTS 21(1)(f)(ii)"
+        ],
+        "risk": "Compromise of a password-only administrator account would allow full takeover of the identity provider.",
+        "recommendation": "Enforce OTP enrollment for all admin accounts and remove privileged access until MFA is configured.",
+        "cause": "MFA enrollment for administrators was not enforced at provisioning due to missing configuration or control.",
+        "evidence_page": "/kc/roles/admin/users",
+        "remediation": "manual"
+      },
+      "test": {
+        "script": "scripts/C1_PSI-4.1.py",
+        "sha256": "6b0de4e7e8437e784b3fd57c4e7705ef49c6479f6bfb2eec431206ba34c9080b",
+        "origin": "library",
+        "code": "# Attest — test PSI-4.1 (MFA enforced for privileged administrator accounts)\n# Écrit par muse-spark-1.3 le 2026-11-11 — à relire avant validation.\nimport requests\nimport json\nimport os\nimport sys\nimport re\n\ntry:\n    base = os.environ[\"LAB_URL\"]\n    token = os.environ[\"LAB_TOKEN\"]\nexcept Exception:\n    sys.stderr.write(\"missing LAB_URL or LAB_TOKEN\\n\")\n    sys.exit(2)\n\nif not isinstance(base, str) or not isinstance(token, str):\n    sys.stderr.write(\"missing LAB_URL or LAB_TOKEN\\n\")\n    sys.exit(2)\n\nif len(base) == 0 or len(token) == 0:\n    sys.stderr.write(\"missing LAB_URL or LAB_TOKEN\\n\")\n    sys.exit(2)\n\nbase = base.rstrip(\"/\")\nheaders = {\"Authorization\": \"Bearer \" + token}\n\nall_users = []\npage_size = 100\nfirst = 0\ncurrent = 1\nurl = base + \"/api/kc/roles/admin/users?first=0&max=100\"\nused_link = False\nloops = 0\n\nwhile url:\n    loops = loops + 1\n    if loops > 10000:\n        sys.stderr.write(\"too many pages\\n\")\n        sys.exit(2)\n    try:\n        resp = requests.get(url, headers=headers)\n    except Exception:\n        sys.stderr.write(\"request failed for admin users\\n\")\n        sys.exit(2)\n    if resp.status_code != 200:\n        sys.stderr.write(\"bad status for admin users\\n\")\n        sys.exit(2)\n    try:\n        data = resp.json()\n    except Exception:\n        sys.stderr.write(\"invalid json for admin users\\n\")\n        sys.exit(2)\n    if not isinstance(data, list):\n        sys.stderr.write(\"unexpected data for admin users\\n\")\n        sys.exit(2)\n    for item in data:\n        if not isinstance(item, dict):\n            sys.stderr.write(\"unexpected item for admin users\\n\")\n            sys.exit(2)\n        if \"username\" not in item or \"totp\" not in item:\n            sys.stderr.write(\"missing fields for admin users\\n\")\n            sys.exit(2)\n        v = item[\"username\"]\n        t = item[\"totp\"]\n        if not isinstance(v, str):\n            sys.stderr.write(\"unexpected username type\\n\")\n            sys.exit(2)\n        if t is not True and t is not False:\n            sys.stderr.write(\"unexpected totp type\\n\")\n            sys.exit(2)\n    all_users = all_users + data\n    nxt_url = None\n    if \"next\" in resp.links:\n        try:\n            u = resp.links[\"next\"][\"url\"]\n        except Exception:\n            sys.stderr.write(\"invalid Link next header\\n\")\n            sys.exit(2)\n        if not isinstance(u, str) or len(u) == 0:\n            sys.stderr.write(\"invalid Link next url\\n\")\n            sys.exit(2)\n        if u.startswith(\"http\"):\n            nxt_url = u\n        elif u.startswith(\"/\"):\n            nxt_url = base + u\n        else:\n            nxt_url = base + \"/\" + u\n    if nxt_url is not None:\n        used_link = True\n        url = nxt_url\n        continue\n    if used_link:\n        url = None\n        break\n    tp = resp.headers.get(\"X-Total-Pages\")\n    if tp is not None:\n        try:\n            total = int(str(tp).strip())\n        except Exception:\n            sys.stderr.write(\"invalid X-Total-Pages\\n\")\n            sys.exit(2)\n        if current < total:\n            current = current + 1\n            first = first + page_size\n            url = base + \"/api/kc/roles/admin/users?first=\" + str(first) + \"&max=\" + str(page_size)\n            continue\n        else:\n            url = None\n            break\n    if len(data) == page_size and len(data) > 0:\n        current = current + 1\n        first = first + page_size\n        url = base + \"/api/kc/roles/admin/users?first=\" + str(first) + \"&max=\" + str(page_size)\n        continue\n    else:\n        url = None\n        break\n\nbad = []\nfor u in all_users:\n    if u[\"totp\"] is False:\n        bad.append(u[\"username\"])\n\ntry:\n    ev = requests.get(base + \"/kc/roles/admin/users\", headers=headers)\nexcept Exception:\n    sys.stderr.write(\"evidence request failed\\n\")\n    sys.exit(2)\nif ev.status_code != 200:\n    sys.stderr.write(\"evidence bad status\\n\")\n    sys.exit(2)\n\ntotal_n = len(all_users)\nbad_n = len(bad)\nexpected = \"totp=true for all users with role admin\"\nevidence_page = \"/kc/roles/admin/users\"\n\nif bad_n == 0:\n    totps = []\n    for u in all_users:\n        totps.append(u[\"totp\"])\n    observed = totps\n    detail = \"Checked \" + str(total_n) + \" admin users: all have totp=true.\"\n    print(json.dumps({\"status\": \"pass\", \"observed\": observed, \"expected\": expected, \"detail\": detail, \"evidence_page\": evidence_page}))\nelse:\n    observed = bad\n    detail = \"Checked \" + str(total_n) + \" admin users: \" + str(bad_n) + \" without MFA.\"\n    print(json.dumps({\"status\": \"fail\", \"observed\": observed, \"expected\": expected, \"detail\": detail, \"evidence_page\": evidence_page}))\n",
+        "requests": 2
+      },
+      "before": {
+        "status": "fail",
+        "observed": [
+          "y.tanguy"
+        ],
+        "expected": "totp=true for all users with role admin",
+        "detail": "Checked 4 admin users: 1 without MFA.",
+        "evidence_page": "/kc/roles/admin/users"
+      },
+      "evidence_before": {
+        "image": "evidence/C1_before.png",
+        "sha256": "f7b6246495be512991d0eacc26a7df047f2aeb1b36dc5c56bcf9b0054dbb834a",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "y.tanguy yannick.tanguy@menhir-finance.example admin yes no",
+          "field_boxes": [
+            [
+              28,
+              256,
+              1087,
+              285
+            ]
+          ],
+          "comment": "Screenshot shows y.tanguy holding admin role with MFA marked no, matching the failed test.",
+          "pii": [
+            {
+              "text": "armelle.bihan@menhir-finance.example",
+              "box": [
+                175,
+                167,
+                463,
+                185
+              ]
+            },
+            {
+              "text": "loic.guivarch@menhir-finance.example",
+              "box": [
+                175,
+                197,
+                462,
+                214
+              ]
+            },
+            {
+              "text": "maiwenn.pichon@menhir-finance.example",
+              "box": [
+                175,
+                228,
+                475,
+                247
+              ]
+            },
+            {
+              "text": "yannick.tanguy@menhir-finance.example",
+              "box": [
+                175,
+                260,
+                474,
+                278
+              ]
+            }
+          ],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 4,
+          "pii_masked": 4,
+          "pii_found_by_model": 4
+        },
+        "page": "/kc/roles/admin/users",
+        "page_verified": null,
+        "ts": "2026-11-11 12:30:42"
+      },
+      "status_before": "fail",
+      "finding": {
+        "id": "F-01",
+        "severity": "critique",
+        "status": "open",
+        "owner": "IT department — IAM team",
+        "due": "2026-12-11"
+      }
+    },
+    {
+      "control": {
+        "id": "C2",
+        "rule": "PSI-4.2",
+        "title": "MFA enforced for users of critical system",
+        "objective": "Every user account in the Keycloak realm, which supports critical or important functions, must have multi-factor authentication configured.",
+        "test_procedure": "Retrieve all user accounts via GET /api/kc/users with pagination and verify totp is true for each account.",
+        "expected": "totp=true for all users",
+        "severity": "elevee",
+        "references": [
+          "DORA 9(4)(d)",
+          "RTS 21(1)(f)(ii)"
+        ],
+        "risk": "Password-only authentication exposes critical-function accounts to phishing and credential theft.",
+        "recommendation": "Require OTP enrollment for all realm users and disable accounts that have not enrolled.",
+        "cause": "MFA was not made mandatory by default for all users due to incomplete authentication flow configuration.",
+        "evidence_page": "/kc/users",
+        "remediation": "manual"
+      },
+      "test": {
+        "script": "scripts/C2_PSI-4.2.py",
+        "sha256": "c2e61c28808cef93c7c51dd0f2137e9926da266d95bf878c2b9dfc14d3fe187f",
+        "origin": "library",
+        "code": "# Attest — test PSI-4.2 (MFA enforced for users of critical system)\n# Écrit par muse-spark-1.3 le 2026-11-11 — à relire avant validation.\nimport requests\nimport json\nimport os\nimport sys\ntry:\n    base = os.environ[\"LAB_URL\"]\n    tok = os.environ[\"LAB_TOKEN\"]\nexcept Exception as e:\n    sys.stderr.write(\"missing environment: \" + str(e) + \"\\n\")\n    sys.exit(2)\nbase = base.rstrip(\"/\")\nheaders = {\"Authorization\": \"Bearer \" + tok}\nusers = []\nfirst = 0\nsize = 100\ncurrent = base + \"/api/kc/users?first=0&max=100\"\nseen = []\nwhile current is not None:\n    try:\n        resp = requests.get(current, headers=headers)\n    except Exception as e:\n        sys.stderr.write(\"request failed: \" + str(e) + \"\\n\")\n        sys.exit(2)\n    if resp.status_code != 200:\n        sys.stderr.write(\"unexpected status \" + str(resp.status_code) + \" for users list\\n\")\n        sys.exit(2)\n    try:\n        data = resp.json()\n    except Exception as e:\n        sys.stderr.write(\"invalid json: \" + str(e) + \"\\n\")\n        sys.exit(2)\n    if not isinstance(data, list):\n        sys.stderr.write(\"unexpected data type, expected list\\n\")\n        sys.exit(2)\n    for entry in data:\n        if not isinstance(entry, dict):\n            sys.stderr.write(\"unexpected entry type\\n\")\n            sys.exit(2)\n        if \"username\" not in entry:\n            sys.stderr.write(\"missing username field\\n\")\n            sys.exit(2)\n        if \"totp\" not in entry:\n            sys.stderr.write(\"missing totp field\\n\")\n            sys.exit(2)\n        if not isinstance(entry[\"totp\"], bool):\n            sys.stderr.write(\"unexpected totp type for user \" + str(entry[\"username\"]) + \"\\n\")\n            sys.exit(2)\n        if not isinstance(entry[\"username\"], str):\n            sys.stderr.write(\"unexpected username type\\n\")\n            sys.exit(2)\n    for entry in data:\n        users.append(entry)\n    seen.append(current)\n    nxt = None\n    try:\n        links = resp.links\n    except Exception as e:\n        sys.stderr.write(\"cannot read pagination links: \" + str(e) + \"\\n\")\n        sys.exit(2)\n    if isinstance(links, dict) and \"next\" in links:\n        try:\n            raw = links[\"next\"][\"url\"]\n        except Exception:\n            sys.stderr.write(\"invalid next link structure\\n\")\n            sys.exit(2)\n        if not isinstance(raw, str):\n            sys.stderr.write(\"invalid next link type\\n\")\n            sys.exit(2)\n        if len(raw) == 0:\n            sys.stderr.write(\"empty next link\\n\")\n            sys.exit(2)\n        if raw.startswith(\"http://\") or raw.startswith(\"https://\"):\n            nxt = raw\n        elif raw.startswith(\"/\"):\n            nxt = base + raw\n        else:\n            nxt = base + \"/\" + raw\n    if nxt is not None:\n        if nxt in seen:\n            sys.stderr.write(\"pagination loop detected\\n\")\n            sys.exit(2)\n        current = nxt\n        first = first + size\n        continue\n    totalpages = None\n    try:\n        if \"X-Total-Pages\" in resp.headers:\n            totalpages = resp.headers[\"X-Total-Pages\"]\n    except Exception as e:\n        sys.stderr.write(\"cannot read headers: \" + str(e) + \"\\n\")\n        sys.exit(2)\n    if totalpages is not None:\n        try:\n            need = int(str(totalpages).strip())\n        except Exception:\n            sys.stderr.write(\"invalid X-Total-Pages value\\n\")\n            sys.exit(2)\n        curpage = first // size + 1\n        if curpage < need:\n            first = first + size\n            current = base + \"/api/kc/users?first=\" + str(first) + \"&max=\" + str(size)\n            if current in seen:\n                sys.stderr.write(\"pagination loop detected\\n\")\n                sys.exit(2)\n            continue\n        else:\n            current = None\n    else:\n        if len(data) < size:\n            current = None\n        else:\n            if len(data) == 0:\n                current = None\n            else:\n                first = first + size\n                current = base + \"/api/kc/users?first=\" + str(first) + \"&max=\" + str(size)\n                if current in seen:\n                    sys.stderr.write(\"pagination loop detected\\n\")\n                    sys.exit(2)\n                continue\ntry:\n    ev = requests.get(base + \"/kc/users\", headers=headers)\nexcept Exception as e:\n    sys.stderr.write(\"evidence request failed: \" + str(e) + \"\\n\")\n    sys.exit(2)\nif ev.status_code != 200:\n    sys.stderr.write(\"evidence page unexpected status \" + str(ev.status_code) + \"\\n\")\n    sys.exit(2)\nbad = []\nfor entry in users:\n    if entry[\"totp\"] == False:\n        bad.append(entry[\"username\"])\ntotal = len(users)\ncountbad = len(bad)\nif countbad == 0:\n    observed = []\n    detail = \"Checked \" + str(total) + \" users, all have totp=true.\"\n    result = {\"status\": \"pass\", \"observed\": observed, \"expected\": \"totp=true for all users\", \"detail\": detail, \"evidence_page\": \"/kc/users\"}\nelse:\n    detail = \"Checked \" + str(total) + \" users, \" + str(countbad) + \" without MFA.\"\n    result = {\"status\": \"fail\", \"observed\": bad, \"expected\": \"totp=true for all users\", \"detail\": detail, \"evidence_page\": \"/kc/users\"}\nprint(json.dumps(result))\n",
+        "requests": 3
+      },
+      "before": {
+        "status": "fail",
+        "observed": [
+          "y.tanguy"
+        ],
+        "expected": "totp=true for all users",
+        "detail": "Checked 180 users, 1 without MFA.",
+        "evidence_page": "/kc/users"
+      },
+      "evidence_before": {
+        "image": "evidence/C2_before.png",
+        "sha256": "dad7faedc4d194d7f80c06c452a8e3d1270db1e2961b0105c3be4fe64228f8b3",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "y.tanguy yannick.tanguy@menhir-finance.example admin yes no",
+          "field_boxes": [
+            [
+              22,
+              2505,
+              1077,
+              2538
+            ]
+          ],
+          "comment": "Screenshot shows accounts 101-180 with y.tanguy as the only account with MFA marked no.",
+          "pii": [
+            {
+              "text": "louis.uguen@menhir-finance.example",
+              "box": [
+                183,
+                202,
+                530,
+                220
+              ]
+            },
+            {
+              "text": "marie.allain@menhir-finance.example",
+              "box": [
+                183,
+                232,
+                530,
+                250
+              ]
+            },
+            {
+              "text": "morgane.briand@menhir-finance.example",
+              "box": [
+                183,
+                262,
+                530,
+                280
+              ]
+            },
+            {
+              "text": "maxime.dubois@menhir-finance.example",
+              "box": [
+                183,
+                292,
+                530,
+                310
+              ]
+            },
+            {
+              "text": "mael.dupont@menhir-finance.example",
+              "box": [
+                183,
+                322,
+                530,
+                340
+              ]
+            },
+            {
+              "text": "maela.floch@menhir-finance.example",
+              "box": [
+                183,
+                352,
+                530,
+                370
+              ]
+            },
+            {
+              "text": "manon.garcia@menhir-finance.example",
+              "box": [
+                183,
+                382,
+                530,
+                400
+              ]
+            },
+            {
+              "text": "maxime.gourmelen@menhir-finance.example",
+              "box": [
+                183,
+                412,
+                530,
+                430
+              ]
+            },
+            {
+              "text": "maxime.guillou@menhir-finance.example",
+              "box": [
+                183,
+                442,
+                530,
+                460
+              ]
+            },
+            {
+              "text": "morgane.hamon@menhir-finance.example",
+              "box": [
+                183,
+                472,
+                530,
+                490
+              ]
+            },
+            {
+              "text": "mael.jaouen@menhir-finance.example",
+              "box": [
+                183,
+                502,
+                530,
+                520
+              ]
+            },
+            {
+              "text": "manon.jaouen2@menhir-finance.example",
+              "box": [
+                183,
+                532,
+                530,
+                550
+              ]
+            },
+            {
+              "text": "manon.jegou@menhir-finance.example",
+              "box": [
+                183,
+                562,
+                530,
+                580
+              ]
+            },
+            {
+              "text": "mael.jegou2@menhir-finance.example",
+              "box": [
+                183,
+                592,
+                530,
+                610
+              ]
+            },
+            {
+              "text": "manon.kervella@menhir-finance.example",
+              "box": [
+                183,
+                622,
+                530,
+                640
+              ]
+            },
+            {
+              "text": "mael.lefloch@menhir-finance.example",
+              "box": [
+                183,
+                652,
+                530,
+                670
+              ]
+            },
+            {
+              "text": "maiwenn.pichon@menhir-finance.example",
+              "box": [
+                183,
+                682,
+                530,
+                700
+              ]
+            },
+            {
+              "text": "maela.quillien@menhir-finance.example",
+              "box": [
+                183,
+                712,
+                530,
+                730
+              ]
+            },
+            {
+              "text": "nathalie.abgrall@menhir-finance.example",
+              "box": [
+                183,
+                742,
+                530,
+                760
+              ]
+            },
+            {
+              "text": "nathalie.bonnet@menhir-finance.example",
+              "box": [
+                183,
+                772,
+                530,
+                790
+              ]
+            },
+            {
+              "text": "nicolas.dupont@menhir-finance.example",
+              "box": [
+                183,
+                802,
+                530,
+                820
+              ]
+            },
+            {
+              "text": "nolwenn.gourmelen@menhir-finance.example",
+              "box": [
+                183,
+                832,
+                530,
+                850
+              ]
+            },
+            {
+              "text": "nicolas.hamon@menhir-finance.example",
+              "box": [
+                183,
+                862,
+                530,
+                880
+              ]
+            },
+            {
+              "text": "nicolas.hamon2@menhir-finance.example",
+              "box": [
+                183,
+                892,
+                530,
+                910
+              ]
+            },
+            {
+              "text": "nicolas.lambert@menhir-finance.example",
+              "box": [
+                183,
+                922,
+                530,
+                940
+              ]
+            },
+            {
+              "text": "nathalie.prigent@menhir-finance.example",
+              "box": [
+                183,
+                952,
+                530,
+                970
+              ]
+            },
+            {
+              "text": "nicolas.raoul@menhir-finance.example",
+              "box": [
+                183,
+                982,
+                530,
+                1000
+              ]
+            },
+            {
+              "text": "nolwenn.tanguy@menhir-finance.example",
+              "box": [
+                183,
+                1012,
+                530,
+                1030
+              ]
+            },
+            {
+              "text": "nathalie.vincent@menhir-finance.example",
+              "box": [
+                183,
+                1042,
+                530,
+                1060
+              ]
+            },
+            {
+              "text": "olivier.tanguy@menhir-finance.example",
+              "box": [
+                183,
+                1072,
+                530,
+                1090
+              ]
+            },
+            {
+              "text": "pierre.bertrand@menhir-finance.example",
+              "box": [
+                183,
+                1102,
+                530,
+                1120
+              ]
+            },
+            {
+              "text": "paul.david@menhir-finance.example",
+              "box": [
+                183,
+                1132,
+                530,
+                1150
+              ]
+            },
+            {
+              "text": "pierre.gourmelen@menhir-finance.example",
+              "box": [
+                183,
+                1162,
+                530,
+                1180
+              ]
+            },
+            {
+              "text": "patrick.henaff@menhir-finance.example",
+              "box": [
+                183,
+                1192,
+                530,
+                1210
+              ]
+            },
+            {
+              "text": "pauline.henaff2@menhir-finance.example",
+              "box": [
+                183,
+                1222,
+                530,
+                1240
+              ]
+            },
+            {
+              "text": "patrick.jaouen@menhir-finance.example",
+              "box": [
+                183,
+                1252,
+                530,
+                1270
+              ]
+            },
+            {
+              "text": "patrick.le-roux@menhir-finance.example",
+              "box": [
+                183,
+                1282,
+                530,
+                1300
+              ]
+            },
+            {
+              "text": "paul.martin@menhir-finance.example",
+              "box": [
+                183,
+                1312,
+                530,
+                1330
+              ]
+            },
+            {
+              "text": "pauline.morvan@menhir-finance.example",
+              "box": [
+                183,
+                1342,
+                530,
+                1360
+              ]
+            },
+            {
+              "text": "paul.petit@menhir-finance.example",
+              "box": [
+                183,
+                1372,
+                530,
+                1390
+              ]
+            },
+            {
+              "text": "patrick.quere@menhir-finance.example",
+              "box": [
+                183,
+                1402,
+                530,
+                1420
+              ]
+            },
+            {
+              "text": "quentin.girard@menhir-finance.example",
+              "box": [
+                183,
+                1432,
+                530,
+                1450
+              ]
+            },
+            {
+              "text": "quentin.kerbrat@menhir-finance.example",
+              "box": [
+                183,
+                1462,
+                530,
+                1480
+              ]
+            },
+            {
+              "text": "quentin.kervella@menhir-finance.example",
+              "box": [
+                183,
+                1492,
+                530,
+                1510
+              ]
+            },
+            {
+              "text": "quentin.kervella2@menhir-finance.example",
+              "box": [
+                183,
+                1522,
+                530,
+                1540
+              ]
+            },
+            {
+              "text": "quentin.vigouroux@menhir-finance.example",
+              "box": [
+                183,
+                1552,
+                530,
+                1570
+              ]
+            },
+            {
+              "text": "quentin.vigouroux2@menhir-finance.example",
+              "box": [
+                183,
+                1582,
+                530,
+                1600
+              ]
+            },
+            {
+              "text": "romain.fournier@menhir-finance.example",
+              "box": [
+                183,
+                1612,
+                530,
+                1630
+              ]
+            },
+            {
+              "text": "romain.girard@menhir-finance.example",
+              "box": [
+                183,
+                1642,
+                530,
+                1660
+              ]
+            },
+            {
+              "text": "rozenn.gourvennec@menhir-finance.example",
+              "box": [
+                183,
+                1672,
+                530,
+                1690
+              ]
+            },
+            {
+              "text": "rozenn.hamon@menhir-finance.example",
+              "box": [
+                183,
+                1702,
+                530,
+                1720
+              ]
+            },
+            {
+              "text": "rozenn.lambert@menhir-finance.example",
+              "box": [
+                183,
+                1732,
+                530,
+                1750
+              ]
+            },
+            {
+              "text": "rozenn.michel@menhir-finance.example",
+              "box": [
+                183,
+                1762,
+                530,
+                1780
+              ]
+            },
+            {
+              "text": "sophie.cloarec@menhir-finance.example",
+              "box": [
+                183,
+                1792,
+                530,
+                1810
+              ]
+            },
+            {
+              "text": "sophie.floch@menhir-finance.example",
+              "box": [
+                183,
+                1822,
+                530,
+                1840
+              ]
+            },
+            {
+              "text": "sarah.kerjean@menhir-finance.example",
+              "box": [
+                183,
+                1852,
+                530,
+                1870
+              ]
+            },
+            {
+              "text": "sophie.le-goff@menhir-finance.example",
+              "box": [
+                183,
+                1882,
+                530,
+                1900
+              ]
+            },
+            {
+              "text": "sophie.le-meur@menhir-finance.example",
+              "box": [
+                183,
+                1912,
+                530,
+                1930
+              ]
+            },
+            {
+              "text": "sylvain.morvan@menhir-finance.example",
+              "box": [
+                183,
+                1942,
+                530,
+                1960
+              ]
+            },
+            {
+              "text": "sophie.richard@menhir-finance.example",
+              "box": [
+                183,
+                1972,
+                530,
+                1990
+              ]
+            },
+            {
+              "text": "sophie.tanguy@menhir-finance.example",
+              "box": [
+                183,
+                2002,
+                530,
+                2020
+              ]
+            },
+            {
+              "text": "sarah.uguen@menhir-finance.example",
+              "box": [
+                183,
+                2032,
+                530,
+                2050
+              ]
+            },
+            {
+              "text": "thomas.briand@menhir-finance.example",
+              "box": [
+                183,
+                2062,
+                530,
+                2080
+              ]
+            },
+            {
+              "text": "tifenn.gourmelen@menhir-finance.example",
+              "box": [
+                183,
+                2092,
+                530,
+                2110
+              ]
+            },
+            {
+              "text": "tifenn.kerbrat@menhir-finance.example",
+              "box": [
+                183,
+                2122,
+                530,
+                2140
+              ]
+            },
+            {
+              "text": "thomas.le-goff@menhir-finance.example",
+              "box": [
+                183,
+                2152,
+                530,
+                2170
+              ]
+            },
+            {
+              "text": "ulysse.le-roux@menhir-finance.example",
+              "box": [
+                183,
+                2182,
+                530,
+                2200
+              ]
+            },
+            {
+              "text": "ulysse.le-roux2@menhir-finance.example",
+              "box": [
+                183,
+                2212,
+                530,
+                2230
+              ]
+            },
+            {
+              "text": "ulysse.nedelec@menhir-finance.example",
+              "box": [
+                183,
+                2242,
+                530,
+                2260
+              ]
+            },
+            {
+              "text": "ulysse.tanguy@menhir-finance.example",
+              "box": [
+                183,
+                2272,
+                530,
+                2290
+              ]
+            },
+            {
+              "text": "valerie.bertrand@menhir-finance.example",
+              "box": [
+                183,
+                2302,
+                530,
+                2320
+              ]
+            },
+            {
+              "text": "valerie.garcia@menhir-finance.example",
+              "box": [
+                183,
+                2332,
+                530,
+                2350
+              ]
+            },
+            {
+              "text": "xavier.gourmelen@menhir-finance.example",
+              "box": [
+                183,
+                2362,
+                530,
+                2380
+              ]
+            },
+            {
+              "text": "xavier.le-bihan@menhir-finance.example",
+              "box": [
+                183,
+                2392,
+                530,
+                2410
+              ]
+            },
+            {
+              "text": "xavier.le-gall@menhir-finance.example",
+              "box": [
+                183,
+                2422,
+                530,
+                2440
+              ]
+            },
+            {
+              "text": "yann.even@menhir-finance.example",
+              "box": [
+                183,
+                2452,
+                530,
+                2470
+              ]
+            },
+            {
+              "text": "yannick.laurent@menhir-finance.example",
+              "box": [
+                183,
+                2482,
+                530,
+                2500
+              ]
+            },
+            {
+              "text": "yannick.tanguy@menhir-finance.example",
+              "box": [
+                183,
+                2512,
+                530,
+                2530
+              ]
+            },
+            {
+              "text": "yannick.vincent@menhir-finance.example",
+              "box": [
+                183,
+                2542,
+                530,
+                2560
+              ]
+            },
+            {
+              "text": "zoe.lefloch@menhir-finance.example",
+              "box": [
+                183,
+                2572,
+                530,
+                2590
+              ]
+            }
+          ],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 80,
+          "pii_masked": 80,
+          "pii_found_by_model": 78
+        },
+        "page": "/kc/users?first=100&max=100",
+        "page_verified": null,
+        "ts": "2026-11-11 12:31:27"
+      },
+      "status_before": "fail",
+      "finding": {
+        "id": "F-02",
+        "severity": "elevee",
+        "status": "open",
+        "owner": "IT department — IAM team",
+        "due": "2027-02-09"
+      }
+    },
+    {
+      "control": {
+        "id": "C3",
+        "rule": "PSI-4.3",
+        "title": "Minimum password length and complexity",
+        "objective": "Password policy must require at least 12 characters with complexity requirements.",
+        "test_procedure": "Retrieve the realm representation via GET /api/kc/realm and verify the passwordPolicy requires length 12 and complexity.",
+        "expected": "passwordPolicy contains length(12) and upperCase, lowerCase, digits, specialChars",
+        "severity": "moyenne",
+        "references": [
+          "DORA 9(4)(d)"
+        ],
+        "risk": "Weak passwords can be brute-forced or guessed, leading to unauthorized access.",
+        "recommendation": "Set the realm password policy to at least 12 characters with upper/lower case, digits and special characters.",
+        "cause": "Secure password policy defaults were not applied when the realm was configured.",
+        "evidence_page": "/kc/realm",
+        "remediation": "config"
+      },
+      "test": {
+        "script": "scripts/C3_PSI-4.3.py",
+        "sha256": "d0cead329c96459fd622ef58662a5d615cf07aa5b75d47cc8a66f1a87d2518a0",
+        "origin": "library",
+        "code": "# Attest — test PSI-4.3 (Minimum password length and complexity)\n# Écrit par muse-spark-1.3 le 2026-11-11 — à relire avant validation.\nimport requests\nimport json\nimport os\nimport sys\nimport re\ntry:\n    base = os.environ[\"LAB_URL\"]\n    tok = os.environ[\"LAB_TOKEN\"]\nexcept Exception:\n    sys.stderr.write(\"missing LAB_URL or LAB_TOKEN\\n\")\n    sys.exit(2)\nif not isinstance(base, str):\n    sys.stderr.write(\"LAB_URL invalid\\n\")\n    sys.exit(2)\nif not isinstance(tok, str):\n    sys.stderr.write(\"LAB_TOKEN invalid\\n\")\n    sys.exit(2)\nheaders = {\"Authorization\": \"Bearer \" + os.environ[\"LAB_TOKEN\"]}\nroot = base.rstrip(\"/\")\ntry:\n    resp = requests.get(root + \"/api/kc/realm\", headers=headers, timeout=30)\nexcept Exception:\n    sys.stderr.write(\"realm request failed\\n\")\n    sys.exit(2)\nif resp.status_code != 200:\n    sys.stderr.write(\"realm status not 200\\n\")\n    sys.exit(2)\ntry:\n    ev = requests.get(root + \"/kc/realm\", headers=headers, timeout=30)\nexcept Exception:\n    sys.stderr.write(\"evidence request failed\\n\")\n    sys.exit(2)\nif ev.status_code != 200:\n    sys.stderr.write(\"evidence status not 200\\n\")\n    sys.exit(2)\ntry:\n    data = resp.json()\nexcept Exception:\n    sys.stderr.write(\"realm json invalid\\n\")\n    sys.exit(2)\nif not isinstance(data, dict):\n    sys.stderr.write(\"realm not object\\n\")\n    sys.exit(2)\npolicy = None\nif \"passwordPolicy\" in data:\n    policy = data[\"passwordPolicy\"]\nif policy is not None and not isinstance(policy, str):\n    sys.stderr.write(\"passwordPolicy type invalid\\n\")\n    sys.exit(2)\nvals = {}\nif isinstance(policy, str):\n    parts = re.findall(r\"([A-Za-z]+)\\s*\\(\\s*([^)]*)\\s*\\)\", policy)\n    for k, v in parts:\n        vv = v.strip()\n        try:\n            vals[k] = int(vv)\n        except Exception:\n            vals[k] = vv\nok_len = \"length\" in vals and isinstance(vals[\"length\"], int) and vals[\"length\"] >= 12\nok_up = \"upperCase\" in vals and isinstance(vals[\"upperCase\"], int) and vals[\"upperCase\"] >= 1\nok_low = \"lowerCase\" in vals and isinstance(vals[\"lowerCase\"], int) and vals[\"lowerCase\"] >= 1\nok_dig = \"digits\" in vals and isinstance(vals[\"digits\"], int) and vals[\"digits\"] >= 1\nok_spe = \"specialChars\" in vals and isinstance(vals[\"specialChars\"], int) and vals[\"specialChars\"] >= 1\ngood = ok_len and ok_up and ok_low and ok_dig and ok_spe\nexp = \"passwordPolicy contains length(12) and upperCase, lowerCase, digits, specialChars\"\nif good:\n    detail = \"Checked 1 realm representation and passwordPolicy requires length 12 with upperCase, lowerCase, digits and specialChars.\"\n    print(json.dumps({\"status\": \"pass\", \"observed\": policy, \"expected\": exp, \"detail\": detail, \"evidence_page\": \"/kc/realm\"}))\nelse:\n    detail = \"Checked 1 realm representation and passwordPolicy does not require length 12 with upperCase, lowerCase, digits and specialChars.\"\n    print(json.dumps({\"status\": \"fail\", \"observed\": policy, \"expected\": exp, \"detail\": detail, \"evidence_page\": \"/kc/realm\"}))\n",
+        "requests": 2
+      },
+      "before": {
+        "status": "fail",
+        "observed": "length(14)",
+        "expected": "passwordPolicy contains length(12) and upperCase, lowerCase, digits, specialChars",
+        "detail": "Checked 1 realm representation and passwordPolicy does not require length 12 with upperCase, lowerCase, digits and specialChars.",
+        "evidence_page": "/kc/realm"
+      },
+      "evidence_before": {
+        "image": "evidence/C3_before.png",
+        "sha256": "64b8789ad5b89ccbee6b0ed0f6eab8751b5e9c066f1104c37eca24c72d15b0b1",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "passwordPolicy length(14)",
+          "field_boxes": [
+            [
+              26,
+              228,
+              1074,
+              258
+            ]
+          ],
+          "comment": "Screenshot shows passwordPolicy is length(14) with no complexity requirements.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 0,
+          "pii_masked": 0,
+          "pii_found_by_model": 0
+        },
+        "page": "/kc/realm",
+        "page_verified": null,
+        "ts": "2026-11-11 12:30:37"
+      },
+      "status_before": "fail",
+      "finding": {
+        "id": "F-03",
+        "severity": "moyenne",
+        "status": "open",
+        "owner": "IT department — IAM team",
+        "due": "2027-05-10"
+      }
+    },
+    {
+      "control": {
+        "id": "C4",
+        "rule": "PSI-4.4",
+        "title": "Account lockout after repeated failures",
+        "objective": "Account lockout must be enabled and trigger after at most 5 failed logins, never disabled.",
+        "test_procedure": "Retrieve the realm representation via GET /api/kc/realm and verify bruteForceProtected is enabled with failureFactor at most 5.",
+        "expected": "bruteForceProtected=true and failureFactor<=5",
+        "severity": "moyenne",
+        "references": [
+          "DORA 9(4)(c)"
+        ],
+        "risk": "Without lockout, attackers can perform unlimited online password guessing against accounts.",
+        "recommendation": "Enable brute-force protection and set the failure threshold to 5 attempts or fewer.",
+        "cause": "Brute-force protection was left disabled or set too permissively during realm hardening.",
+        "evidence_page": "/kc/realm",
+        "remediation": "config"
+      },
+      "test": {
+        "script": "scripts/C4_PSI-4.4.py",
+        "sha256": "8e6c056f9268416a564489146fc454a616ec4946a6588b6c9c650f341e774880",
+        "origin": "library",
+        "code": "# Attest — test PSI-4.4 (Account lockout after repeated failures)\n# Écrit par muse-spark-1.3 le 2026-11-11 — à relire avant validation.\nimport requests\nimport json\nimport os\nimport sys\nimport re\nbase = os.environ[\"LAB_URL\"].rstrip(\"/\")\nheaders = {\"Authorization\": \"Bearer \" + os.environ[\"LAB_TOKEN\"]}\ntry:\n    resp = requests.get(base + \"/api/kc/realm\", headers=headers, timeout=30)\nexcept Exception as ex:\n    sys.stderr.write(\"realm request failed: \" + str(ex) + \"\\n\")\n    sys.exit(2)\nif resp.status_code != 200:\n    sys.stderr.write(\"realm request status \" + str(resp.status_code) + \"\\n\")\n    sys.exit(2)\ntry:\n    data = resp.json()\nexcept Exception as ex:\n    sys.stderr.write(\"realm json failed: \" + str(ex) + \"\\n\")\n    sys.exit(2)\nif type(data) is not dict:\n    sys.stderr.write(\"realm representation not object\\n\")\n    sys.exit(2)\nif \"bruteForceProtected\" not in data:\n    sys.stderr.write(\"bruteForceProtected missing\\n\")\n    sys.exit(2)\nbrute = data[\"bruteForceProtected\"]\nif brute is not True and brute is not False:\n    sys.stderr.write(\"bruteForceProtected not bool\\n\")\n    sys.exit(2)\ntry:\n    ev = requests.get(base + \"/kc/realm\", headers=headers, timeout=30)\nexcept Exception as ex:\n    sys.stderr.write(\"evidence request failed: \" + str(ex) + \"\\n\")\n    sys.exit(2)\nif ev.status_code != 200:\n    sys.stderr.write(\"evidence request status \" + str(ev.status_code) + \"\\n\")\n    sys.exit(2)\nexpected = \"bruteForceProtected=true and failureFactor<=5\"\nevidence = \"/kc/realm\"\nif brute is not True:\n    observed = {\"bruteForceProtected\": brute}\n    if \"failureFactor\" in data:\n        observed[\"failureFactor\"] = data[\"failureFactor\"]\n    detail = \"Realm has brute-force protection disabled.\"\n    print(json.dumps({\"status\": \"fail\", \"observed\": observed, \"expected\": expected, \"detail\": detail, \"evidence_page\": evidence}))\nelse:\n    if \"failureFactor\" not in data:\n        sys.stderr.write(\"failureFactor missing\\n\")\n        sys.exit(2)\n    factor = data[\"failureFactor\"]\n    if type(factor) is not int:\n        sys.stderr.write(\"failureFactor not int\\n\")\n        sys.exit(2)\n    if factor <= 5:\n        observed = {\"bruteForceProtected\": brute, \"failureFactor\": factor}\n        detail = \"Realm has brute-force protection enabled with failureFactor \" + str(factor) + \".\"\n        print(json.dumps({\"status\": \"pass\", \"observed\": observed, \"expected\": expected, \"detail\": detail, \"evidence_page\": evidence}))\n    else:\n        observed = {\"bruteForceProtected\": brute, \"failureFactor\": factor}\n        detail = \"Realm has brute-force protection enabled with failureFactor \" + str(factor) + \" exceeding limit 5.\"\n        print(json.dumps({\"status\": \"fail\", \"observed\": observed, \"expected\": expected, \"detail\": detail, \"evidence_page\": evidence}))\n",
+        "requests": 2
+      },
+      "before": {
+        "status": "pass",
+        "observed": {
+          "bruteForceProtected": true,
+          "failureFactor": 3
+        },
+        "expected": "bruteForceProtected=true and failureFactor<=5",
+        "detail": "Realm has brute-force protection enabled with failureFactor 3.",
+        "evidence_page": "/kc/realm"
+      },
+      "evidence_before": {
+        "image": "evidence/C4_before.png",
+        "sha256": "e604fb9e82c5006a9a5a3c4246ae71ab3afd3999032b09f8260c37fc4dd2342e",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "bruteForceProtected True, failureFactor 3",
+          "field_boxes": [
+            [
+              24,
+              252,
+              1075,
+              282
+            ],
+            [
+              24,
+              309,
+              1075,
+              339
+            ]
+          ],
+          "comment": "Screenshot shows bruteForceProtected True and failureFactor 3, matching the automated pass result.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 0,
+          "pii_masked": 0,
+          "pii_found_by_model": 0
+        },
+        "page": "/kc/realm",
+        "page_verified": null,
+        "ts": "2026-11-11 12:30:38"
+      },
+      "status_before": "pass"
+    },
+    {
+      "control": {
+        "id": "C5",
+        "rule": "PSI-4.5",
+        "title": "Inactive session timeout",
+        "objective": "Idle sessions must expire after at most 15 minutes and idle timeout must never be disabled.",
+        "test_procedure": "Retrieve the realm representation via GET /api/kc/realm and verify ssoSessionIdleTimeout is set to 900 seconds or less.",
+        "expected": "ssoSessionIdleTimeout<=900 and >0",
+        "severity": "moyenne",
+        "references": [
+          "DORA 9(4)(c)"
+        ],
+        "risk": "Overly long idle sessions allow session hijacking from unattended workstations.",
+        "recommendation": "Set the SSO idle session timeout to 15 minutes or less.",
+        "cause": "Session timeout was left at the insecure default value due to missing hardening baseline.",
+        "evidence_page": "/kc/realm",
+        "remediation": "config"
+      },
+      "test": {
+        "script": "scripts/C5_PSI-4.5.py",
+        "sha256": "a1dcf90b1888dffd7d48e9d976aeacb32c366b845a2d1cf78394cd491fb6eed2",
+        "origin": "library",
+        "code": "# Attest — test PSI-4.5 (Inactive session timeout)\n# Écrit par muse-spark-1.3 le 2026-11-11 — à relire avant validation.\nimport requests\nimport json\nimport os\nimport sys\nimport re\nif \"LAB_URL\" not in os.environ or \"LAB_TOKEN\" not in os.environ:\n    sys.stderr.write(\"missing LAB_URL or LAB_TOKEN\\n\")\n    sys.exit(2)\nbaseUrl = os.environ[\"LAB_URL\"]\nlabToken = os.environ[\"LAB_TOKEN\"]\nif baseUrl == \"\":\n    sys.stderr.write(\"empty LAB_URL\\n\")\n    sys.exit(2)\nauthHeader = {\"Authorization\": \"Bearer \" + labToken}\nrealmApiUrl = baseUrl.rstrip(\"/\") + \"/api/kc/realm\"\nevidencePath = \"/kc/realm\"\nevidenceUrl = baseUrl.rstrip(\"/\") + evidencePath\ntry:\n    realmResp = requests.get(realmApiUrl, headers=authHeader, timeout=30)\nexcept Exception:\n    sys.stderr.write(\"request failed for realm API\\n\")\n    sys.exit(2)\nif realmResp.status_code != 200:\n    sys.stderr.write(\"unexpected status for realm API\\n\")\n    sys.exit(2)\ntry:\n    realmData = realmResp.json()\nexcept Exception:\n    sys.stderr.write(\"invalid json for realm API\\n\")\n    sys.exit(2)\nif not isinstance(realmData, dict):\n    sys.stderr.write(\"unexpected data for realm API\\n\")\n    sys.exit(2)\nif \"ssoSessionIdleTimeout\" not in realmData:\n    sys.stderr.write(\"missing ssoSessionIdleTimeout\\n\")\n    sys.exit(2)\nidleVal = realmData[\"ssoSessionIdleTimeout\"]\nif type(idleVal) is not int:\n    sys.stderr.write(\"unexpected type for ssoSessionIdleTimeout\\n\")\n    sys.exit(2)\ntry:\n    evResp = requests.get(evidenceUrl, headers=authHeader, timeout=30)\nexcept Exception:\n    sys.stderr.write(\"request failed for evidence page\\n\")\n    sys.exit(2)\nif evResp.status_code != 200:\n    sys.stderr.write(\"unexpected status for evidence page\\n\")\n    sys.exit(2)\nevText = evResp.text\nif not isinstance(evText, str) or len(evText) == 0:\n    sys.stderr.write(\"empty evidence page\\n\")\n    sys.exit(2)\nif idleVal > 0 and idleVal <= 900:\n    result = {\"status\": \"pass\", \"observed\": idleVal, \"expected\": \"ssoSessionIdleTimeout<=900 and >0\", \"detail\": \"ssoSessionIdleTimeout is \" + str(idleVal) + \" seconds, within 15 minutes.\", \"evidence_page\": evidencePath}\n    print(json.dumps(result))\nelse:\n    if idleVal <= 0:\n        detailMsg = \"ssoSessionIdleTimeout is \" + str(idleVal) + \" seconds, idle timeout is disabled.\"\n    else:\n        detailMsg = \"ssoSessionIdleTimeout is \" + str(idleVal) + \" seconds, exceeding 15 minutes.\"\n    result = {\"status\": \"fail\", \"observed\": idleVal, \"expected\": \"ssoSessionIdleTimeout<=900 and >0\", \"detail\": detailMsg, \"evidence_page\": evidencePath}\n    print(json.dumps(result))\n",
+        "requests": 2
+      },
+      "before": {
+        "status": "fail",
+        "observed": 1800,
+        "expected": "ssoSessionIdleTimeout<=900 and >0",
+        "detail": "ssoSessionIdleTimeout is 1800 seconds, exceeding 15 minutes.",
+        "evidence_page": "/kc/realm"
+      },
+      "evidence_before": {
+        "image": "evidence/C5_before.png",
+        "sha256": "b0a6437a5f1517794342f2bb440ab3a3b6e11250f4bd6754ae78bfe79ebef5ff",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "ssoSessionIdleTimeout 1800",
+          "field_boxes": [
+            [
+              26,
+              412,
+              1074,
+              444
+            ]
+          ],
+          "comment": "The screenshot shows ssoSessionIdleTimeout is 1800 seconds, exceeding the 900-second limit.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 0,
+          "pii_masked": 0,
+          "pii_found_by_model": 0
+        },
+        "page": "/kc/realm",
+        "page_verified": null,
+        "ts": "2026-11-11 12:30:51"
+      },
+      "status_before": "fail",
+      "finding": {
+        "id": "F-04",
+        "severity": "moyenne",
+        "status": "open",
+        "owner": "IT department — IAM team",
+        "due": "2027-05-10"
+      }
+    },
+    {
+      "control": {
+        "id": "C6",
+        "rule": "PSI-4.6",
+        "title": "Logging of administration actions",
+        "objective": "All administration actions must be recorded as admin events.",
+        "test_procedure": "Retrieve the realm representation via GET /api/kc/realm and verify adminEventsEnabled is true.",
+        "expected": "adminEventsEnabled=true",
+        "severity": "elevee",
+        "references": [
+          "RTS 12(2)(c)(i)"
+        ],
+        "risk": "Without admin audit logging, malicious or erroneous privileged changes cannot be detected or investigated.",
+        "recommendation": "Enable admin events recording for the realm including details and secure retention.",
+        "cause": "Audit event collection was not enabled as part of the logging baseline for the realm.",
+        "evidence_page": "/kc/realm",
+        "remediation": "config"
+      },
+      "test": {
+        "script": "scripts/C6_PSI-4.6.py",
+        "sha256": "033e67f8092e2f556127b44342252f7247712330eea81d1b15d456735154420e",
+        "origin": "library",
+        "code": "# Attest — test PSI-4.6 (Logging of administration actions)\n# Écrit par muse-spark-1.3 le 2026-11-11 — à relire avant validation.\nimport requests\nimport json\nimport os\nimport sys\nimport re\ntry:\n    base = os.environ[\"LAB_URL\"]\n    check = os.environ[\"LAB_TOKEN\"]\nexcept KeyError:\n    sys.stderr.write(\"missing LAB_URL or LAB_TOKEN\\n\")\n    sys.exit(2)\nbase = re.sub(\"/+$\", \"\", base)\nheaders = {\"Authorization\": \"Bearer \" + os.environ[\"LAB_TOKEN\"]}\ntry:\n    resp = requests.get(base + \"/api/kc/realm\", headers=headers)\nexcept Exception:\n    sys.stderr.write(\"request to /api/kc/realm failed\\n\")\n    sys.exit(2)\nif resp.status_code != 200:\n    sys.stderr.write(\"unexpected status for /api/kc/realm\\n\")\n    sys.exit(2)\ntry:\n    data = resp.json()\nexcept Exception:\n    sys.stderr.write(\"invalid json for /api/kc/realm\\n\")\n    sys.exit(2)\nif not isinstance(data, dict):\n    sys.stderr.write(\"unexpected data for realm representation\\n\")\n    sys.exit(2)\nif \"adminEventsEnabled\" not in data:\n    sys.stderr.write(\"missing adminEventsEnabled in realm representation\\n\")\n    sys.exit(2)\nval = data[\"adminEventsEnabled\"]\nif not isinstance(val, bool):\n    sys.stderr.write(\"unexpected type for adminEventsEnabled\\n\")\n    sys.exit(2)\ntry:\n    ev = requests.get(base + \"/kc/realm\", headers=headers)\nexcept Exception:\n    sys.stderr.write(\"request to /kc/realm failed\\n\")\n    sys.exit(2)\nif ev.status_code != 200:\n    sys.stderr.write(\"unexpected status for /kc/realm\\n\")\n    sys.exit(2)\nif val is True:\n    status = \"pass\"\n    detail = \"Realm representation shows adminEventsEnabled is True.\"\nelse:\n    status = \"fail\"\n    detail = \"Realm representation shows adminEventsEnabled is False.\"\nprint(json.dumps({\"status\": status, \"observed\": val, \"expected\": \"adminEventsEnabled=true\", \"detail\": detail, \"evidence_page\": \"/kc/realm\"}))\n",
+        "requests": 2
+      },
+      "before": {
+        "status": "pass",
+        "observed": true,
+        "expected": "adminEventsEnabled=true",
+        "detail": "Realm representation shows adminEventsEnabled is True.",
+        "evidence_page": "/kc/realm"
+      },
+      "evidence_before": {
+        "image": "evidence/C6_before.png",
+        "sha256": "66e524d4fa59c51a1592a9edd1250a253fdeac97c908f0b1e0a2d46fc0ec60ac",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "adminEventsEnabled True",
+          "field_boxes": [
+            [
+              28,
+              509,
+              1072,
+              542
+            ]
+          ],
+          "comment": "Screenshot shows adminEventsEnabled is True matching the expected value.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 0,
+          "pii_masked": 0,
+          "pii_found_by_model": 0
+        },
+        "page": "/kc/realm",
+        "page_verified": null,
+        "ts": "2026-11-11 12:30:51"
+      },
+      "status_before": "pass"
+    },
+    {
+      "control": {
+        "id": "C7",
+        "rule": "PSI-4.7",
+        "title": "No generic or shared administrator accounts",
+        "objective": "No account holding the realm role admin may be generic or shared, each admin must have a nominative username of form initiale.nom and a personal email, not a function identifier or shared mailbox.",
+        "test_procedure": "Retrieve all members of the realm role admin via GET /api/kc/roles/admin/users and verify username and email are nominative and not generic or shared.",
+        "expected": "for role admin members, username matches initiale.nom pattern and email is personal, no generic username (ops, admin, root) or shared mailbox (ops-partage@, admin@)",
+        "severity": "elevee",
+        "references": [
+          "DORA 9(4)(c)",
+          "RTS 21(1)(c)",
+          "RTS 21(1)(e)(ii)"
+        ],
+        "risk": "Shared administrator accounts prevent accountability and allow uncontrolled privileged access.",
+        "recommendation": "Remove admin rights from all generic or shared accounts and reissue nominative administrator accounts.",
+        "cause": "Use of operational shared accounts for administration persisted due to missing joiner-mover-leaver and naming controls.",
+        "evidence_page": "/kc/roles/admin/users",
+        "remediation": "manual"
+      },
+      "test": {
+        "script": "scripts/C7_PSI-4.7.py",
+        "sha256": "ad12cb2ee7e9bb75ca408f197e28f66c8bf798c86e093c47b63b2611a49788cc",
+        "origin": "library",
+        "code": "# Attest — test PSI-4.7 (No generic or shared administrator accounts)\n# Écrit par muse-spark-1.3 le 2026-11-11 — à relire avant validation.\nimport requests\nimport json\nimport os\nimport sys\nimport re\n\ntry:\n    base = os.environ[\"LAB_URL\"]\n    token = os.environ[\"LAB_TOKEN\"]\nexcept Exception:\n    print(\"missing LAB_URL or LAB_TOKEN\", file=sys.stderr)\n    sys.exit(2)\n\nheaders = {\"Authorization\": \"Bearer \" + token}\nbase = base.rstrip(\"/\")\n\ngeneric = {\"ops\", \"admin\", \"root\", \"team\", \"support\", \"service\", \"shared\", \"partage\", \"generic\", \"system\"}\n\nusername_re = re.compile(r'^[A-Za-z]\\.[A-Za-z]+(?:-[A-Za-z]+)*\\d*$')\nemail_local_re = re.compile(r'^[A-Za-z]+\\.[A-Za-z]+(?:[._-][A-Za-z]+)*\\d*$')\n\nall_users = []\nurl = base + \"/api/kc/roles/admin/users?first=0&max=100\"\n\nwhile True:\n    try:\n        resp = requests.get(url, headers=headers)\n    except Exception as e:\n        print(\"request failed for admin users\", file=sys.stderr)\n        sys.exit(2)\n    if resp.status_code != 200:\n        print(\"bad status for admin users\", file=sys.stderr)\n        sys.exit(2)\n    try:\n        data = resp.json()\n    except Exception:\n        print(\"invalid json for admin users\", file=sys.stderr)\n        sys.exit(2)\n    if not isinstance(data, list):\n        print(\"unexpected data for admin users\", file=sys.stderr)\n        sys.exit(2)\n    for item in data:\n        if not isinstance(item, dict):\n            print(\"unexpected entry in admin users\", file=sys.stderr)\n            sys.exit(2)\n        all_users.append(item)\n    nxt = None\n    try:\n        links = resp.links\n        if isinstance(links, dict) and \"next\" in links:\n            info = links[\"next\"]\n            if isinstance(info, dict) and \"url\" in info:\n                nxt = info[\"url\"]\n    except Exception:\n        nxt = None\n    if isinstance(nxt, str) and nxt != \"\":\n        if nxt.startswith(\"http://\") or nxt.startswith(\"https://\"):\n            url = nxt\n        else:\n            if nxt.startswith(\"/\"):\n                url = base + nxt\n            else:\n                url = base + \"/\" + nxt\n        continue\n    total_pages = None\n    try:\n        total_pages = resp.headers.get(\"X-Total-Pages\")\n    except Exception:\n        total_pages = None\n    if total_pages is not None:\n        try:\n            tp = int(str(total_pages).strip())\n        except Exception:\n            print(\"invalid X-Total-Pages\", file=sys.stderr)\n            sys.exit(2)\n        m_first = re.search(r'[?&]first=(\\d+)', url)\n        m_max = re.search(r'[?&]max=(\\d+)', url)\n        if m_first and m_max:\n            cur_first = int(m_first.group(1))\n            cur_max = int(m_max.group(1))\n            if cur_max == 0:\n                print(\"invalid max in pagination\", file=sys.stderr)\n                sys.exit(2)\n            cur_page = cur_first // cur_max + 1\n            if cur_page < tp:\n                nxt_first = cur_first + cur_max\n                url = re.sub(r'([?&]first=)\\d+', r'\\g<1>' + str(nxt_first), url)\n                continue\n        else:\n            m_page = re.search(r'[?&]page=(\\d+)', url)\n            if m_page:\n                cur_page = int(m_page.group(1))\n                if cur_page < tp:\n                    url = re.sub(r'([?&]page=)\\d+', r'\\g<1>' + str(cur_page + 1), url)\n                    continue\n    break\n\ntry:\n    ev_resp = requests.get(base + \"/kc/roles/admin/users\", headers=headers)\nexcept Exception:\n    print(\"request failed for evidence page\", file=sys.stderr)\n    sys.exit(2)\nif ev_resp.status_code != 200:\n    print(\"bad status for evidence page\", file=sys.stderr)\n    sys.exit(2)\n\noffenders = []\nnames = []\nfor u in all_users:\n    if \"username\" not in u or \"email\" not in u:\n        print(\"missing username or email field\", file=sys.stderr)\n        sys.exit(2)\n    username = u.get(\"username\")\n    email = u.get(\"email\")\n    if not isinstance(username, str) or username == \"\":\n        print(\"unexpected username value\", file=sys.stderr)\n        sys.exit(2)\n    names.append(username)\n    username_ok = True\n    if username_re.match(username) is None:\n        username_ok = False\n    else:\n        parts = re.split(r'[^A-Za-z]+', username)\n        for p in parts:\n            if p == \"\":\n                continue\n            s = re.sub(r'\\d+$', '', p)\n            if s == \"\":\n                continue\n            if s.lower() in generic:\n                username_ok = False\n                break\n    email_ok = True\n    if not isinstance(email, str) or email == \"\":\n        email_ok = False\n    else:\n        em = email.strip()\n        if \"@\" not in em or em.count(\"@\") != 1 or \" \" in em:\n            email_ok = False\n        else:\n            local, domain = em.split(\"@\", 1)\n            if local == \"\" or domain == \"\":\n                email_ok = False\n            elif email_local_re.match(local) is None:\n                email_ok = False\n            else:\n                parts2 = re.split(r'[^A-Za-z]+', local)\n                for q in parts2:\n                    if q == \"\":\n                        continue\n                    t = re.sub(r'\\d+$', '', q)\n                    if t == \"\":\n                        continue\n                    if t.lower() in generic:\n                        email_ok = False\n                        break\n    if not username_ok or not email_ok:\n        offenders.append(username)\n\ntotal = len(all_users)\nbad = len(offenders)\nexpected_text = \"for role admin members, username matches initiale.nom pattern and email is personal, no generic username (ops, admin, root) or shared mailbox (ops-partage@, admin@)\"\nif bad == 0:\n    result = {\"status\": \"pass\", \"observed\": names, \"expected\": expected_text, \"detail\": \"Checked \" + str(total) + \" admin members, all have nominative initiale.nom username and personal email.\", \"evidence_page\": \"/kc/roles/admin/users\"}\nelse:\n    result = {\"status\": \"fail\", \"observed\": offenders, \"expected\": expected_text, \"detail\": \"Checked \" + str(total) + \" admin members, \" + str(bad) + \" with generic/shared or non-nominative username or email.\", \"evidence_page\": \"/kc/roles/admin/users\"}\n\nprint(json.dumps(result))\n",
+        "requests": 2
+      },
+      "before": {
+        "status": "pass",
+        "observed": [
+          "a.bihan",
+          "l.guivarch",
+          "m.pichon",
+          "y.tanguy"
+        ],
+        "expected": "for role admin members, username matches initiale.nom pattern and email is personal, no generic username (ops, admin, root) or shared mailbox (ops-partage@, admin@)",
+        "detail": "Checked 4 admin members, all have nominative initiale.nom username and personal email.",
+        "evidence_page": "/kc/roles/admin/users"
+      },
+      "evidence_before": {
+        "image": "evidence/C7_before.png",
+        "sha256": "0f8a894deb2f04fe9f92c4d7f9d0b7d740b92322e5dd85e393c552df3db1da10",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "a.bihan armelle.bihan@menhir-finance.example admin yes yes; l.guivarch loic.guivarch@menhir-finance.example admin yes yes; m.pichon maiwenn.pichon@menhir-finance.example admin yes yes; y.tanguy yannick.tanguy@menhir-finance.example admin yes no",
+          "field_boxes": [
+            [
+              27,
+              162,
+              1045,
+              191
+            ],
+            [
+              27,
+              191,
+              1045,
+              221
+            ],
+            [
+              27,
+              221,
+              1045,
+              252
+            ],
+            [
+              27,
+              252,
+              1045,
+              284
+            ]
+          ],
+          "comment": "The screenshot lists four admin accounts all with initiale.nom usernames and personal emails.",
+          "pii": [
+            {
+              "text": "armelle.bihan@menhir-finance.example",
+              "box": [
+                176,
+                168,
+                459,
+                184
+              ]
+            },
+            {
+              "text": "loic.guivarch@menhir-finance.example",
+              "box": [
+                176,
+                198,
+                455,
+                214
+              ]
+            },
+            {
+              "text": "maiwenn.pichon@menhir-finance.example",
+              "box": [
+                176,
+                229,
+                463,
+                245
+              ]
+            },
+            {
+              "text": "yannick.tanguy@menhir-finance.example",
+              "box": [
+                176,
+                260,
+                473,
+                276
+              ]
+            }
+          ],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 4,
+          "pii_masked": 4,
+          "pii_found_by_model": 4
+        },
+        "page": "/kc/roles/admin/users",
+        "page_verified": null,
+        "ts": "2026-11-11 12:30:58"
+      },
+      "status_before": "pass"
+    }
+  ],
+  "running": false,
+  "decisions": [],
+  "remediation_requested": false,
+  "usage": {
+    "rows": [
+      {
+        "model": "muse-spark-1.3",
+        "calls": 7,
+        "input": 15254,
+        "output": 15462,
+        "seconds": 129.99222612380981,
+        "images": 0,
+        "cost_usd": 0.084781
+      },
+      {
+        "model": "sam-3.1",
+        "calls": 12,
+        "input": 0,
+        "output": 0,
+        "seconds": 18.576709747314453,
+        "images": 12,
+        "cost_usd": null
+      }
+    ],
+    "total_usd": 0.084781,
+    "unpriced": [
+      "sam-3.1"
+    ],
+    "estimated": false
+  },
+  "duration_s": 66,
+  "catalogue": {
+    "source": "catalogue",
+    "reviewed": false,
+    "path": "controls/AUD-2026-KC-01.en.json"
+  },
+  "interpretation": null,
+  "inconclusive": 0,
+  "opinion_initial": "insuffisant",
+  "opinion_final": "insuffisant",
+  "injection_detected": false,
+  "trail_head": "f54a0421a27be90d03190353ee6abbed381158ecdff365a50f36d89306c4a166"
+}
