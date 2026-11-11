@@ -1,0 +1,574 @@
+{
+  "mission": {
+    "id": "AUD-2026-JML-01",
+    "title": "Access lifecycle — joiners, movers, leavers",
+    "entity": "Banque Kerlann (fictive)",
+    "system": "Registre RH et habilitations (cycle de vie des accès)",
+    "system_criticality": "Supports critical or important functions (DORA)",
+    "environment": "Demonstration extract (fictitious data)",
+    "owner": "IT department — IAM team; HR for the register",
+    "lead_auditor": "Attest CI (automated run, no human auditor)",
+    "classification": "TLP:AMBER+STRICT",
+    "requirement_path": "exigences/cycle_de_vie_acces.md",
+    "lab_url": "http://127.0.0.1:5050",
+    "scope_in": [
+      "Reconciliation of the HR register with accounts at the reference date",
+      "Entitlements held by enabled accounts (segregation of duties, movers, privileges)"
+    ],
+    "scope_out": [
+      "Accuracy of the HR register itself",
+      "Entitlement granting process (requests, approvals)",
+      "Accounts of other applications"
+    ],
+    "sla_days": {
+      "critique": 30,
+      "elevee": 90,
+      "moyenne": 180,
+      "faible": 365
+    },
+    "target": "iam-lifecycle",
+    "framework_label": "DORA art. 9(4)(c) · RTS (UE) 2024/1774 art. 21 · PSI-5",
+    "requirement_text": null
+  },
+  "run_id": "20261111-123208-lifecycle-bench-meta",
+  "started": "2026-11-11 12:32",
+  "lang": "en",
+  "target": "iam-lifecycle",
+  "target_label": "HR register ↔ entitlements (leavers, movers, conflicting rights)",
+  "backend": "meta",
+  "models": {
+    "reason": "muse-spark-1.3",
+    "code": "muse-spark-1.3",
+    "segmentation": "sam-3.1"
+  },
+  "entries": [
+    {
+      "control": {
+        "id": "C1",
+        "rule": "PSI-5.1",
+        "title": "Leaver account deactivation",
+        "objective": "No person account with enabled=true has a linked employee with end_date earlier than as_of; end_date equal to as_of, in the future, or null is compliant and only enabled accounts are in scope.",
+        "test_procedure": "Retrieve as_of from GET /api/lifecycle/meta, accounts from GET /api/lifecycle/accounts and employees from GET /api/hr/employees and flag any account with enabled=true and type=person whose linked employee has end_date < as_of.",
+        "expected": "enabled=false for any person account where linked employee end_date < as_of; enabled=true allowed only if end_date is null or end_date >= as_of",
+        "severity": "critique",
+        "references": [
+          "DORA 9(4)(c)",
+          "RTS 21(1)(e)"
+        ],
+        "risk": "A former employee retains logical access and could read, modify or initiate unauthorized transactions after contract end.",
+        "recommendation": "Disable the non-compliant leaver accounts immediately via the change management process and remove their entitlements.",
+        "cause": "The HR leaver feed is likely not interfaced automatically to the access deprovisioning process or manual deactivation was delayed.",
+        "evidence_page": "/lifecycle/accounts",
+        "remediation": "manual"
+      },
+      "test": {
+        "script": "scripts/C1_PSI-5.1.py",
+        "sha256": "886f035f5488df65900b35d96f7fabed0e66e6bb7c0025ef146b94215b8af806",
+        "origin": "generated",
+        "code": "import requests\nimport json\nimport os\nimport sys\nimport re\ntry:\n  base = os.environ[\"LAB_URL\"]\n  token = os.environ[\"LAB_TOKEN\"]\nexcept Exception as e:\n  sys.stderr.write(\"missing env: \" + str(e) + \"\\n\")\n  sys.exit(2)\nif base.endswith(\"/\"):\n  base = base[:-1]\nheaders = {\"Authorization\": \"Bearer \" + token}\ndef err(msg):\n  sys.stderr.write(str(msg) + \"\\n\")\n  sys.exit(2)\ndef do_get(url):\n  try:\n    resp = requests.get(url, headers=headers)\n  except Exception as e:\n    sys.stderr.write(\"request failed for \" + url + \": \" + str(e) + \"\\n\")\n    sys.exit(2)\n  if resp.status_code != 200:\n    sys.stderr.write(\"request failed for \" + url + \": status \" + str(resp.status_code) + \"\\n\")\n    sys.exit(2)\n  return resp\ndef fetch_list(path):\n  items = []\n  orig = path\n  url = base + orig\n  page = 1\n  total = None\n  loops = 0\n  while True:\n    loops = loops + 1\n    if loops > 10000:\n      sys.stderr.write(\"too many pages for \" + orig + \"\\n\")\n      sys.exit(2)\n    resp = do_get(url)\n    try:\n      data = resp.json()\n    except Exception as e:\n      sys.stderr.write(\"invalid json for \" + url + \": \" + str(e) + \"\\n\")\n      sys.exit(2)\n    if isinstance(data, list):\n      for row in data:\n        items.append(row)\n    elif isinstance(data, dict):\n      found = []\n      for k in data:\n        v = data[k]\n        if isinstance(v, list):\n          found.append(v)\n      if len(found) == 0:\n        sys.stderr.write(\"unexpected data shape for \" + url + \"\\n\")\n        sys.exit(2)\n      for lst in found:\n        for row in lst:\n          items.append(row)\n    else:\n      sys.stderr.write(\"unexpected data shape for \" + url + \"\\n\")\n      sys.exit(2)\n    nxt = None\n    try:\n      lk = resp.links\n      if \"next\" in lk:\n        info = lk[\"next\"]\n        if \"url\" in info:\n          cand = info[\"url\"]\n          if isinstance(cand, str):\n            if len(cand) > 0:\n              nxt = cand\n    except Exception as e:\n      nxt = None\n    if nxt is not None:\n      if nxt.startswith(\"http://\") or nxt.startswith(\"https://\"):\n        url = nxt\n      else:\n        if nxt.startswith(\"/\"):\n          url = base + nxt\n        else:\n          url = base + \"/\" + nxt\n      continue\n    tp_raw = None\n    try:\n      if \"X-Total-Pages\" in resp.headers:\n        tp_raw = resp.headers[\"X-Total-Pages\"]\n    except Exception as e:\n      tp_raw = None\n    if tp_raw is not None:\n      try:\n        total = int(tp_raw)\n      except Exception as e:\n        sys.stderr.write(\"invalid X-Total-Pages for \" + url + \"\\n\")\n        sys.exit(2)\n      if page < total:\n        page = page + 1\n        if \"?\" in orig:\n          url = base + orig + \"&page=\" + str(page)\n        else:\n          url = base + orig + \"?page=\" + str(page)\n        continue\n    break\n  return items\nmeta_resp = do_get(base + \"/api/lifecycle/meta\")\ntry:\n  meta_data = meta_resp.json()\nexcept Exception as e:\n  sys.stderr.write(\"invalid json for meta: \" + str(e) + \"\\n\")\n  sys.exit(2)\nif not isinstance(meta_data, dict):\n  sys.stderr.write(\"unexpected meta shape\\n\")\n  sys.exit(2)\nif \"as_of\" not in meta_data:\n  sys.stderr.write(\"missing as_of\\n\")\n  sys.exit(2)\nas_of = meta_data[\"as_of\"]\nif not isinstance(as_of, str):\n  sys.stderr.write(\"unexpected as_of type\\n\")\n  sys.exit(2)\nif re.match(\"^[0-9]{4}-[0-9]{2}-[0-9]{2}$\", as_of) is None:\n  sys.stderr.write(\"unexpected as_of format\\n\")\n  sys.exit(2)\naccounts = fetch_list(\"/api/lifecycle/accounts\")\nemployees = fetch_list(\"/api/hr/employees\")\nev_resp = do_get(base + \"/lifecycle/accounts\")\nemp_map = {}\nfor emp in employees:\n  if not isinstance(emp, dict):\n    sys.stderr.write(\"unexpected employee record\\n\")\n    sys.exit(2)\n  if \"employee_id\" not in emp:\n    sys.stderr.write(\"missing employee_id\\n\")\n    sys.exit(2)\n  if \"end_date\" not in emp:\n    sys.stderr.write(\"missing end_date\\n\")\n    sys.exit(2)\n  eid = emp[\"employee_id\"]\n  if not isinstance(eid, str):\n    sys.stderr.write(\"unexpected employee_id type\\n\")\n    sys.exit(2)\n  ed = emp[\"end_date\"]\n  if ed is not None:\n    if not isinstance(ed, str):\n      sys.stderr.write(\"unexpected end_date type\\n\")\n      sys.exit(2)\n    if re.match(\"^[0-9]{4}-[0-9]{2}-[0-9]{2}$\", ed) is None:\n      sys.stderr.write(\"unexpected end_date format\\n\")\n      sys.exit(2)\n  emp_map[eid] = ed\noff = []\nenabled_person = 0\nfor acc in accounts:\n  if not isinstance(acc, dict):\n    sys.stderr.write(\"unexpected account record\\n\")\n    sys.exit(2)\n  if \"login\" not in acc:\n    sys.stderr.write(\"missing login\\n\")\n    sys.exit(2)\n  if \"type\" not in acc:\n    sys.stderr.write(\"missing type\\n\")\n    sys.exit(2)\n  if \"enabled\" not in acc:\n    sys.stderr.write(\"missing enabled\\n\")\n    sys.exit(2)\n  login = acc[\"login\"]\n  typ = acc[\"type\"]\n  en = acc[\"enabled\"]\n  if not isinstance(login, str):\n    sys.stderr.write(\"unexpected login type\\n\")\n    sys.exit(2)\n  if not isinstance(typ, str):\n    sys.stderr.write(\"unexpected type value\\n\")\n    sys.exit(2)\n  if en is not True and en is not False:\n    sys.stderr.write(\"unexpected enabled value\\n\")\n    sys.exit(2)\n  if typ != \"person\":\n    continue\n  if en is not True:\n    continue\n  enabled_person = enabled_person + 1\n  if \"employee_id\" not in acc:\n    continue\n  eid2 = acc[\"employee_id\"]\n  if eid2 is None:\n    continue\n  if not isinstance(eid2, str):\n    continue\n  if eid2 not in emp_map:\n    continue\n  ed2 = emp_map[eid2]\n  if ed2 is None:\n    continue\n  if ed2 < as_of:\n    off.append(login)\nexpected_str = \"enabled=false for any person account where linked employee end_date < as_of; enabled=true allowed only if end_date is null or end_date >= as_of\"\ntotal_acc = len(accounts)\ntotal_emp = len(employees)\nif len(off) > 0:\n  status = \"fail\"\n  observed = off\n  detail = \"Checked \" + str(enabled_person) + \" enabled person accounts out of \" + str(total_acc) + \" total accounts and \" + str(total_emp) + \" employees at as_of \" + as_of + \" with \" + str(len(off)) + \" enabled accounts having end_date before as_of\"\nelse:\n  status = \"pass\"\n  observed = []\n  detail = \"Checked \" + str(enabled_person) + \" enabled person accounts out of \" + str(total_acc) + \" total accounts and \" + str(total_emp) + \" employees at as_of \" + as_of + \" with no enabled account having end_date before as_of\"\nresult = {\"status\": status, \"observed\": observed, \"expected\": expected_str, \"detail\": detail, \"evidence_page\": \"/lifecycle/accounts\"}\nprint(json.dumps(result))\n",
+        "requests": 32
+      },
+      "before": {
+        "status": "fail",
+        "observed": [
+          "m.cloarec2",
+          "n.derrien",
+          "p.bertrand",
+          "m.cloarec2",
+          "n.derrien",
+          "p.bertrand",
+          "m.cloarec2",
+          "n.derrien",
+          "p.bertrand",
+          "p.bertrand"
+        ],
+        "expected": "enabled=false for any person account where linked employee end_date < as_of; enabled=true allowed only if end_date is null or end_date >= as_of",
+        "detail": "Checked 1066 enabled person accounts out of 1170 total accounts and 1150 employees at as_of 2026-11-02 with 10 enabled accounts having end_date before as_of",
+        "evidence_page": "/lifecycle/accounts"
+      },
+      "evidence_before": {
+        "image": "evidence/C1_before.png",
+        "sha256": "c937e953f75f18c9f4ec9366ed23f1005ba391badfef22b34d7e57c59964d294",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "m.cloarec2 E11948 Actif 2026-04-15 commun.messagerie, credit.decision — ; n.derrien E12538 Actif 2026-09-17 commun.messagerie, tresorerie.operations —",
+          "field_boxes": [
+            [
+              10,
+              2975,
+              1090,
+              3050
+            ],
+            [
+              10,
+              5545,
+              1090,
+              5620
+            ]
+          ],
+          "comment": "Page 3 dated 2026-11-02 shows m.cloarec2 and n.derrien as Actif matching two of the failed accounts.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 0,
+          "pii_masked": 0,
+          "pii_found_by_model": 0
+        },
+        "page": "/lifecycle/accounts?page=3&per_page=100",
+        "page_verified": null,
+        "ts": "2026-11-11 12:37:29"
+      },
+      "status_before": "fail",
+      "finding": {
+        "id": "F-01",
+        "severity": "critique",
+        "status": "open",
+        "owner": "IT department — IAM team; HR for the register",
+        "due": "2026-12-11"
+      }
+    },
+    {
+      "control": {
+        "id": "C2",
+        "rule": "PSI-5.2",
+        "title": "Account ownership linkage",
+        "objective": "Every account with enabled=true is linked to a known responsible person present in the HR register, meaning person accounts have employee_id existing in employees and service accounts have owner_employee_id existing in employees with an active employee.",
+        "test_procedure": "Retrieve accounts from GET /api/lifecycle/accounts and employees from GET /api/hr/employees and flag any account with enabled=true where employee_id for type=person or owner_employee_id for type=service is missing from employees or refers to a left employee.",
+        "expected": "for all accounts with enabled=true, employee_id (type=person) or owner_employee_id (type=service) exists in employee_id and linked status=active",
+        "severity": "elevee",
+        "references": [
+          "DORA 9(4)(c)",
+          "RTS 21(1)(e)"
+        ],
+        "risk": "Orphan or ownerless accounts cannot be attributed or approved and could be abused without detection or accountability.",
+        "recommendation": "Attach each orphan account to a known active responsible or disable and delete it following the change management process.",
+        "cause": "Account creation likely allows manual entry of identifiers without referential check against the HR register or owner departure does not trigger service account review.",
+        "evidence_page": "/lifecycle/accounts",
+        "remediation": "manual"
+      },
+      "test": {
+        "script": "scripts/C2_PSI-5.2.py",
+        "sha256": "30240061f2012b042c3b1a7ece240ee61c35c8eafa835aa55033fe4d7b2b9714",
+        "origin": "generated",
+        "code": "import requests\nimport json\nimport os\nimport sys\nimport re\ntry:\n    base_url = os.environ[\"LAB_URL\"]\n    lab_token = os.environ[\"LAB_TOKEN\"]\nexcept KeyError:\n    sys.stderr.write(\"missing LAB_URL or LAB_TOKEN\\n\")\n    sys.exit(2)\nauth_header = {\"Authorization\": \"Bearer \" + lab_token}\nbase_root = base_url.rstrip(\"/\")\ndef fetch_all(api_path):\n    items = []\n    start_url = base_root + api_path\n    url = start_url\n    while True:\n        resp = requests.get(url, headers=auth_header)\n        if resp.status_code != 200:\n            sys.stderr.write(\"GET failed for \" + url + \": \" + str(resp.status_code) + \"\\n\")\n            sys.exit(2)\n        try:\n            body = resp.json()\n        except ValueError:\n            sys.stderr.write(\"bad JSON from \" + url + \"\\n\")\n            sys.exit(2)\n        if isinstance(body, list):\n            for row in body:\n                items.append(row)\n        elif isinstance(body, dict):\n            got = None\n            for k in (\"items\", \"data\", \"results\", \"accounts\", \"employees\"):\n                if k in body and isinstance(body[k], list):\n                    got = body[k]\n                    break\n            if got is None:\n                sys.stderr.write(\"unexpected JSON shape from \" + url + \"\\n\")\n                sys.exit(2)\n            for row in got:\n                items.append(row)\n        else:\n            sys.stderr.write(\"unexpected JSON shape from \" + url + \"\\n\")\n            sys.exit(2)\n        nxt = None\n        lk = resp.links\n        if \"next\" in lk:\n            info = lk[\"next\"]\n            if \"url\" not in info:\n                sys.stderr.write(\"bad Link next from \" + url + \"\\n\")\n                sys.exit(2)\n            nxt = info[\"url\"]\n            if not isinstance(nxt, str) or nxt == \"\":\n                sys.stderr.write(\"bad Link next from \" + url + \"\\n\")\n                sys.exit(2)\n        if nxt is not None:\n            if nxt.startswith(\"http://\") or nxt.startswith(\"https://\"):\n                url = nxt\n            else:\n                url = base_root + \"/\" + nxt.lstrip(\"/\")\n            continue\n        total_h = resp.headers.get(\"X-Total-Pages\")\n        if total_h is None:\n            total_h = resp.headers.get(\"x-total-pages\")\n        if total_h is not None:\n            try:\n                total_n = int(str(total_h).strip())\n            except ValueError:\n                sys.stderr.write(\"bad X-Total-Pages from \" + url + \"\\n\")\n                sys.exit(2)\n            if total_n > 1:\n                for p in range(2, total_n + 1):\n                    if \"?\" in start_url:\n                        purl = start_url + \"&page=\" + str(p)\n                    else:\n                        purl = start_url + \"?page=\" + str(p)\n                    r2 = requests.get(purl, headers=auth_header)\n                    if r2.status_code != 200:\n                        sys.stderr.write(\"GET failed for \" + purl + \": \" + str(r2.status_code) + \"\\n\")\n                        sys.exit(2)\n                    try:\n                        b2 = r2.json()\n                    except ValueError:\n                        sys.stderr.write(\"bad JSON from \" + purl + \"\\n\")\n                        sys.exit(2)\n                    if isinstance(b2, list):\n                        for row in b2:\n                            items.append(row)\n                    elif isinstance(b2, dict):\n                        got2 = None\n                        for k in (\"items\", \"data\", \"results\", \"accounts\", \"employees\"):\n                            if k in b2 and isinstance(b2[k], list):\n                                got2 = b2[k]\n                                break\n                        if got2 is None:\n                            sys.stderr.write(\"unexpected JSON shape from \" + purl + \"\\n\")\n                            sys.exit(2)\n                        for row in got2:\n                            items.append(row)\n                    else:\n                        sys.stderr.write(\"unexpected JSON shape from \" + purl + \"\\n\")\n                        sys.exit(2)\n            break\n        else:\n            break\n    return items\nemployees = fetch_all(\"/api/hr/employees\")\naccounts = fetch_all(\"/api/lifecycle/accounts\")\nev_resp = requests.get(base_root + \"/lifecycle/accounts\", headers=auth_header)\nif ev_resp.status_code != 200:\n    sys.stderr.write(\"GET failed for evidence page\\n\")\n    sys.exit(2)\nemp_status = {}\nfor e in employees:\n    if not isinstance(e, dict):\n        sys.stderr.write(\"bad employee record\\n\")\n        sys.exit(2)\n    if \"employee_id\" not in e or \"status\" not in e:\n        sys.stderr.write(\"missing employee field\\n\")\n        sys.exit(2)\n    eid = e[\"employee_id\"]\n    st = e[\"status\"]\n    if not isinstance(eid, str) or eid == \"\":\n        sys.stderr.write(\"bad employee_id\\n\")\n        sys.exit(2)\n    if st != \"active\" and st != \"left\":\n        sys.stderr.write(\"bad employee status\\n\")\n        sys.exit(2)\n    emp_status[eid] = st\nenabled_total = 0\nbad = []\nfor a in accounts:\n    if not isinstance(a, dict):\n        sys.stderr.write(\"bad account record\\n\")\n        sys.exit(2)\n    if \"login\" not in a or \"type\" not in a or \"enabled\" not in a:\n        sys.stderr.write(\"missing account field\\n\")\n        sys.exit(2)\n    login = a[\"login\"]\n    atype = a[\"type\"]\n    enabled = a[\"enabled\"]\n    if not isinstance(login, str) or login == \"\":\n        sys.stderr.write(\"bad login\\n\")\n        sys.exit(2)\n    if enabled is not True and enabled is not False:\n        sys.stderr.write(\"bad enabled flag\\n\")\n        sys.exit(2)\n    if atype != \"person\" and atype != \"service\":\n        sys.stderr.write(\"bad account type\\n\")\n        sys.exit(2)\n    if enabled is False:\n        continue\n    enabled_total = enabled_total + 1\n    if atype == \"person\":\n        link = a.get(\"employee_id\")\n        if not isinstance(link, str) or link == \"\":\n            bad.append(login)\n        elif link not in emp_status:\n            bad.append(login)\n        elif emp_status[link] != \"active\":\n            bad.append(login)\n    else:\n        link2 = a.get(\"owner_employee_id\")\n        if not isinstance(link2, str) or link2 == \"\":\n            bad.append(login)\n        elif link2 not in emp_status:\n            bad.append(login)\n        elif emp_status[link2] != \"active\":\n            bad.append(login)\nexpected_txt = \"for all accounts with enabled=true, employee_id (type=person) or owner_employee_id (type=service) exists in employee_id and linked status=active\"\nif len(bad) == 0:\n    detail_txt = \"Checked \" + str(enabled_total) + \" enabled accounts against \" + str(len(emp_status)) + \" employees: all linked to active employees.\"\n    print(json.dumps({\"status\": \"pass\", \"observed\": [], \"expected\": expected_txt, \"detail\": detail_txt, \"evidence_page\": \"/lifecycle/accounts\"}))\nelse:\n    detail_txt = \"Checked \" + str(enabled_total) + \" enabled accounts against \" + str(len(emp_status)) + \" employees: \" + str(len(bad)) + \" orphan enabled accounts found.\"\n    print(json.dumps({\"status\": \"fail\", \"observed\": bad, \"expected\": expected_txt, \"detail\": detail_txt, \"evidence_page\": \"/lifecycle/accounts\"}))\n",
+        "requests": 19
+      },
+      "before": {
+        "status": "fail",
+        "observed": [
+          "j.leroy",
+          "m.cloarec2",
+          "n.derrien",
+          "p.bertrand",
+          "svc-export-compta",
+          "j.leroy",
+          "m.cloarec2",
+          "n.derrien",
+          "p.bertrand",
+          "svc-export-compta"
+        ],
+        "expected": "for all accounts with enabled=true, employee_id (type=person) or owner_employee_id (type=service) exists in employee_id and linked status=active",
+        "detail": "Checked 712 enabled accounts against 430 employees: 10 orphan enabled accounts found.",
+        "evidence_page": "/lifecycle/accounts"
+      },
+      "evidence_before": {
+        "image": "evidence/C2_before.png",
+        "sha256": "611807b5ace09b14b79f2c23562a6a2abc2d23cbfb805e947910be953da963f8",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "m.cloarec2 E11948 Actif 2026-04-15 commun.messagerie, credit.decision; n.derrien E12538 Actif 2026-09-17 commun.messagerie, tresorerie.operations",
+          "field_boxes": [
+            [
+              8,
+              3040,
+              1092,
+              3125
+            ],
+            [
+              8,
+              5665,
+              1092,
+              5750
+            ]
+          ],
+          "comment": "Page 3 shows m.cloarec2 and n.derrien with Etat Actif, matching two accounts listed as orphan enabled.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 0,
+          "pii_masked": 0,
+          "pii_found_by_model": 0
+        },
+        "page": "/lifecycle/accounts?page=3&per_page=100",
+        "page_verified": null,
+        "ts": "2026-11-11 12:36:06"
+      },
+      "status_before": "fail",
+      "finding": {
+        "id": "F-03",
+        "severity": "elevee",
+        "status": "open",
+        "owner": "IT department — IAM team; HR for the register",
+        "due": "2027-02-09"
+      }
+    },
+    {
+      "control": {
+        "id": "C3",
+        "rule": "PSI-5.3",
+        "title": "Dormant person accounts",
+        "objective": "No person account with enabled=true has been inactive for more than 90 days measured as as_of minus last_login, or as_of minus created if last_login is null, with exactly 90 days compliant and service accounts out of scope.",
+        "test_procedure": "Retrieve as_of from GET /api/lifecycle/meta and accounts from GET /api/lifecycle/accounts and flag any account with enabled=true and type=person where as_of minus last_login or created if last_login is null exceeds 90 days.",
+        "expected": "for all accounts with enabled=true and type=person, (as_of - last_login or as_of - created if last_login=null) <= 90 days",
+        "severity": "moyenne",
+        "references": [
+          "DORA 9(4)(c)",
+          "RTS 21(1)(a)"
+        ],
+        "risk": "Unused dormant accounts can be hijacked to gain persistent undetected access to banking data and functions.",
+        "recommendation": "Disable or recertify dormant person accounts after verification with managers via the change management process.",
+        "cause": "Periodic inactivity monitoring and automatic disabling after prolonged non-use is likely missing or misconfigured.",
+        "evidence_page": "/lifecycle/accounts",
+        "remediation": "manual"
+      },
+      "test": {
+        "script": "scripts/C3_PSI-5.3.py",
+        "sha256": "df093242f84853f0eebced98b5a2e2d0983f5899a8e8ee0f89708e2ea7007ff6",
+        "origin": "generated",
+        "code": "import requests\nimport json\nimport os\nimport sys\nimport re\n\ndef date_to_ordinal(s):\n  m = re.match(r\"^(\\d{4})-(\\d{2})-(\\d{2})$\", s)\n  if not m:\n    sys.stderr.write(\"bad date format: \" + s + \"\\n\")\n    sys.exit(2)\n  y = int(m.group(1))\n  mo = int(m.group(2))\n  da = int(m.group(3))\n  if mo < 1 or mo > 12:\n    sys.stderr.write(\"bad month: \" + s + \"\\n\")\n    sys.exit(2)\n  leap = (y % 4 == 0 and y % 100 != 0) or (y % 400 == 0)\n  if leap:\n    feb = 29\n  else:\n    feb = 28\n  month_len = [31, feb, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]\n  maxd = month_len[mo - 1]\n  if da < 1 or da > maxd:\n    sys.stderr.write(\"bad day: \" + s + \"\\n\")\n    sys.exit(2)\n  n = 365 * (y - 1) + (y - 1) // 4 - (y - 1) // 100 + (y - 1) // 400\n  idx = 0\n  while idx < mo - 1:\n    n = n + month_len[idx]\n    idx = idx + 1\n  n = n + da\n  return n\n\nif \"LAB_URL\" not in os.environ:\n  sys.stderr.write(\"missing LAB_URL\\n\")\n  sys.exit(2)\nif \"LAB_TOKEN\" not in os.environ:\n  sys.stderr.write(\"missing LAB_TOKEN\\n\")\n  sys.exit(2)\nbase_url = os.environ[\"LAB_URL\"]\ntoken = os.environ[\"LAB_TOKEN\"]\nif not isinstance(base_url, str) or len(base_url) == 0:\n  sys.stderr.write(\"bad LAB_URL\\n\")\n  sys.exit(2)\nif not isinstance(token, str) or len(token) == 0:\n  sys.stderr.write(\"bad LAB_TOKEN\\n\")\n  sys.exit(2)\nheaders = {\"Authorization\": \"Bearer \" + token}\nbase = base_url.rstrip(\"/\")\nmeta_url = base + \"/api/lifecycle/meta\"\ntry:\n  meta_resp = requests.get(meta_url, headers=headers)\nexcept Exception:\n  sys.stderr.write(\"meta request failed\\n\")\n  sys.exit(2)\nif meta_resp.status_code != 200:\n  sys.stderr.write(\"meta bad status: \" + str(meta_resp.status_code) + \"\\n\")\n  sys.exit(2)\ntry:\n  meta_data = meta_resp.json()\nexcept Exception:\n  sys.stderr.write(\"meta bad json\\n\")\n  sys.exit(2)\nif not isinstance(meta_data, dict):\n  sys.stderr.write(\"meta not dict\\n\")\n  sys.exit(2)\nif \"as_of\" not in meta_data:\n  sys.stderr.write(\"meta missing as_of\\n\")\n  sys.exit(2)\nas_of_str = meta_data[\"as_of\"]\nif not isinstance(as_of_str, str):\n  sys.stderr.write(\"as_of not string\\n\")\n  sys.exit(2)\nas_of_ord = date_to_ordinal(as_of_str)\naccounts = []\nacc_base = base + \"/api/lifecycle/accounts\"\nurl = acc_base\npage_num = 1\ntotal_pages = None\nloops = 0\nwhile url:\n  loops = loops + 1\n  if loops > 10000:\n    sys.stderr.write(\"too many pages\\n\")\n    sys.exit(2)\n  try:\n    resp = requests.get(url, headers=headers)\n  except Exception:\n    sys.stderr.write(\"accounts request failed\\n\")\n    sys.exit(2)\n  if resp.status_code != 200:\n    sys.stderr.write(\"accounts bad status: \" + str(resp.status_code) + \"\\n\")\n    sys.exit(2)\n  try:\n    payload = resp.json()\n  except Exception:\n    sys.stderr.write(\"accounts bad json\\n\")\n    sys.exit(2)\n  if isinstance(payload, list):\n    items = payload\n  elif isinstance(payload, dict):\n    if \"accounts\" in payload and isinstance(payload[\"accounts\"], list):\n      items = payload[\"accounts\"]\n    elif \"items\" in payload and isinstance(payload[\"items\"], list):\n      items = payload[\"items\"]\n    elif \"data\" in payload and isinstance(payload[\"data\"], list):\n      items = payload[\"data\"]\n    else:\n      sys.stderr.write(\"accounts unexpected shape\\n\")\n      sys.exit(2)\n  else:\n    sys.stderr.write(\"accounts unexpected type\\n\")\n    sys.exit(2)\n  for entry in items:\n    accounts.append(entry)\n  next_url = None\n  try:\n    link_map = resp.links\n  except Exception:\n    link_map = {}\n  if isinstance(link_map, dict) and \"next\" in link_map:\n    nxt = link_map[\"next\"]\n    if isinstance(nxt, dict) and \"url\" in nxt:\n      cand = nxt[\"url\"]\n      if isinstance(cand, str) and len(cand) > 0:\n        next_url = cand\n  hdr_val = None\n  if \"X-Total-Pages\" in resp.headers:\n    hdr_val = resp.headers[\"X-Total-Pages\"]\n  if hdr_val is not None:\n    try:\n      total_pages = int(str(hdr_val))\n    except Exception:\n      sys.stderr.write(\"bad X-Total-Pages\\n\")\n      sys.exit(2)\n    if total_pages < 1:\n      sys.stderr.write(\"bad X-Total-Pages range\\n\")\n      sys.exit(2)\n  if next_url is not None:\n    if next_url.startswith(\"http://\") or next_url.startswith(\"https://\"):\n      url = next_url\n    elif next_url.startswith(\"/\"):\n      url = base + next_url\n    else:\n      url = base + \"/\" + next_url\n    page_num = page_num + 1\n  elif total_pages is not None and page_num < total_pages:\n    page_num = page_num + 1\n    if re.search(r\"[?&]page=\", url):\n      url = re.sub(r\"([?&]page=)\\d+\", r\"\\g<1>\" + str(page_num), url)\n    else:\n      if \"?\" in url:\n        url = url + \"&page=\" + str(page_num)\n      else:\n        url = url + \"?page=\" + str(page_num)\n  else:\n    url = None\ndormant = []\nperson_enabled_count = 0\nfor acc in accounts:\n  if not isinstance(acc, dict):\n    sys.stderr.write(\"account not dict\\n\")\n    sys.exit(2)\n  for k in [\"login\", \"type\", \"enabled\", \"created\", \"last_login\"]:\n    if k not in acc:\n      sys.stderr.write(\"account missing \" + k + \"\\n\")\n      sys.exit(2)\n  login = acc[\"login\"]\n  typ = acc[\"type\"]\n  enabled = acc[\"enabled\"]\n  created = acc[\"created\"]\n  last_login = acc[\"last_login\"]\n  if not isinstance(login, str):\n    sys.stderr.write(\"bad login type\\n\")\n    sys.exit(2)\n  if not isinstance(typ, str):\n    sys.stderr.write(\"bad type\\n\")\n    sys.exit(2)\n  if typ not in [\"person\", \"service\"]:\n    sys.stderr.write(\"unknown type\\n\")\n    sys.exit(2)\n  if not isinstance(enabled, bool):\n    sys.stderr.write(\"bad enabled for \" + login + \"\\n\")\n    sys.exit(2)\n  if not isinstance(created, str):\n    sys.stderr.write(\"bad created\\n\")\n    sys.exit(2)\n  created_ord = date_to_ordinal(created)\n  if last_login is not None and not isinstance(last_login, str):\n    sys.stderr.write(\"bad last_login\\n\")\n    sys.exit(2)\n  if typ == \"person\" and enabled is True:\n    person_enabled_count = person_enabled_count + 1\n    if last_login is None:\n      ref_ord = created_ord\n    else:\n      ref_ord = date_to_ordinal(last_login)\n    diff = as_of_ord - ref_ord\n    if diff > 90:\n      dormant.append(login)\nevidence_page = \"/api/lifecycle/accounts\"\nev_url = base + \"/lifecycle/accounts\"\ntry:\n  ev_resp = requests.get(ev_url, headers=headers)\n  if ev_resp.status_code == 200:\n    evidence_page = \"/lifecycle/accounts\"\n  else:\n    evidence_page = \"/api/lifecycle/accounts\"\nexcept Exception:\n  evidence_page = \"/api/lifecycle/accounts\"\ndormant_sorted = sorted(dormant)\nif len(dormant_sorted) == 0:\n  status = \"pass\"\n  observed = []\nelse:\n  status = \"fail\"\n  observed = dormant_sorted\nexpected = \"for all accounts with enabled=true and type=person, (as_of - last_login or as_of - created if last_login=null) <= 90 days\"\ndetail = \"Checked \" + str(len(accounts)) + \" accounts (\" + str(person_enabled_count) + \" enabled person) with as_of \" + as_of_str + \", found \" + str(len(dormant_sorted)) + \" dormant over 90 days.\"\nresult = {\"status\": status, \"observed\": observed, \"expected\": expected, \"detail\": detail, \"evidence_page\": evidence_page}\nprint(json.dumps(result))\n",
+        "requests": 7
+      },
+      "before": {
+        "status": "fail",
+        "observed": [
+          "h.prigent",
+          "m.cloarec2",
+          "m.lambert",
+          "s.durand"
+        ],
+        "expected": "for all accounts with enabled=true and type=person, (as_of - last_login or as_of - created if last_login=null) <= 90 days",
+        "detail": "Checked 434 accounts (398 enabled person) with as_of 2026-11-02, found 4 dormant over 90 days.",
+        "evidence_page": "/lifecycle/accounts"
+      },
+      "evidence_before": {
+        "image": "evidence/C3_before.png",
+        "sha256": "638d037eab4c168f57e9170bd7aa53e2d8f7026dd7c1d3c0ee9bbe323de8a745",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "m.cloarec2 E11948 Actif 2026-04-15 commun.messagerie, credit.decision — ; m.lambert E11319 Actif 2026-06-05 commun.messagerie, conforme.consultation —",
+          "field_boxes": [
+            [
+              12,
+              2950,
+              1088,
+              3015
+            ],
+            [
+              12,
+              3980,
+              1088,
+              4045
+            ]
+          ],
+          "comment": "Page 3 dated 2026-11-02 shows two enabled accounts with last login more than 90 days earlier.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 0,
+          "pii_masked": 0,
+          "pii_found_by_model": 0
+        },
+        "page": "/lifecycle/accounts?page=3&per_page=100",
+        "page_verified": null,
+        "ts": "2026-11-11 12:35:51"
+      },
+      "status_before": "fail",
+      "finding": {
+        "id": "F-05",
+        "severity": "moyenne",
+        "status": "open",
+        "owner": "IT department — IAM team; HR for the register",
+        "due": "2027-05-10"
+      }
+    },
+    {
+      "control": {
+        "id": "C4",
+        "rule": "PSI-5.4",
+        "title": "Segregation of duties",
+        "objective": "No account with enabled=true holds both entitlements paiements.saisie and paiements.validation together, nor both credit.instruction and credit.decision together.",
+        "test_procedure": "Retrieve accounts from GET /api/lifecycle/accounts and flag any account with enabled=true whose entitlements list contains both conflicting pairs.",
+        "expected": "for all accounts with enabled=true, entitlements does not contain (paiements.saisie + paiements.validation) nor (credit.instruction + credit.decision)",
+        "severity": "critique",
+        "references": [
+          "RTS 21(1)(b)"
+        ],
+        "risk": "A single user could initiate and approve the same payment or credit decision, enabling fraud and undetected errors.",
+        "recommendation": "Remove one of the conflicting entitlements from each violating account via the change management process.",
+        "cause": "Entitlement assignment likely lacks preventive SoD conflict checks at provisioning time.",
+        "evidence_page": "/lifecycle/accounts",
+        "remediation": "manual"
+      },
+      "test": {
+        "script": "scripts/C4_PSI-5.4.py",
+        "sha256": "5fe4e0548dbf5875224b5743c37701610b486dfd78fd95dd9b5828d010afa3b7",
+        "origin": "generated",
+        "code": "import requests\nimport json\nimport os\nimport sys\nimport re\ntry:\n    base_url = os.environ[\"LAB_URL\"]\n    token = os.environ[\"LAB_TOKEN\"]\nexcept Exception:\n    sys.stderr.write(\"missing env\\n\")\n    sys.exit(2)\nif not isinstance(base_url, str) or not isinstance(token, str):\n    sys.stderr.write(\"bad env\\n\")\n    sys.exit(2)\nbase_url = base_url.rstrip(\"/\")\nif base_url == \"\" or token == \"\":\n    sys.stderr.write(\"bad env\\n\")\n    sys.exit(2)\nheaders = {\"Authorization\": \"Bearer \" + token}\napi_url = base_url + \"/api/lifecycle/accounts\"\nseen = []\nallacc = []\ncur = api_url\nwhile cur is not None:\n    dup = False\n    for v in seen:\n        if v == cur:\n            dup = True\n            break\n    if dup:\n        sys.stderr.write(\"pagination loop\\n\")\n        sys.exit(2)\n    seen.append(cur)\n    if len(seen) > 1000:\n        sys.stderr.write(\"too many pages\\n\")\n        sys.exit(2)\n    try:\n        resp = requests.get(cur, headers=headers, timeout=30)\n    except Exception:\n        sys.stderr.write(\"request failed\\n\")\n        sys.exit(2)\n    if resp.status_code != 200:\n        sys.stderr.write(\"bad status\\n\")\n        sys.exit(2)\n    try:\n        data = resp.json()\n    except Exception:\n        sys.stderr.write(\"bad json\\n\")\n        sys.exit(2)\n    if not isinstance(data, list):\n        sys.stderr.write(\"bad shape\\n\")\n        sys.exit(2)\n    for a in data:\n        allacc.append(a)\n    cand = None\n    try:\n        linkmap = resp.links\n    except Exception:\n        linkmap = {}\n    if isinstance(linkmap, dict):\n        if \"next\" in linkmap:\n            nxt = linkmap[\"next\"]\n            if isinstance(nxt, dict):\n                raw = nxt.get(\"url\")\n                if isinstance(raw, str):\n                    raw = raw.strip()\n                    if raw != \"\":\n                        if raw.startswith(\"http://\") or raw.startswith(\"https://\"):\n                            cand = raw\n                        elif raw.startswith(\"/\"):\n                            cand = base_url + raw\n                        else:\n                            cand = base_url + \"/\" + raw\n    if cand is not None:\n        if cand == cur:\n            sys.stderr.write(\"next repeats\\n\")\n            sys.exit(2)\n        cur = cand\n        continue\n    total_raw = None\n    try:\n        total_raw = resp.headers.get(\"X-Total-Pages\")\n    except Exception:\n        total_raw = None\n    if total_raw is None:\n        cur = None\n        continue\n    total_str = str(total_raw).strip()\n    if total_str == \"\":\n        cur = None\n        continue\n    try:\n        total = int(total_str)\n    except Exception:\n        sys.stderr.write(\"bad total\\n\")\n        sys.exit(2)\n    if total <= len(seen):\n        cur = None\n        continue\n    m = re.search(r\"[?&]page=(\\d+)\", cur)\n    if m is not None:\n        try:\n            cur_num = int(m.group(1))\n        except Exception:\n            sys.stderr.write(\"bad page num\\n\")\n            sys.exit(2)\n        nxt_num = cur_num + 1\n        cur = re.sub(r\"([?&]page=)\\d+\", r\"\\g<1>\" + str(nxt_num), cur)\n    else:\n        nxt_num = len(seen) + 1\n        if \"?\" in cur:\n            cur = cur + \"&page=\" + str(nxt_num)\n        else:\n            cur = cur + \"?page=\" + str(nxt_num)\ntry:\n    ev = requests.get(base_url + \"/lifecycle/accounts\", headers=headers, timeout=30)\nexcept Exception:\n    sys.stderr.write(\"evidence request failed\\n\")\n    sys.exit(2)\nif ev.status_code != 200:\n    sys.stderr.write(\"evidence bad status\\n\")\n    sys.exit(2)\ntry:\n    evtext = ev.text\nexcept Exception:\n    sys.stderr.write(\"evidence unreadable\\n\")\n    sys.exit(2)\nif not isinstance(evtext, str) or evtext == \"\":\n    sys.stderr.write(\"evidence empty\\n\")\n    sys.exit(2)\nviol = []\nenabled_count = 0\nfor acc in allacc:\n    if not isinstance(acc, dict):\n        sys.stderr.write(\"bad account\\n\")\n        sys.exit(2)\n    if \"login\" not in acc or \"enabled\" not in acc or \"entitlements\" not in acc:\n        sys.stderr.write(\"missing fields\\n\")\n        sys.exit(2)\n    login = acc[\"login\"]\n    enabled = acc[\"enabled\"]\n    ents = acc[\"entitlements\"]\n    if not isinstance(login, str):\n        sys.stderr.write(\"bad login\\n\")\n        sys.exit(2)\n    if not isinstance(enabled, bool):\n        sys.stderr.write(\"bad enabled\\n\")\n        sys.exit(2)\n    if not isinstance(ents, list):\n        sys.stderr.write(\"bad entitlements\\n\")\n        sys.exit(2)\n    for e in ents:\n        if not isinstance(e, str):\n            sys.stderr.write(\"bad entitlement entry\\n\")\n            sys.exit(2)\n    if enabled is True:\n        enabled_count = enabled_count + 1\n        ha1 = False\n        ha2 = False\n        hb1 = False\n        hb2 = False\n        for e in ents:\n            if e == \"paiements.saisie\":\n                ha1 = True\n            if e == \"paiements.validation\":\n                ha2 = True\n            if e == \"credit.instruction\":\n                hb1 = True\n            if e == \"credit.decision\":\n                hb2 = True\n        if (ha1 and ha2) or (hb1 and hb2):\n            viol.append(login)\ntotal_count = len(allacc)\nexpected = \"for all accounts with enabled=true, entitlements does not contain (paiements.saisie + paiements.validation) nor (credit.instruction + credit.decision)\"\ndetail = \"Checked \" + str(enabled_count) + \" enabled accounts among \" + str(total_count) + \" total accounts, found \" + str(len(viol)) + \" violations.\"\nif len(viol) == 0:\n    result = {\"status\": \"pass\", \"observed\": [], \"expected\": expected, \"detail\": detail, \"evidence_page\": \"/lifecycle/accounts\"}\nelse:\n    result = {\"status\": \"fail\", \"observed\": viol, \"expected\": expected, \"detail\": detail, \"evidence_page\": \"/lifecycle/accounts\"}\nprint(json.dumps(result))\n",
+        "requests": 6
+      },
+      "before": {
+        "status": "fail",
+        "observed": [
+          "l.mercier",
+          "p.martin"
+        ],
+        "expected": "for all accounts with enabled=true, entitlements does not contain (paiements.saisie + paiements.validation) nor (credit.instruction + credit.decision)",
+        "detail": "Checked 402 enabled accounts among 434 total accounts, found 2 violations.",
+        "evidence_page": "/lifecycle/accounts"
+      },
+      "evidence_before": {
+        "image": "evidence/C4_before.png",
+        "sha256": "398c392b95b38aafe1031fd2f2efce302eac2e2b1e512cacc35795fe2677ef0d",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "l.mercier E11569 Actif 2026-10-19 commun.messagerie, credit.decision, credit.instruction —",
+          "field_boxes": [
+            [
+              8,
+              1715,
+              1092,
+              1785
+            ]
+          ],
+          "comment": "Active account l.mercier holds both credit.instruction and credit.decision, matching one of the two reported SoD violations.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 0,
+          "pii_masked": 0,
+          "pii_found_by_model": 0
+        },
+        "page": "/lifecycle/accounts?page=3&per_page=100",
+        "page_verified": null,
+        "ts": "2026-11-11 12:38:45"
+      },
+      "status_before": "fail",
+      "finding": {
+        "id": "F-02",
+        "severity": "critique",
+        "status": "open",
+        "owner": "IT department — IAM team; HR for the register",
+        "due": "2026-12-11"
+      }
+    },
+    {
+      "control": {
+        "id": "C5",
+        "rule": "PSI-5.5",
+        "title": "Mover rights removal",
+        "objective": "No account with enabled=true retains an entitlement whose department equals the holder previous_department more than 30 days after transfer_date, with exactly 30 days compliant and entitlements with department=null out of scope.",
+        "test_procedure": "Retrieve as_of from GET /api/lifecycle/meta, accounts from GET /api/lifecycle/accounts, employees from GET /api/hr/employees and entitlements from GET /api/lifecycle/entitlements and flag any enabled account holding an entitlement with department equal to previous_department where as_of minus transfer_date exceeds 30 days.",
+        "expected": "for all accounts with enabled=true, no entitlements with department == previous_department when (as_of - transfer_date) > 30 days; department=null always allowed",
+        "severity": "elevee",
+        "references": [
+          "RTS 21(1)(a)",
+          "RTS 21(1)(e)"
+        ],
+        "risk": "Transferred employees accumulate excessive rights from former and new departments, allowing unauthorized actions beyond their current role.",
+        "recommendation": "Remove former-department entitlements retained beyond 30 days after transfer via the change management process.",
+        "cause": "The mover process likely copies new rights without automatically revoking old department rights after the 30-day grace period.",
+        "evidence_page": "/lifecycle/accounts",
+        "remediation": "manual"
+      },
+      "test": {
+        "script": "scripts/C5_PSI-5.5.py",
+        "sha256": "c0fc74ab30fe1e6ec03ba89c900ccb97afaa66c55aa9ddb7040d986ff138c480",
+        "origin": "generated",
+        "code": "import requests\nimport json\nimport os\nimport sys\nimport re\nif \"LAB_URL\" not in os.environ:\n  print(\"missing LAB_URL\", file=sys.stderr)\n  sys.exit(2)\nif \"LAB_TOKEN\" not in os.environ:\n  print(\"missing LAB_TOKEN\", file=sys.stderr)\n  sys.exit(2)\nbase = os.environ[\"LAB_URL\"]\ntoken = os.environ[\"LAB_TOKEN\"]\nbase = base.rstrip(\"/\")\nheaders = {\"Authorization\": \"Bearer \" + token}\ndef tech(msg):\n  print(msg, file=sys.stderr)\n  sys.exit(2)\ndef isleap(y):\n  return y % 4 == 0 and (y % 100 != 0 or y % 400 == 0)\ndef toordinal(y, m, d):\n  y1 = y - 1\n  days = 365 * y1 + y1 // 4 - y1 // 100 + y1 // 400\n  ml = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]\n  s = 0\n  idx = 0\n  while idx < m - 1:\n    s = s + ml[idx]\n    idx = idx + 1\n  if m > 2 and isleap(y):\n    s = s + 1\n  days = days + s + d\n  return days\ndef parsedate(s):\n  mm = re.match(r\"^(\\d{4})-(\\d{2})-(\\d{2})$\", s)\n  if not mm:\n    return None\n  y = int(mm.group(1))\n  mo = int(mm.group(2))\n  da = int(mm.group(3))\n  if mo < 1 or mo > 12:\n    return None\n  ml = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]\n  maxd = ml[mo - 1]\n  if mo == 2 and isleap(y):\n    maxd = 29\n  if da < 1 or da > maxd:\n    return None\n  return [y, mo, da]\ndef doget(url):\n  try:\n    resp = requests.get(url, headers=headers)\n  except Exception as e:\n    tech(\"request failed for \" + url + \" \" + str(e))\n  if resp.status_code != 200:\n    tech(\"bad status \" + str(resp.status_code) + \" for \" + url)\n  return resp\ndef fetchlist(path):\n  url = base + path\n  out = []\n  curpage = 1\n  loops = 0\n  while url:\n    loops = loops + 1\n    if loops > 10000:\n      tech(\"too many pages for \" + path)\n    resp = doget(url)\n    try:\n      data = resp.json()\n    except Exception as e:\n      tech(\"bad json for \" + url + \" \" + str(e))\n    pageitems = None\n    if isinstance(data, list):\n      pageitems = data\n    elif isinstance(data, dict):\n      for k in [\"data\", \"items\", \"results\", \"accounts\", \"employees\", \"entitlements\"]:\n        if k in data and isinstance(data[k], list):\n          pageitems = data[k]\n          break\n      if pageitems is None:\n        tech(\"unexpected shape for \" + url)\n    else:\n      tech(\"unexpected shape for \" + url)\n    out = out + pageitems\n    nexturl = None\n    try:\n      links = resp.links\n    except Exception:\n      links = {}\n    if isinstance(links, dict) and \"next\" in links:\n      nxt = links[\"next\"]\n      if isinstance(nxt, dict) and \"url\" in nxt and isinstance(nxt[\"url\"], str):\n        nexturl = nxt[\"url\"]\n    if nexturl:\n      if nexturl.startswith(\"http://\") or nexturl.startswith(\"https://\"):\n        url = nexturl\n      else:\n        if nexturl.startswith(\"/\"):\n          url = base + nexturl\n        else:\n          url = base + \"/\" + nexturl\n      continue\n    totalv = None\n    try:\n      totalv = resp.headers.get(\"X-Total-Pages\")\n    except Exception:\n      totalv = None\n    if totalv is not None:\n      try:\n        totalp = int(str(totalv).strip())\n      except Exception:\n        tech(\"bad X-Total-Pages for \" + url)\n      cur = curpage\n      for hk in [\"X-Page\", \"X-Current-Page\", \"Page\"]:\n        try:\n          vv = resp.headers.get(hk)\n        except Exception:\n          vv = None\n        if vv is not None:\n          try:\n            cur = int(str(vv).strip())\n            break\n          except Exception:\n            pass\n      curpage = cur\n      if curpage < totalp:\n        curpage = curpage + 1\n        if re.search(r\"[?&]page=\", url):\n          url = re.sub(r\"([?&]page=)\\d+\", r\"\\1\" + str(curpage), url)\n        else:\n          if \"?\" in url:\n            url = url + \"&page=\" + str(curpage)\n          else:\n            url = url + \"?page=\" + str(curpage)\n        continue\n      else:\n        break\n    else:\n      break\n  return out\nmetaresp = doget(base + \"/api/lifecycle/meta\")\ntry:\n  metaj = metaresp.json()\nexcept Exception as e:\n  tech(\"bad json meta \" + str(e))\nif not isinstance(metaj, dict):\n  tech(\"bad meta shape\")\nif \"as_of\" not in metaj:\n  tech(\"missing as_of\")\nasofstr = metaj[\"as_of\"]\nif not isinstance(asofstr, str):\n  tech(\"bad as_of\")\nasofparts = parsedate(asofstr)\nif asofparts is None:\n  tech(\"bad as_of value\")\nasoford = toordinal(asofparts[0], asofparts[1], asofparts[2])\nemplist = fetchlist(\"/api/hr/employees\")\nentlist = fetchlist(\"/api/lifecycle/entitlements\")\nacclist = fetchlist(\"/api/lifecycle/accounts\")\nevresp = doget(base + \"/lifecycle/accounts\")\nentmap = {}\nfor e in entlist:\n  if not isinstance(e, dict):\n    tech(\"invalid entitlement entry\")\n  if \"name\" not in e or \"department\" not in e:\n    tech(\"missing entitlement fields\")\n  nm = e[\"name\"]\n  dp = e[\"department\"]\n  if not isinstance(nm, str):\n    tech(\"invalid entitlement name\")\n  if dp is not None and not isinstance(dp, str):\n    tech(\"invalid entitlement department\")\n  entmap[nm] = dp\nempmap = {}\nfor emp in emplist:\n  if not isinstance(emp, dict):\n    tech(\"invalid employee entry\")\n  if \"employee_id\" not in emp:\n    tech(\"missing employee_id\")\n  eid = emp[\"employee_id\"]\n  if not isinstance(eid, str):\n    tech(\"invalid employee_id\")\n  if \"previous_department\" not in emp or \"transfer_date\" not in emp:\n    tech(\"missing mover fields for \" + eid)\n  pd = emp[\"previous_department\"]\n  td = emp[\"transfer_date\"]\n  if pd is not None and not isinstance(pd, str):\n    tech(\"invalid previous_department for \" + eid)\n  if td is not None and not isinstance(td, str):\n    tech(\"invalid transfer_date for \" + eid)\n  if td is not None:\n    tparts = parsedate(td)\n    if tparts is None:\n      tech(\"invalid transfer_date value for \" + eid)\n  empmap[eid] = [pd, td]\nviol = []\nenabledcount = 0\nfor acc in acclist:\n  if not isinstance(acc, dict):\n    tech(\"invalid account entry\")\n  for req in [\"login\", \"enabled\", \"entitlements\"]:\n    if req not in acc:\n      tech(\"missing account field \" + req)\n  login = acc[\"login\"]\n  enabled = acc[\"enabled\"]\n  ents = acc[\"entitlements\"]\n  if not isinstance(login, str):\n    tech(\"invalid login\")\n  if not isinstance(enabled, bool):\n    tech(\"invalid enabled flag\")\n  if not isinstance(ents, list):\n    tech(\"invalid entitlements list\")\n  holder = None\n  if \"employee_id\" in acc and acc[\"employee_id\"] is not None:\n    if not isinstance(acc[\"employee_id\"], str):\n      tech(\"invalid employee_id in account \" + login)\n    holder = acc[\"employee_id\"]\n  elif \"owner_employee_id\" in acc and acc[\"owner_employee_id\"] is not None:\n    if not isinstance(acc[\"owner_employee_id\"], str):\n      tech(\"invalid owner in account \" + login)\n    holder = acc[\"owner_employee_id\"]\n  else:\n    holder = None\n  if enabled is not True:\n    continue\n  enabledcount = enabledcount + 1\n  if holder is None:\n    continue\n  if holder not in empmap:\n    continue\n  pdtd = empmap[holder]\n  pd = pdtd[0]\n  td = pdtd[1]\n  if pd is None or td is None:\n    continue\n  tparts = parsedate(td)\n  if tparts is None:\n    tech(\"invalid transfer_date value for \" + holder)\n  tord = toordinal(tparts[0], tparts[1], tparts[2])\n  diff = asoford - tord\n  if diff <= 30:\n    continue\n  bad = []\n  for ename in ents:\n    if not isinstance(ename, str):\n      tech(\"invalid entitlement name in account \" + login)\n    if ename not in entmap:\n      tech(\"unknown entitlement \" + ename + \" in account \" + login)\n    edept = entmap[ename]\n    if edept is None:\n      continue\n    if edept == pd:\n      bad = bad + [ename]\n  if len(bad) > 0:\n    viol = viol + [{\"login\": login, \"previous_department\": pd, \"transfer_date\": td, \"entitlements\": bad}]\nexpected = \"for all accounts with enabled=true, no entitlements with department == previous_department when (as_of - transfer_date) > 30 days; department=null always allowed\"\ndetail = \"Checked \" + str(len(acclist)) + \" accounts (\" + str(enabledcount) + \" enabled) against \" + str(len(emplist)) + \" employees at as_of \" + asofstr + \", finding \" + str(len(viol)) + \" enabled mover accounts retaining previous-department entitlements beyond 30 days\"\nif len(viol) > 0:\n  print(json.dumps({\"status\": \"fail\", \"observed\": viol, \"expected\": expected, \"detail\": detail, \"evidence_page\": \"/lifecycle/accounts\"}))\nelse:\n  print(json.dumps({\"status\": \"pass\", \"observed\": [], \"expected\": expected, \"detail\": detail, \"evidence_page\": \"/lifecycle/accounts\"}))\n",
+        "requests": 13
+      },
+      "before": {
+        "status": "fail",
+        "observed": [
+          {
+            "login": "l.lagadec",
+            "previous_department": "credit",
+            "transfer_date": "2026-07-05",
+            "entitlements": [
+              "credit.decision"
+            ]
+          },
+          {
+            "login": "m.cloarec",
+            "previous_department": "tresorerie",
+            "transfer_date": "2026-10-02",
+            "entitlements": [
+              "tresorerie.operations"
+            ]
+          }
+        ],
+        "expected": "for all accounts with enabled=true, no entitlements with department == previous_department when (as_of - transfer_date) > 30 days; department=null always allowed",
+        "detail": "Checked 434 accounts (402 enabled) against 430 employees at as_of 2026-11-02, finding 2 enabled mover accounts retaining previous-department entitlements beyond 30 days",
+        "evidence_page": "/lifecycle/accounts"
+      },
+      "evidence_before": {
+        "image": "evidence/C5_before.png",
+        "sha256": "686e767a0bdd799052ecd6cf457d089c9ba8fa78671e5ce3a5e62c9ef0d9d0a5",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "l.lagadec E10213 Actif 2026-09-21 commun.messagerie, credit.decision, paiements.saisie —\nm.cloarec E11143 Actif 2026-10-15 commun.messagerie, paiements.saisie, tresorerie.operations —",
+          "field_boxes": [
+            [
+              10,
+              1170,
+              1090,
+              1240
+            ],
+            [
+              10,
+              2950,
+              1090,
+              3020
+            ]
+          ],
+          "comment": "The 2026-11-02 screenshot shows l.lagadec as Actif with credit.decision and m.cloarec as Actif with tresorerie.operations.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 0,
+          "pii_masked": 0,
+          "pii_found_by_model": 0
+        },
+        "page": "/lifecycle/accounts?page=3&per_page=100",
+        "page_verified": null,
+        "ts": "2026-11-11 12:54:27"
+      },
+      "status_before": "fail",
+      "finding": {
+        "id": "F-04",
+        "severity": "elevee",
+        "status": "open",
+        "owner": "IT department — IAM team; HR for the register",
+        "due": "2027-02-09"
+      }
+    },
+    {
+      "control": {
+        "id": "C6",
+        "rule": "PSI-5.6",
+        "title": "Privileged access review",
+        "objective": "Every account with enabled=true holding at least one privileged entitlement has last_access_review not null and within 365 days before or on as_of.",
+        "test_procedure": "Retrieve as_of from GET /api/lifecycle/meta, accounts from GET /api/lifecycle/accounts and entitlements from GET /api/lifecycle/entitlements and flag any enabled account whose entitlements include a privileged=true entitlement but whose last_access_review is null or older than 365 days from as_of.",
+        "expected": "for all accounts with enabled=true where entitlements includes privileged=true, last_access_review != null and (as_of - last_access_review) <= 365 days",
+        "severity": "moyenne",
+        "references": [
+          "RTS 21(1)(e)(iv)"
+        ],
+        "risk": "Unreviewed privileged rights persist beyond business need and could be exploited to compromise critical ICT assets.",
+        "recommendation": "Perform an immediate access review of flagged privileged accounts and remove unjustified rights via the change management process.",
+        "cause": "The annual privileged access recertification campaign likely misses some accounts due to incomplete scoping or follow-up.",
+        "evidence_page": "/lifecycle/accounts",
+        "remediation": "manual"
+      },
+      "test": {
+        "script": "scripts/C6_PSI-5.6.py",
+        "sha256": "bbecdad9fbca9d712d160915b41945d56ee7a62e7d1b120d101bcef3b11ec81f",
+        "origin": "generated",
+        "code": "import requests\nimport json\nimport os\nimport sys\nimport re\nif \"LAB_URL\" not in os.environ:\n    sys.stderr.write(\"missing LAB_URL\\n\")\n    sys.exit(2)\nif \"LAB_TOKEN\" not in os.environ:\n    sys.stderr.write(\"missing LAB_TOKEN\\n\")\n    sys.exit(2)\nbase = os.environ[\"LAB_URL\"]\ntoken = os.environ[\"LAB_TOKEN\"]\nif base.endswith(\"/\"):\n    base = base[0:len(base)-1]\nheaders = {\"Authorization\": \"Bearer \" + token}\ndef error_exit(msg):\n    sys.stderr.write(msg + \"\\n\")\n    sys.exit(2)\ndef do_get(url):\n    try:\n        resp = requests.get(url, headers=headers)\n    except Exception as ex:\n        error_exit(\"request failed for \" + url + \": \" + str(ex))\n    if resp.status_code != 200:\n        error_exit(\"request failed status \" + str(resp.status_code) + \" for \" + url)\n    return resp\ndef fetch_list(path):\n    if path.startswith(\"/\"):\n        start = base + path\n    else:\n        start = base + \"/\" + path\n    url = start\n    out = []\n    pages = 0\n    visited = {}\n    while url is not None:\n        if url in visited:\n            error_exit(\"pagination loop for \" + path)\n        visited[url] = 1\n        pages = pages + 1\n        if pages > 1000:\n            error_exit(\"too many pages for \" + path)\n        resp = do_get(url)\n        try:\n            data = resp.json()\n        except Exception as ex:\n            error_exit(\"invalid json for \" + url + \": \" + str(ex))\n        if not isinstance(data, list):\n            error_exit(\"unexpected data not list for \" + url)\n        out = out + data\n        nxt = None\n        try:\n            links = resp.links\n        except Exception as ex:\n            links = {}\n        if isinstance(links, dict) and \"next\" in links:\n            entry = links[\"next\"]\n            if isinstance(entry, dict) and \"url\" in entry:\n                cand = entry[\"url\"]\n                if isinstance(cand, str) and cand != \"\":\n                    nxt = cand\n        if nxt is not None:\n            if nxt.startswith(\"http://\") or nxt.startswith(\"https://\"):\n                url = nxt\n            elif nxt.startswith(\"/\"):\n                url = base + nxt\n            else:\n                url = base + \"/\" + nxt\n            continue\n        totalpages = None\n        try:\n            totalpages = resp.headers.get(\"X-Total-Pages\")\n        except Exception as ex:\n            totalpages = None\n        if totalpages is None:\n            try:\n                totalpages = resp.headers.get(\"x-total-pages\")\n            except Exception as ex:\n                totalpages = None\n        if totalpages is not None and str(totalpages).strip() != \"\":\n            try:\n                total = int(str(totalpages).strip())\n            except Exception as ex:\n                error_exit(\"invalid X-Total-Pages for \" + url)\n            m = re.search(r\"[?&]page=(\\d+)\", url)\n            if m:\n                cur = int(m.group(1))\n            else:\n                cur = 1\n            if cur < total:\n                want = cur + 1\n                if m:\n                    url = re.sub(r\"([?&]page=)\\d+\", r\"\\g<1>\" + str(want), url)\n                else:\n                    if \"?\" in url:\n                        url = url + \"&page=\" + str(want)\n                    else:\n                        url = url + \"?page=\" + str(want)\n                continue\n            else:\n                url = None\n        else:\n            url = None\n    return out\ndef is_leap(year):\n    return year % 4 == 0 and (year % 100 != 0 or year % 400 == 0)\ndef date_to_ordinal(datestr):\n    m = re.match(r\"^(\\d{4})-(\\d{2})-(\\d{2})$\", datestr)\n    if not m:\n        return None\n    year = int(m.group(1))\n    month = int(m.group(2))\n    day = int(m.group(3))\n    if month < 1 or month > 12:\n        return None\n    monthlen = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]\n    feb = 29 if is_leap(year) else 28\n    monthlen[1] = feb\n    if day < 1 or day > monthlen[month - 1]:\n        return None\n    days_before_year = 365 * (year - 1) + (year - 1) // 4 - (year - 1) // 100 + (year - 1) // 400\n    days_before_month = 0\n    idx = 0\n    while idx < month - 1:\n        days_before_month = days_before_month + monthlen[idx]\n        idx = idx + 1\n    return days_before_year + days_before_month + day\nmetaresp = do_get(base + \"/api/lifecycle/meta\")\ntry:\n    metaj = metaresp.json()\nexcept Exception as ex:\n    error_exit(\"invalid json for meta: \" + str(ex))\nif not isinstance(metaj, dict):\n    error_exit(\"unexpected meta not dict\")\nif \"as_of\" not in metaj:\n    error_exit(\"missing as_of in meta\")\nasofstr = metaj[\"as_of\"]\nif not isinstance(asofstr, str):\n    error_exit(\"invalid as_of not string\")\nasof_ord = date_to_ordinal(asofstr)\nif asof_ord is None:\n    error_exit(\"invalid as_of date: \" + asofstr)\nentlist = fetch_list(\"/api/lifecycle/entitlements\")\nacclist = fetch_list(\"/api/lifecycle/accounts\")\nevresp = do_get(base + \"/lifecycle/accounts\")\nprivset = {}\nfor ent in entlist:\n    if not isinstance(ent, dict):\n        error_exit(\"unexpected entitlement not dict\")\n    if \"name\" not in ent or \"privileged\" not in ent:\n        error_exit(\"missing fields in entitlement\")\n    ename = ent[\"name\"]\n    epriv = ent[\"privileged\"]\n    if not isinstance(ename, str):\n        error_exit(\"invalid entitlement name\")\n    if not isinstance(epriv, bool):\n        error_exit(\"invalid privileged flag\")\n    if epriv is True:\n        privset[ename] = 1\nflagged = []\nenabled_priv_count = 0\nfor acc in acclist:\n    if not isinstance(acc, dict):\n        error_exit(\"unexpected account not dict\")\n    if \"login\" not in acc or \"enabled\" not in acc or \"entitlements\" not in acc or \"last_access_review\" not in acc:\n        error_exit(\"missing fields in account\")\n    login = acc[\"login\"]\n    enabled = acc[\"enabled\"]\n    ents = acc[\"entitlements\"]\n    review = acc[\"last_access_review\"]\n    if not isinstance(login, str):\n        error_exit(\"invalid login\")\n    if not isinstance(enabled, bool):\n        error_exit(\"invalid enabled flag\")\n    if not isinstance(ents, list):\n        error_exit(\"invalid entitlements not list\")\n    haspriv = False\n    for ename in ents:\n        if not isinstance(ename, str):\n            error_exit(\"invalid entitlement entry\")\n        if ename in privset:\n            haspriv = True\n    if enabled is True and haspriv:\n        enabled_priv_count = enabled_priv_count + 1\n        if review is None:\n            flagged.append(login)\n        elif not isinstance(review, str):\n            error_exit(\"invalid last_access_review\")\n        else:\n            rord = date_to_ordinal(review)\n            if rord is None:\n                error_exit(\"invalid last_access_review date: \" + review)\n            diff = asof_ord - rord\n            if diff < 0 or diff > 365:\n                flagged.append(login)\nif len(flagged) == 0:\n    result = {\"status\": \"pass\", \"observed\": [], \"expected\": \"for all accounts with enabled=true where entitlements includes privileged=true, last_access_review != null and (as_of - last_access_review) <= 365 days\", \"detail\": \"Checked \" + str(enabled_priv_count) + \" enabled privileged accounts out of \" + str(len(acclist)) + \" total accounts against as_of \" + asofstr + \" with no overdue review.\", \"evidence_page\": \"/lifecycle/accounts\"}\n    print(json.dumps(result))\nelse:\n    result = {\"status\": \"fail\", \"observed\": flagged, \"expected\": \"for all accounts with enabled=true where entitlements includes privileged=true, last_access_review != null and (as_of - last_access_review) <= 365 days\", \"detail\": \"Checked \" + str(enabled_priv_count) + \" enabled privileged accounts out of \" + str(len(acclist)) + \" total accounts against as_of \" + asofstr + \": \" + str(len(flagged)) + \" with missing or outdated review.\", \"evidence_page\": \"/lifecycle/accounts\"}\n    print(json.dumps(result))\n",
+        "requests": 8
+      },
+      "before": {
+        "status": "fail",
+        "observed": [
+          "b.roux",
+          "m.bonnet"
+        ],
+        "expected": "for all accounts with enabled=true where entitlements includes privileged=true, last_access_review != null and (as_of - last_access_review) <= 365 days",
+        "detail": "Checked 15 enabled privileged accounts out of 434 total accounts against as_of 2026-11-02: 2 with missing or outdated review.",
+        "evidence_page": "/lifecycle/accounts"
+      },
+      "evidence_before": {
+        "image": "evidence/C6_before.png",
+        "sha256": "8df36ff67d77ba4a462daad36898adb2b12ad78ee22721f96ab6415da4cc5661",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "b.roux E11465 Actif 2026-10-17 commun.messagerie, tresorerie.admin, tresorerie.operations —",
+          "field_boxes": [
+            [
+              10,
+              3555,
+              1090,
+              3620
+            ]
+          ],
+          "comment": "The b.roux row shows an active account with tresorerie.admin entitlement and no review date.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 0,
+          "pii_masked": 0,
+          "pii_found_by_model": 0
+        },
+        "page": "/lifecycle/accounts",
+        "page_verified": null,
+        "ts": "2026-11-11 12:38:33"
+      },
+      "status_before": "fail",
+      "finding": {
+        "id": "F-06",
+        "severity": "moyenne",
+        "status": "open",
+        "owner": "IT department — IAM team; HR for the register",
+        "due": "2027-05-10"
+      }
+    }
+  ],
+  "running": false,
+  "decisions": [],
+  "remediation_requested": false,
+  "usage": {
+    "rows": [
+      {
+        "model": "muse-spark-1.3",
+        "calls": 15,
+        "input": 41255,
+        "output": 160699,
+        "seconds": 2280.1890563964844,
+        "images": 0,
+        "cost_usd": 0.7345395000000001
+      },
+      {
+        "model": "sam-3.1",
+        "calls": 6,
+        "input": 0,
+        "output": 0,
+        "seconds": 13.466749906539917,
+        "images": 6,
+        "cost_usd": null
+      }
+    ],
+    "total_usd": 0.7345395000000001,
+    "unpriced": [
+      "sam-3.1"
+    ],
+    "estimated": false
+  },
+  "duration_s": 1339,
+  "catalogue": {
+    "source": "planned",
+    "reviewed": false,
+    "path": "controls/AUD-2026-JML-01.en.json"
+  },
+  "interpretation": null,
+  "inconclusive": 0,
+  "opinion_initial": "insuffisant",
+  "opinion_final": "insuffisant",
+  "injection_detected": false,
+  "trail_head": "11d25ed0c414d3c0272ac58f5fb982414b90aaa3f23898ab88262fefb84dfcc9"
+}

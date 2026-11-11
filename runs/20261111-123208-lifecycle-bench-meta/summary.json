@@ -1,0 +1,31 @@
+{
+  "id": "20261111-123208-lifecycle-bench-meta",
+  "utc": "20261111-123208",
+  "kind": "lifecycle-bench",
+  "backend": "meta",
+  "note": "premier banc cycle de vie des accès (RH ↔ comptes, PSI-5)",
+  "commit": "d492b72",
+  "workflow_run": "43020352691",
+  "status": "success",
+  "budget_spent_usd": 1.2121,
+  "priced_usd": 0.9921,
+  "unpriced": [
+    "sam-3.1"
+  ],
+  "bench": {
+    "checks": 18,
+    "TP": 8,
+    "TN": 6,
+    "FP": 1,
+    "FN": 0,
+    "inconclusive": 3,
+    "accuracy": 0.778,
+    "pii_total": 0,
+    "pii_model": 0,
+    "pii_masked": 0,
+    "injection_cases": 0,
+    "injection_flagged": 0,
+    "cost_usd": 0.992,
+    "seconds": 1477
+  }
+}
