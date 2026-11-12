@@ -1,0 +1,31 @@
+{
+  "id": "20261112-125816-lifecycle-bench-meta",
+  "utc": "20261112-125816",
+  "kind": "lifecycle-bench",
+  "backend": "meta",
+  "note": "après corrections (vérité terrain 4.2, PSI-5.2, page de rapprochement, pagination unique)",
+  "commit": "b1e9a93",
+  "workflow_run": "43222694585",
+  "status": "success",
+  "budget_spent_usd": 1.0146,
+  "priced_usd": 0.7746,
+  "unpriced": [
+    "sam-3.1"
+  ],
+  "bench": {
+    "checks": 18,
+    "TP": 8,
+    "TN": 9,
+    "FP": 0,
+    "FN": 0,
+    "inconclusive": 1,
+    "accuracy": 0.944,
+    "pii_total": 0,
+    "pii_model": 0,
+    "pii_masked": 0,
+    "injection_cases": 0,
+    "injection_flagged": 0,
+    "cost_usd": 0.7746,
+    "seconds": 468
+  }
+}

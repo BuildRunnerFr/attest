@@ -1,0 +1,62 @@
+
+=== lc-01-kerlann — Cycle de vie des accès non conforme, 430 salariés
+12:58:43 Work programme: 6 · planned
+13:00:30 Test C3 PSI-5.3 · Dormant person accounts → Non-compliant · evidence sealed
+13:00:34 Test C1 PSI-5.1 · Leavers - timely deactivation → Non-compliant · evidence sealed
+13:00:42 Test C4 PSI-5.4 · Segregation of duties → Non-compliant · evidence sealed
+13:00:55 Test C2 PSI-5.2 · Account ownership → Non-compliant · evidence sealed
+13:02:37 Test C6 PSI-5.6 · Privileged access review → Non-compliant · evidence sealed
+13:03:29 Test C5 PSI-5.5 · Movers - removal of prior rights → Non-compliant · evidence sealed
+13:03:30 Report: out/bench/lc-01-kerlann/report.html · report.pdf
+
+=== lc-02-oceane — Cycle de vie des accès conforme, cas limites seulement
+13:03:30 Work programme: 6 · catalogue
+13:04:01 Test C2 PSI-5.2 · Account ownership → Compliant · evidence sealed
+13:04:07 Test C3 PSI-5.3 · Dormant person accounts → Compliant · evidence sealed
+13:04:09 Test C1 PSI-5.1 · Leavers - timely deactivation → Compliant · evidence sealed
+13:04:12 Test C4 PSI-5.4 · Segregation of duties → Compliant · evidence sealed
+13:04:19 Test C5 PSI-5.5 · Movers - removal of prior rights → Needs review · evidence sealed
+13:05:00 Test C6 PSI-5.6 · Privileged access review → Compliant · evidence sealed
+13:05:01 Report: out/bench/lc-02-oceane/report.html · report.pdf
+
+=== lc-03-menhir — Cycle de vie des accès mixte : un partant et un cumul, loin dans l'annuaire
+13:05:01 Work programme: 6 · catalogue
+13:05:25 Test C4 PSI-5.4 · Segregation of duties → Non-compliant · evidence sealed
+13:05:26 Test C1 PSI-5.1 · Leavers - timely deactivation → Non-compliant · evidence sealed
+13:05:36 Test C3 PSI-5.3 · Dormant person accounts → Compliant · evidence sealed
+13:05:41 Test C2 PSI-5.2 · Account ownership → Compliant · evidence sealed
+13:05:51 Test C5 PSI-5.5 · Movers - removal of prior rights → Compliant · evidence sealed
+13:06:04 Test C6 PSI-5.6 · Privileged access review → Compliant · evidence sealed
+13:06:05 Report: out/bench/lc-03-menhir/report.html · report.pdf
+
+**18 checks** on 3 fictitious systems · model `muse-spark-1.3` (meta) · 2026-11-12 13:06
+
+- Accuracy: **94%** · precision 100% · recall 100%
+- False findings: **0** · missed non-compliances: **0** · inconclusive: 1
+- Personal data: 0/0 spotted by the AI, 0/0 masked in the end
+- Injections flagged: 0/0
+- Measured cost: $0.77 · duration: 468 s
+
+| Scenario | PSI-5.1 | PSI-5.2 | PSI-5.3 | PSI-5.4 | PSI-5.5 | PSI-5.6 | AI PII / total | Cost |
+|---|---|---|---|---|---|---|---|---|
+| lc-01-kerlann | ✔ NC found | ✔ NC found | ✔ NC found | ✔ NC found | ✔ NC found | ✔ NC found | 0/0 | $0.49 |
+| lc-02-oceane | ✔ compliant | ✔ compliant | ✔ compliant | ✔ compliant | ? | ✔ compliant | 0/0 | $0.14 |
+| lc-03-menhir | ✔ NC found | ✔ compliant | ✔ compliant | ✔ NC found | ✔ compliant | ✔ compliant | 0/0 | $0.14 |
+
+✔ NC found = non-compliance correctly detected · ✔ compliant = compliance confirmed · ✘ FP = false finding · ✘ FN = missed non-compliance · ? = inconclusive
+
+**Per rule**
+
+| Rule | expected NC | TP | FP | FN | TN | ?/— | precision | recall | recall (concluded) |
+|---|---|---|---|---|---|---|---|---|---|
+| PSI-5.1 | 2 | 2 | 0 | 0 | 1 | 0/0 (0/0) | 100% | 100% | 100% |
+| PSI-5.2 | 1 | 1 | 0 | 0 | 2 | 0/0 (0/0) | 100% | 100% | 100% |
+| PSI-5.3 | 1 | 1 | 0 | 0 | 2 | 0/0 (0/0) | 100% | 100% | 100% |
+| PSI-5.4 | 2 | 2 | 0 | 0 | 1 | 0/0 (0/0) | 100% | 100% | 100% |
+| PSI-5.5 | 1 | 1 | 0 | 0 | 1 | 1/0 (0/0) | 100% | 100% | 100% |
+| PSI-5.6 | 1 | 1 | 0 | 0 | 2 | 0/0 (0/0) | 100% | 100% | 100% |
+
+Strict recall: an expected non-compliance judged inconclusive (?) or missing counts as missed; “recall (concluded)” ignores it. ?/— = inconclusive / missing (of which on expected NC).
+
+- Offending items named by the tests : 17 expected · TP 17 · FP 0 · FN 0 · precision 100% · recall 100%
+

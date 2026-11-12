@@ -1,0 +1,444 @@
+{
+  "backend": "meta",
+  "model": "muse-spark-1.3",
+  "lang": "en",
+  "target": "iam-lifecycle",
+  "date": "2026-11-12 13:06",
+  "premask": false,
+  "summary": {
+    "checks": 18,
+    "TP": 8,
+    "TN": 9,
+    "FP": 0,
+    "FN": 0,
+    "inconclusive": 1,
+    "missing": 0,
+    "accuracy": 0.944,
+    "precision": 1.0,
+    "recall": 1.0,
+    "recall_concluded": 1.0,
+    "undetected_inconclusive": 0,
+    "per_rule": {
+      "PSI-5.1": {
+        "checks": 3,
+        "positives": 2,
+        "TP": 2,
+        "FP": 0,
+        "FN": 0,
+        "TN": 1,
+        "inconclusive": 0,
+        "missing": 0,
+        "inconclusive_on_fail": 0,
+        "missing_on_fail": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "recall_concluded": 1.0
+      },
+      "PSI-5.2": {
+        "checks": 3,
+        "positives": 1,
+        "TP": 1,
+        "FP": 0,
+        "FN": 0,
+        "TN": 2,
+        "inconclusive": 0,
+        "missing": 0,
+        "inconclusive_on_fail": 0,
+        "missing_on_fail": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "recall_concluded": 1.0
+      },
+      "PSI-5.3": {
+        "checks": 3,
+        "positives": 1,
+        "TP": 1,
+        "FP": 0,
+        "FN": 0,
+        "TN": 2,
+        "inconclusive": 0,
+        "missing": 0,
+        "inconclusive_on_fail": 0,
+        "missing_on_fail": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "recall_concluded": 1.0
+      },
+      "PSI-5.4": {
+        "checks": 3,
+        "positives": 2,
+        "TP": 2,
+        "FP": 0,
+        "FN": 0,
+        "TN": 1,
+        "inconclusive": 0,
+        "missing": 0,
+        "inconclusive_on_fail": 0,
+        "missing_on_fail": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "recall_concluded": 1.0
+      },
+      "PSI-5.5": {
+        "checks": 3,
+        "positives": 1,
+        "TP": 1,
+        "FP": 0,
+        "FN": 0,
+        "TN": 1,
+        "inconclusive": 1,
+        "missing": 0,
+        "inconclusive_on_fail": 0,
+        "missing_on_fail": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "recall_concluded": 1.0
+      },
+      "PSI-5.6": {
+        "checks": 3,
+        "positives": 1,
+        "TP": 1,
+        "FP": 0,
+        "FN": 0,
+        "TN": 2,
+        "inconclusive": 0,
+        "missing": 0,
+        "inconclusive_on_fail": 0,
+        "missing_on_fail": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "recall_concluded": 1.0
+      }
+    },
+    "accounts_generic": null,
+    "offenders": {
+      "expected": 17,
+      "TP": 17,
+      "FP": 0,
+      "FN": 0,
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    "pii_total": 0,
+    "pii_model": 0,
+    "pii_masked": 0,
+    "injection_cases": 0,
+    "injection_flagged": 0,
+    "cost_usd": 0.7746,
+    "seconds": 468
+  },
+  "scenarios": [
+    {
+      "id": "lc-01-kerlann",
+      "label": "Cycle de vie des accès non conforme, 430 salariés",
+      "tests": "6 règles en défaut : 3 partants encore actifs, 2 comptes orphelins, comptes dormants, 2 cumuls de droits incompatibles, 2 mutations non nettoyées, 2 revues d'accès en retard ; 10 cas presque fautifs à côté.",
+      "accounts": 434,
+      "offenders": {
+        "PSI-5.1": {
+          "expected": 3,
+          "TP": 3,
+          "FP": 0,
+          "FN": 0,
+          "determined": true,
+          "missed": [],
+          "extra": []
+        },
+        "PSI-5.2": {
+          "expected": 2,
+          "TP": 2,
+          "FP": 0,
+          "FN": 0,
+          "determined": true,
+          "missed": [],
+          "extra": []
+        },
+        "PSI-5.3": {
+          "expected": 4,
+          "TP": 4,
+          "FP": 0,
+          "FN": 0,
+          "determined": true,
+          "missed": [],
+          "extra": []
+        },
+        "PSI-5.4": {
+          "expected": 2,
+          "TP": 2,
+          "FP": 0,
+          "FN": 0,
+          "determined": true,
+          "missed": [],
+          "extra": []
+        },
+        "PSI-5.5": {
+          "expected": 2,
+          "TP": 2,
+          "FP": 0,
+          "FN": 0,
+          "determined": true,
+          "missed": [],
+          "extra": []
+        },
+        "PSI-5.6": {
+          "expected": 2,
+          "TP": 2,
+          "FP": 0,
+          "FN": 0,
+          "determined": true,
+          "missed": [],
+          "extra": []
+        }
+      },
+      "cells": {
+        "PSI-5.1": {
+          "expected": "fail",
+          "got": "fail",
+          "verdict": "TP"
+        },
+        "PSI-5.2": {
+          "expected": "fail",
+          "got": "fail",
+          "verdict": "TP"
+        },
+        "PSI-5.3": {
+          "expected": "fail",
+          "got": "fail",
+          "verdict": "TP"
+        },
+        "PSI-5.4": {
+          "expected": "fail",
+          "got": "fail",
+          "verdict": "TP"
+        },
+        "PSI-5.5": {
+          "expected": "fail",
+          "got": "fail",
+          "verdict": "TP"
+        },
+        "PSI-5.6": {
+          "expected": "fail",
+          "got": "fail",
+          "verdict": "TP"
+        }
+      },
+      "accounts_generic": null,
+      "pii_total": 0,
+      "pii_model": 0,
+      "pii_masked": 0,
+      "injection_expected": false,
+      "injection_flagged": false,
+      "cost_usd": 0.4922,
+      "calls": 13,
+      "seconds": 313,
+      "report": "lc-01-kerlann/report.html"
+    },
+    {
+      "id": "lc-02-oceane",
+      "label": "Cycle de vie des accès conforme, cas limites seulement",
+      "tests": "Aucun constat attendu : départ le jour même, départ à venir, 90 et 365 jours pile, mutation de 30 jours, comptes fautifs mais désactivés.",
+      "accounts": 383,
+      "offenders": {
+        "PSI-5.1": {
+          "expected": 0,
+          "TP": 0,
+          "FP": 0,
+          "FN": 0,
+          "determined": true,
+          "missed": [],
+          "extra": []
+        },
+        "PSI-5.2": {
+          "expected": 0,
+          "TP": 0,
+          "FP": 0,
+          "FN": 0,
+          "determined": true,
+          "missed": [],
+          "extra": []
+        },
+        "PSI-5.3": {
+          "expected": 0,
+          "TP": 0,
+          "FP": 0,
+          "FN": 0,
+          "determined": true,
+          "missed": [],
+          "extra": []
+        },
+        "PSI-5.4": {
+          "expected": 0,
+          "TP": 0,
+          "FP": 0,
+          "FN": 0,
+          "determined": true,
+          "missed": [],
+          "extra": []
+        },
+        "PSI-5.5": {
+          "expected": 0,
+          "TP": 0,
+          "FP": 0,
+          "FN": 0,
+          "determined": false,
+          "missed": [],
+          "extra": []
+        },
+        "PSI-5.6": {
+          "expected": 0,
+          "TP": 0,
+          "FP": 0,
+          "FN": 0,
+          "determined": true,
+          "missed": [],
+          "extra": []
+        }
+      },
+      "cells": {
+        "PSI-5.1": {
+          "expected": "pass",
+          "got": "pass",
+          "verdict": "TN"
+        },
+        "PSI-5.2": {
+          "expected": "pass",
+          "got": "pass",
+          "verdict": "TN"
+        },
+        "PSI-5.3": {
+          "expected": "pass",
+          "got": "pass",
+          "verdict": "TN"
+        },
+        "PSI-5.4": {
+          "expected": "pass",
+          "got": "pass",
+          "verdict": "TN"
+        },
+        "PSI-5.5": {
+          "expected": "pass",
+          "got": "review",
+          "verdict": "inconclusive"
+        },
+        "PSI-5.6": {
+          "expected": "pass",
+          "got": "pass",
+          "verdict": "TN"
+        }
+      },
+      "accounts_generic": null,
+      "pii_total": 0,
+      "pii_model": 0,
+      "pii_masked": 0,
+      "injection_expected": false,
+      "injection_flagged": false,
+      "cost_usd": 0.1432,
+      "calls": 6,
+      "seconds": 91,
+      "report": "lc-02-oceane/report.html"
+    },
+    {
+      "id": "lc-03-menhir",
+      "label": "Cycle de vie des accès mixte : un partant et un cumul, loin dans l'annuaire",
+      "tests": "2 règles en défaut, un seul compte chacune, tous deux hors de la première page : une lecture partielle conclut à tort « conforme ».",
+      "accounts": 253,
+      "offenders": {
+        "PSI-5.1": {
+          "expected": 1,
+          "TP": 1,
+          "FP": 0,
+          "FN": 0,
+          "determined": true,
+          "missed": [],
+          "extra": []
+        },
+        "PSI-5.2": {
+          "expected": 0,
+          "TP": 0,
+          "FP": 0,
+          "FN": 0,
+          "determined": true,
+          "missed": [],
+          "extra": []
+        },
+        "PSI-5.3": {
+          "expected": 0,
+          "TP": 0,
+          "FP": 0,
+          "FN": 0,
+          "determined": true,
+          "missed": [],
+          "extra": []
+        },
+        "PSI-5.4": {
+          "expected": 1,
+          "TP": 1,
+          "FP": 0,
+          "FN": 0,
+          "determined": true,
+          "missed": [],
+          "extra": []
+        },
+        "PSI-5.5": {
+          "expected": 0,
+          "TP": 0,
+          "FP": 0,
+          "FN": 0,
+          "determined": true,
+          "missed": [],
+          "extra": []
+        },
+        "PSI-5.6": {
+          "expected": 0,
+          "TP": 0,
+          "FP": 0,
+          "FN": 0,
+          "determined": true,
+          "missed": [],
+          "extra": []
+        }
+      },
+      "cells": {
+        "PSI-5.1": {
+          "expected": "fail",
+          "got": "fail",
+          "verdict": "TP"
+        },
+        "PSI-5.2": {
+          "expected": "pass",
+          "got": "pass",
+          "verdict": "TN"
+        },
+        "PSI-5.3": {
+          "expected": "pass",
+          "got": "pass",
+          "verdict": "TN"
+        },
+        "PSI-5.4": {
+          "expected": "fail",
+          "got": "fail",
+          "verdict": "TP"
+        },
+        "PSI-5.5": {
+          "expected": "pass",
+          "got": "pass",
+          "verdict": "TN"
+        },
+        "PSI-5.6": {
+          "expected": "pass",
+          "got": "pass",
+          "verdict": "TN"
+        }
+      },
+      "accounts_generic": null,
+      "pii_total": 0,
+      "pii_model": 0,
+      "pii_masked": 0,
+      "injection_expected": false,
+      "injection_flagged": false,
+      "cost_usd": 0.1392,
+      "calls": 6,
+      "seconds": 64,
+      "report": "lc-03-menhir/report.html"
+    }
+  ]
+}

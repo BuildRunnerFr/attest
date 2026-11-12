@@ -1,0 +1,474 @@
+{
+  "mission": {
+    "id": "AUD-2026-JML-01",
+    "title": "Access lifecycle — joiners, movers, leavers",
+    "entity": "Menhir Finance (fictive)",
+    "system": "Registre RH et habilitations (cycle de vie des accès)",
+    "system_criticality": "Supports critical or important functions (DORA)",
+    "environment": "Demonstration extract (fictitious data)",
+    "owner": "IT department — IAM team; HR for the register",
+    "lead_auditor": "Attest CI (automated run, no human auditor)",
+    "classification": "TLP:AMBER+STRICT",
+    "requirement_path": "exigences/cycle_de_vie_acces.md",
+    "lab_url": "http://127.0.0.1:5050",
+    "scope_in": [
+      "Reconciliation of the HR register with accounts at the reference date",
+      "Entitlements held by enabled accounts (segregation of duties, movers, privileges)"
+    ],
+    "scope_out": [
+      "Accuracy of the HR register itself",
+      "Entitlement granting process (requests, approvals)",
+      "Accounts of other applications"
+    ],
+    "sla_days": {
+      "critique": 30,
+      "elevee": 90,
+      "moyenne": 180,
+      "faible": 365
+    },
+    "target": "iam-lifecycle",
+    "framework_label": "DORA art. 9(4)(c) · RTS (UE) 2024/1774 art. 21 · PSI-5",
+    "requirement_text": null
+  },
+  "run_id": "20261112-125816-lifecycle-bench-meta",
+  "started": "2026-11-12 13:05",
+  "lang": "en",
+  "target": "iam-lifecycle",
+  "target_label": "HR register ↔ entitlements (leavers, movers, conflicting rights)",
+  "backend": "meta",
+  "models": {
+    "reason": "muse-spark-1.3",
+    "code": "muse-spark-1.3",
+    "segmentation": "sam-3.1"
+  },
+  "entries": [
+    {
+      "control": {
+        "id": "C1",
+        "rule": "PSI-5.1",
+        "title": "Leavers - timely deactivation",
+        "objective": "At as_of, no enabled person account belongs to an employee whose end_date is strictly before as_of; end_date equal to or after as_of remains compliant and only accounts with enabled=true are in scope.",
+        "test_procedure": "Join GET /api/lifecycle/accounts to GET /api/hr/employees on employee_id and flag any account with type=person and enabled=true where end_date is not null and end_date < meta.as_of.",
+        "expected": "enabled=false where type=person and end_date < as_of",
+        "severity": "critique",
+        "references": [
+          "DORA 9(4)(c)",
+          "RTS 21(1)(e)"
+        ],
+        "risk": "A former employee retains logical access after contract end and could access or alter information assets without authorization.",
+        "recommendation": "Disable the non-compliant accounts and enforce automatic deactivation on contract end date.",
+        "cause": "Leaver process failure or missing synchronization between the HR register and account provisioning.",
+        "evidence_page": "/lifecycle/reconciliation",
+        "remediation": "manual"
+      },
+      "test": {
+        "script": "scripts/C1_PSI-5.1.py",
+        "sha256": "adc2fd67d80130c0f6d75bb7ee8ef4e71271f82313f22315a3444cf38dfb6e90",
+        "origin": "library",
+        "code": "# Attest — test PSI-5.1 (Leavers - timely deactivation)\n# Écrit par muse-spark-1.3 le 2026-11-12 — à relire avant validation.\nimport requests\nimport json\nimport os\nimport sys\nimport re\ntry:\n    base = os.environ[\"LAB_URL\"]\n    token = os.environ[\"LAB_TOKEN\"]\nexcept KeyError:\n    sys.stderr.write(\"missing LAB_URL or LAB_TOKEN\\n\")\n    sys.exit(2)\nif not isinstance(base, str) or not isinstance(token, str):\n    sys.stderr.write(\"env invalid\\n\")\n    sys.exit(2)\nheaders = {\"Authorization\": \"Bearer \" + token}\nclean = base.rstrip(\"/\")\npat = re.compile(r\"^\\d{4}-\\d{2}-\\d{2}$\")\nmeta_resp = requests.get(clean + \"/api/lifecycle/meta\", headers=headers)\nif meta_resp.status_code != 200:\n    sys.stderr.write(\"meta request failed\\n\")\n    sys.exit(2)\ntry:\n    meta_data = meta_resp.json()\nexcept Exception:\n    sys.stderr.write(\"meta json failed\\n\")\n    sys.exit(2)\nif not isinstance(meta_data, dict):\n    sys.stderr.write(\"meta format invalid\\n\")\n    sys.exit(2)\nif \"as_of\" not in meta_data:\n    sys.stderr.write(\"meta as_of missing\\n\")\n    sys.exit(2)\nas_of = meta_data[\"as_of\"]\nif not isinstance(as_of, str):\n    sys.stderr.write(\"as_of invalid\\n\")\n    sys.exit(2)\nif not pat.match(as_of):\n    sys.stderr.write(\"as_of date invalid\\n\")\n    sys.exit(2)\nemployees = {}\nurl = clean + \"/api/hr/employees\"\nwhile True:\n    r = requests.get(url, headers=headers)\n    if r.status_code != 200:\n        sys.stderr.write(\"employees request failed\\n\")\n        sys.exit(2)\n    try:\n        batch = r.json()\n    except Exception:\n        sys.stderr.write(\"employees json failed\\n\")\n        sys.exit(2)\n    if not isinstance(batch, list):\n        sys.stderr.write(\"employees format invalid\\n\")\n        sys.exit(2)\n    for entry in batch:\n        if not isinstance(entry, dict):\n            sys.stderr.write(\"employee entry invalid\\n\")\n            sys.exit(2)\n        if \"employee_id\" not in entry:\n            sys.stderr.write(\"employee_id missing\\n\")\n            sys.exit(2)\n        eid = entry[\"employee_id\"]\n        if not isinstance(eid, str):\n            sys.stderr.write(\"employee_id invalid\\n\")\n            sys.exit(2)\n        if eid not in employees:\n            employees[eid] = entry\n    if \"next\" in r.links:\n        nxt = r.links[\"next\"][\"url\"]\n        if not isinstance(nxt, str):\n            sys.stderr.write(\"next link invalid\\n\")\n            sys.exit(2)\n        if nxt.startswith(\"http\"):\n            url = nxt\n        elif nxt.startswith(\"/\"):\n            url = clean + nxt\n        else:\n            url = clean + \"/\" + nxt\n    else:\n        break\naccounts = {}\nurl2 = clean + \"/api/lifecycle/accounts\"\nwhile True:\n    r2 = requests.get(url2, headers=headers)\n    if r2.status_code != 200:\n        sys.stderr.write(\"accounts request failed\\n\")\n        sys.exit(2)\n    try:\n        batch2 = r2.json()\n    except Exception:\n        sys.stderr.write(\"accounts json failed\\n\")\n        sys.exit(2)\n    if not isinstance(batch2, list):\n        sys.stderr.write(\"accounts format invalid\\n\")\n        sys.exit(2)\n    for entry2 in batch2:\n        if not isinstance(entry2, dict):\n            sys.stderr.write(\"account entry invalid\\n\")\n            sys.exit(2)\n        if \"login\" not in entry2:\n            sys.stderr.write(\"login missing\\n\")\n            sys.exit(2)\n        lg = entry2[\"login\"]\n        if not isinstance(lg, str):\n            sys.stderr.write(\"login invalid\\n\")\n            sys.exit(2)\n        if lg not in accounts:\n            accounts[lg] = entry2\n    if \"next\" in r2.links:\n        nxt2 = r2.links[\"next\"][\"url\"]\n        if not isinstance(nxt2, str):\n            sys.stderr.write(\"next link invalid\\n\")\n            sys.exit(2)\n        if nxt2.startswith(\"http\"):\n            url2 = nxt2\n        elif nxt2.startswith(\"/\"):\n            url2 = clean + nxt2\n        else:\n            url2 = clean + \"/\" + nxt2\n    else:\n        break\nev = requests.get(clean + \"/lifecycle/reconciliation\", headers=headers)\nif ev.status_code != 200:\n    sys.stderr.write(\"evidence request failed\\n\")\n    sys.exit(2)\nbad = []\nenabled_person = 0\nfor lg, acc in accounts.items():\n    if \"type\" not in acc or \"enabled\" not in acc or \"employee_id\" not in acc:\n        sys.stderr.write(\"account fields missing\\n\")\n        sys.exit(2)\n    typ = acc[\"type\"]\n    en = acc[\"enabled\"]\n    if typ not in (\"person\", \"service\"):\n        sys.stderr.write(\"account type invalid\\n\")\n        sys.exit(2)\n    if not isinstance(en, bool):\n        sys.stderr.write(\"enabled invalid\\n\")\n        sys.exit(2)\n    if typ != \"person\":\n        continue\n    if not en:\n        continue\n    enabled_person = enabled_person + 1\n    eid2 = acc[\"employee_id\"]\n    if eid2 is None:\n        continue\n    if not isinstance(eid2, str):\n        sys.stderr.write(\"employee_id invalid\\n\")\n        sys.exit(2)\n    if eid2 not in employees:\n        continue\n    emp = employees[eid2]\n    if \"end_date\" not in emp:\n        sys.stderr.write(\"end_date missing\\n\")\n        sys.exit(2)\n    ed = emp[\"end_date\"]\n    if ed is None:\n        continue\n    if not isinstance(ed, str):\n        sys.stderr.write(\"end_date invalid\\n\")\n        sys.exit(2)\n    if not pat.match(ed):\n        sys.stderr.write(\"end_date date invalid\\n\")\n        sys.exit(2)\n    if ed < as_of:\n        bad.append(lg)\nbad_sorted = sorted(bad)\ntotal_accounts = len(accounts)\ntotal_employees = len(employees)\nif bad_sorted:\n    status = \"fail\"\n    observed = bad_sorted\nelse:\n    status = \"pass\"\n    observed = []\ndetail = \"Checked \" + str(enabled_person) + \" enabled person accounts among \" + str(total_accounts) + \" accounts against \" + str(total_employees) + \" employees at as_of \" + as_of + \": \" + str(len(bad_sorted)) + \" with end_date before as_of\"\nprint(json.dumps({\"status\": status, \"observed\": observed, \"expected\": \"enabled=false where type=person and end_date < as_of\", \"detail\": detail, \"evidence_page\": \"/lifecycle/reconciliation\"}))\n",
+        "requests": 8
+      },
+      "before": {
+        "status": "fail",
+        "observed": [
+          "l.lefloch"
+        ],
+        "expected": "enabled=false where type=person and end_date < as_of",
+        "detail": "Checked 232 enabled person accounts among 253 accounts against 250 employees at as_of 2026-11-02: 1 with end_date before as_of",
+        "evidence_page": "/lifecycle/reconciliation"
+      },
+      "evidence_before": {
+        "image": "evidence/C1_before.png",
+        "sha256": "bca30f60164ddc0c87c938e33f84f3196b4048656fbe7242304cfa80d6c7880a",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "l.lefloch Personne Actif E11280 Parti 2026-10-24 tresorerie — 2026-10-23 commun.messagerie, tresorerie.operations —",
+          "field_boxes": [
+            [
+              12,
+              2530,
+              1183,
+              2570
+            ]
+          ],
+          "comment": "Screenshot shows l.lefloch as an active person account with contract end 2026-10-24 before as_of 2026-11-02.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 0,
+          "pii_masked": 0,
+          "pii_found_by_model": 0
+        },
+        "page": "/lifecycle/reconciliation?page=2&per_page=100",
+        "page_verified": null,
+        "ts": "2026-11-12 13:05:26"
+      },
+      "status_before": "fail",
+      "finding": {
+        "id": "F-01",
+        "severity": "critique",
+        "status": "open",
+        "owner": "IT department — IAM team; HR for the register",
+        "due": "2026-12-12"
+      }
+    },
+    {
+      "control": {
+        "id": "C2",
+        "rule": "PSI-5.2",
+        "title": "Account ownership",
+        "objective": "At as_of, every enabled person account has an employee_id present in the HR register, and every enabled service account has an owner_employee_id present in the HR register with status=active; person accounts present but with status=left are excluded from this rule.",
+        "test_procedure": "Join enabled accounts to HR employees and flag type=person with employee_id not found and type=service with owner_employee_id not found or with status=left.",
+        "expected": "employee_id in employees.employee_id for enabled person accounts; owner_employee_id in employees.employee_id with status=active for enabled service accounts",
+        "severity": "elevee",
+        "references": [
+          "DORA 9(4)(c)",
+          "RTS 21(1)(e)"
+        ],
+        "risk": "Orphan or ownerless active accounts cannot be attributed or reviewed and may be abused without detection.",
+        "recommendation": "Attach each orphan account to a known active responsible person or disable it.",
+        "cause": "Missing ownership control at account creation or unsynchronised HR departures for service account owners.",
+        "evidence_page": "/lifecycle/reconciliation",
+        "remediation": "manual"
+      },
+      "test": {
+        "script": "scripts/C2_PSI-5.2.py",
+        "sha256": "d02ca45f487d05898fe2eb615f5720d2b6e22249754c0494b02895fc9d28bcc6",
+        "origin": "library",
+        "code": "# Attest — test PSI-5.2 (Account ownership)\n# Écrit par muse-spark-1.3 le 2026-11-12 — à relire avant validation.\nimport requests\nimport json\nimport os\nimport sys\nimport re\ntry:\n    base = os.environ[\"LAB_URL\"]\n    token = os.environ[\"LAB_TOKEN\"]\nexcept Exception:\n    sys.stderr.write(\"missing LAB_URL or LAB_TOKEN\\n\")\n    sys.exit(2)\nif not isinstance(base, str) or base == \"\":\n    sys.stderr.write(\"invalid LAB_URL value\\n\")\n    sys.exit(2)\nif not isinstance(token, str) or token == \"\":\n    sys.stderr.write(\"invalid LAB_TOKEN value\\n\")\n    sys.exit(2)\nbase = base.rstrip(\"/\")\nheaders = {\"Authorization\": \"Bearer \" + token}\nemp_status = {}\nurl = base + \"/api/hr/employees\"\nwhile url:\n    try:\n        resp = requests.get(url, headers=headers)\n    except Exception:\n        sys.stderr.write(\"employees request failed\\n\")\n        sys.exit(2)\n    if resp.status_code != 200:\n        sys.stderr.write(\"employees request error \" + str(resp.status_code) + \"\\n\")\n        sys.exit(2)\n    try:\n        data = resp.json()\n    except Exception:\n        sys.stderr.write(\"employees invalid json\\n\")\n        sys.exit(2)\n    if not isinstance(data, list):\n        sys.stderr.write(\"employees unexpected payload\\n\")\n        sys.exit(2)\n    for item in data:\n        if not isinstance(item, dict):\n            sys.stderr.write(\"employee unexpected record\\n\")\n            sys.exit(2)\n        if \"employee_id\" not in item or \"status\" not in item:\n            sys.stderr.write(\"employee missing fields\\n\")\n            sys.exit(2)\n        eid = item[\"employee_id\"]\n        st = item[\"status\"]\n        if not isinstance(eid, str) or eid == \"\":\n            sys.stderr.write(\"employee invalid id\\n\")\n            sys.exit(2)\n        if not isinstance(st, str):\n            sys.stderr.write(\"employee invalid status\\n\")\n            sys.exit(2)\n        if eid not in emp_status:\n            emp_status[eid] = st\n    nxt = None\n    links = resp.links\n    if \"next\" in links:\n        info = links[\"next\"]\n        if \"url\" not in info:\n            sys.stderr.write(\"employees invalid next link\\n\")\n            sys.exit(2)\n        nxt = info[\"url\"]\n        if not isinstance(nxt, str):\n            sys.stderr.write(\"employees invalid next url\\n\")\n            sys.exit(2)\n    if nxt:\n        if re.match(\"https?://\", nxt):\n            url = nxt\n        elif nxt.startswith(\"/\"):\n            url = base + nxt\n        else:\n            url = base + \"/\" + nxt\n    else:\n        url = None\nacc_map = {}\nurl = base + \"/api/lifecycle/accounts\"\nwhile url:\n    try:\n        resp = requests.get(url, headers=headers)\n    except Exception:\n        sys.stderr.write(\"accounts request failed\\n\")\n        sys.exit(2)\n    if resp.status_code != 200:\n        sys.stderr.write(\"accounts request error \" + str(resp.status_code) + \"\\n\")\n        sys.exit(2)\n    try:\n        data = resp.json()\n    except Exception:\n        sys.stderr.write(\"accounts invalid json\\n\")\n        sys.exit(2)\n    if not isinstance(data, list):\n        sys.stderr.write(\"accounts unexpected payload\\n\")\n        sys.exit(2)\n    for item in data:\n        if not isinstance(item, dict):\n            sys.stderr.write(\"account unexpected record\\n\")\n            sys.exit(2)\n        if \"login\" not in item or \"type\" not in item or \"enabled\" not in item:\n            sys.stderr.write(\"account missing fields\\n\")\n            sys.exit(2)\n        login = item[\"login\"]\n        typ = item[\"type\"]\n        ena = item[\"enabled\"]\n        if not isinstance(login, str) or login == \"\":\n            sys.stderr.write(\"account invalid login\\n\")\n            sys.exit(2)\n        if typ != \"person\" and typ != \"service\":\n            sys.stderr.write(\"account invalid type\\n\")\n            sys.exit(2)\n        if not isinstance(ena, bool):\n            sys.stderr.write(\"account invalid enabled flag\\n\")\n            sys.exit(2)\n        if \"employee_id\" not in item or \"owner_employee_id\" not in item:\n            sys.stderr.write(\"account missing ownership fields\\n\")\n            sys.exit(2)\n        if login not in acc_map:\n            acc_map[login] = item\n    nxt = None\n    links = resp.links\n    if \"next\" in links:\n        info = links[\"next\"]\n        if \"url\" not in info:\n            sys.stderr.write(\"accounts invalid next link\\n\")\n            sys.exit(2)\n        nxt = info[\"url\"]\n        if not isinstance(nxt, str):\n            sys.stderr.write(\"accounts invalid next url\\n\")\n            sys.exit(2)\n    if nxt:\n        if re.match(\"https?://\", nxt):\n            url = nxt\n        elif nxt.startswith(\"/\"):\n            url = base + nxt\n        else:\n            url = base + \"/\" + nxt\n    else:\n        url = None\ntry:\n    ev = requests.get(base + \"/lifecycle/reconciliation\", headers=headers)\nexcept Exception:\n    sys.stderr.write(\"evidence request failed\\n\")\n    sys.exit(2)\nif ev.status_code != 200:\n    sys.stderr.write(\"evidence request error \" + str(ev.status_code) + \"\\n\")\n    sys.exit(2)\noffenders = []\nperson_total = 0\nservice_total = 0\nfor login, acc in acc_map.items():\n    if acc[\"enabled\"] is not True:\n        continue\n    typ = acc[\"type\"]\n    if typ == \"person\":\n        person_total = person_total + 1\n        eid = acc[\"employee_id\"]\n        if not isinstance(eid, str) or eid == \"\":\n            offenders.append(login)\n        elif eid not in emp_status:\n            offenders.append(login)\n    else:\n        service_total = service_total + 1\n        owner = acc[\"owner_employee_id\"]\n        if not isinstance(owner, str) or owner == \"\":\n            offenders.append(login)\n        elif owner not in emp_status:\n            offenders.append(login)\n        elif emp_status[owner] != \"active\":\n            offenders.append(login)\noffenders = sorted(offenders)\nenabled_total = person_total + service_total\nemp_total = len(emp_status)\nexpected = \"employee_id in employees.employee_id for enabled person accounts; owner_employee_id in employees.employee_id with status=active for enabled service accounts\"\nif len(offenders) == 0:\n    status = \"pass\"\nelse:\n    status = \"fail\"\ndetail = \"Checked \" + str(enabled_total) + \" enabled accounts (\" + str(person_total) + \" person, \" + str(service_total) + \" service) against \" + str(emp_total) + \" HR employees: \" + str(len(offenders)) + \" orphan or ownerless accounts found\"\nprint(json.dumps({\"status\": status, \"observed\": offenders, \"expected\": expected, \"detail\": detail, \"evidence_page\": \"/lifecycle/reconciliation\"}))\n",
+        "requests": 7
+      },
+      "before": {
+        "status": "pass",
+        "observed": [],
+        "expected": "employee_id in employees.employee_id for enabled person accounts; owner_employee_id in employees.employee_id with status=active for enabled service accounts",
+        "detail": "Checked 235 enabled accounts (232 person, 3 service) against 250 HR employees: 0 orphan or ownerless accounts found",
+        "evidence_page": "/lifecycle/reconciliation"
+      },
+      "evidence_before": {
+        "image": "evidence/C2_before.png",
+        "sha256": "830b7ace571c09e33e360ee58fd8de878262be844a1988e9ed662c4a9ca41f43",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "",
+          "field_boxes": [],
+          "comment": "Page 1 shows no enabled account with absent HR status, consistent with zero orphans.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 0,
+          "pii_masked": 0,
+          "pii_found_by_model": 0
+        },
+        "page": "/lifecycle/reconciliation",
+        "page_verified": null,
+        "ts": "2026-11-12 13:05:41"
+      },
+      "status_before": "pass"
+    },
+    {
+      "control": {
+        "id": "C3",
+        "rule": "PSI-5.3",
+        "title": "Dormant person accounts",
+        "objective": "At as_of, no enabled person account has been inactive for more than 90 days measured as as_of minus last_login, or created if last_login is null, with exactly 90 days remaining compliant; service accounts are out of scope.",
+        "test_procedure": "For all accounts with type=person and enabled=true, compute days between as_of and last_login or created if null and flag those exceeding 90 days.",
+        "expected": "as_of minus (last_login or created if null) <= 90 where type=person and enabled=true",
+        "severity": "moyenne",
+        "references": [
+          "DORA 9(4)(c)",
+          "RTS 21(1)(a)"
+        ],
+        "risk": "Unused accounts can be compromised and exploited without detection because no legitimate user monitors them.",
+        "recommendation": "Disable or recertify dormant accounts and enforce automatic deactivation after 90 days of inactivity.",
+        "cause": "Missing periodic review or automated deactivation for inactive accounts.",
+        "evidence_page": "/lifecycle/accounts",
+        "remediation": "manual"
+      },
+      "test": {
+        "script": "scripts/C3_PSI-5.3.py",
+        "sha256": "9c60b963af04edaeaaebd684f4120629d91834be7f091761302698abd3b4c382",
+        "origin": "library",
+        "code": "# Attest — test PSI-5.3 (Dormant person accounts)\n# Écrit par muse-spark-1.3 le 2026-11-12 — à relire avant validation.\nimport requests\nimport json\nimport os\nimport sys\nimport re\n\ntry:\n    base_raw = os.environ[\"LAB_URL\"]\n    token_raw = os.environ[\"LAB_TOKEN\"]\nexcept Exception as e:\n    sys.stderr.write(\"missing env: \" + str(e) + \"\\n\")\n    sys.exit(2)\n\nbase = base_raw.rstrip(\"/\")\nheaders = {\"Authorization\": \"Bearer \" + token_raw}\n\ndef to_ord(ds):\n    m = re.match(r\"^(\\d{4})-(\\d{2})-(\\d{2})$\", ds)\n    if not m:\n        sys.stderr.write(\"bad date: \" + str(ds) + \"\\n\")\n        sys.exit(2)\n    y = int(m.group(1))\n    mo = int(m.group(2))\n    d = int(m.group(3))\n    if mo < 1 or mo > 12:\n        sys.stderr.write(\"bad month: \" + str(ds) + \"\\n\")\n        sys.exit(2)\n    leap = (y % 4 == 0 and y % 100 != 0) or (y % 400 == 0)\n    ml = [31, 29 if leap else 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]\n    if d < 1 or d > ml[mo - 1]:\n        sys.stderr.write(\"bad day: \" + str(ds) + \"\\n\")\n        sys.exit(2)\n    n = (y - 1) * 365 + (y - 1) // 4 - (y - 1) // 100 + (y - 1) // 400\n    s = 0\n    i = 0\n    while i < mo - 1:\n        s = s + ml[i]\n        i = i + 1\n    n = n + s + d\n    return n\n\ntry:\n    mr = requests.get(base + \"/api/lifecycle/meta\", headers=headers)\nexcept Exception as e:\n    sys.stderr.write(\"meta request failed: \" + str(e) + \"\\n\")\n    sys.exit(2)\nif mr.status_code != 200:\n    sys.stderr.write(\"meta bad status: \" + str(mr.status_code) + \"\\n\")\n    sys.exit(2)\ntry:\n    mdata = mr.json()\nexcept Exception as e:\n    sys.stderr.write(\"meta bad json: \" + str(e) + \"\\n\")\n    sys.exit(2)\nif not isinstance(mdata, dict):\n    sys.stderr.write(\"meta expected dict\\n\")\n    sys.exit(2)\nif \"as_of\" not in mdata:\n    sys.stderr.write(\"meta missing as_of\\n\")\n    sys.exit(2)\nas_of_str = mdata[\"as_of\"]\nif not isinstance(as_of_str, str):\n    sys.stderr.write(\"meta as_of not string\\n\")\n    sys.exit(2)\nif not re.match(r\"^\\d{4}-\\d{2}-\\d{2}$\", as_of_str):\n    sys.stderr.write(\"meta as_of bad format\\n\")\n    sys.exit(2)\nas_of_ord = to_ord(as_of_str)\n\nacc_by_login = {}\nurl = base + \"/api/lifecycle/accounts\"\nwhile url is not None:\n    try:\n        rr = requests.get(url, headers=headers)\n    except Exception as e:\n        sys.stderr.write(\"accounts request failed: \" + str(e) + \"\\n\")\n        sys.exit(2)\n    if rr.status_code != 200:\n        sys.stderr.write(\"accounts bad status: \" + str(rr.status_code) + \"\\n\")\n        sys.exit(2)\n    try:\n        j = rr.json()\n    except Exception as e:\n        sys.stderr.write(\"accounts bad json: \" + str(e) + \"\\n\")\n        sys.exit(2)\n    if not isinstance(j, list):\n        sys.stderr.write(\"accounts expected list\\n\")\n        sys.exit(2)\n    for it in j:\n        if not isinstance(it, dict):\n            sys.stderr.write(\"account expected dict\\n\")\n            sys.exit(2)\n        if \"login\" not in it or \"type\" not in it or \"enabled\" not in it or \"created\" not in it or \"last_login\" not in it:\n            sys.stderr.write(\"account missing fields\\n\")\n            sys.exit(2)\n        lg = it[\"login\"]\n        if not isinstance(lg, str):\n            sys.stderr.write(\"account login not string\\n\")\n            sys.exit(2)\n        if lg not in acc_by_login:\n            acc_by_login[lg] = it\n    if \"next\" in rr.links:\n        nu = rr.links[\"next\"][\"url\"]\n        if not isinstance(nu, str):\n            sys.stderr.write(\"next url not string\\n\")\n            sys.exit(2)\n        if nu.startswith(\"http\"):\n            url = nu\n        elif nu.startswith(\"/\"):\n            url = base + nu\n        else:\n            url = base + \"/\" + nu\n    else:\n        url = None\n\ntry:\n    er = requests.get(base + \"/lifecycle/accounts\", headers=headers)\nexcept Exception as e:\n    sys.stderr.write(\"evidence request failed: \" + str(e) + \"\\n\")\n    sys.exit(2)\nif er.status_code != 200:\n    sys.stderr.write(\"evidence bad status: \" + str(er.status_code) + \"\\n\")\n    sys.exit(2)\n\ntotal = 0\ndormant = []\nfor acc in acc_by_login.values():\n    typ = acc[\"type\"]\n    en = acc[\"enabled\"]\n    if typ not in (\"person\", \"service\"):\n        sys.stderr.write(\"bad type: \" + str(typ) + \"\\n\")\n        sys.exit(2)\n    if not isinstance(en, bool):\n        sys.stderr.write(\"bad enabled flag\\n\")\n        sys.exit(2)\n    if typ == \"person\" and en == True:\n        total = total + 1\n        ll = acc[\"last_login\"]\n        cr = acc[\"created\"]\n        if ll is not None and not isinstance(ll, str):\n            sys.stderr.write(\"bad last_login\\n\")\n            sys.exit(2)\n        if not isinstance(cr, str):\n            sys.stderr.write(\"bad created\\n\")\n            sys.exit(2)\n        ref = ll if ll is not None else cr\n        ref_ord = to_ord(ref)\n        diff = as_of_ord - ref_ord\n        if diff > 90:\n            dormant.append(acc[\"login\"])\n\ndormant_sorted = sorted(dormant)\nexpected = \"as_of minus (last_login or created if null) <= 90 where type=person and enabled=true\"\nif len(dormant_sorted) == 0:\n    status = \"pass\"\n    observed = []\n    detail = \"Checked \" + str(total) + \" enabled person accounts at as_of \" + as_of_str + \", none exceeded 90 days inactivity.\"\nelse:\n    status = \"fail\"\n    observed = dormant_sorted\n    detail = \"Checked \" + str(total) + \" enabled person accounts at as_of \" + as_of_str + \", \" + str(len(dormant_sorted)) + \" exceeded 90 days inactivity.\"\n\nprint(json.dumps({\"status\": status, \"observed\": observed, \"expected\": expected, \"detail\": detail, \"evidence_page\": \"/lifecycle/accounts\"}))\n",
+        "requests": 5
+      },
+      "before": {
+        "status": "pass",
+        "observed": [],
+        "expected": "as_of minus (last_login or created if null) <= 90 where type=person and enabled=true",
+        "detail": "Checked 232 enabled person accounts at as_of 2026-11-02, none exceeded 90 days inactivity.",
+        "evidence_page": "/lifecycle/accounts"
+      },
+      "evidence_before": {
+        "image": "evidence/C3_before.png",
+        "sha256": "a6a4616624c52958674f3e9ffb52bae2074e93fe86f88dd3a28c8fc608e6fce8",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "",
+          "field_boxes": [],
+          "comment": "All visible enabled accounts show last connection between 2026-09-03 and 2026-11-02, within 90 days of as_of 2026-11-02.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 0,
+          "pii_masked": 0,
+          "pii_found_by_model": 0
+        },
+        "page": "/lifecycle/accounts",
+        "page_verified": null,
+        "ts": "2026-11-12 13:05:36"
+      },
+      "status_before": "pass"
+    },
+    {
+      "control": {
+        "id": "C4",
+        "rule": "PSI-5.4",
+        "title": "Segregation of duties",
+        "objective": "At as_of, no enabled account simultaneously holds paiements.saisie and paiements.validation, nor credit.instruction and credit.decision.",
+        "test_procedure": "For all accounts with enabled=true, inspect entitlements and flag accounts containing both entitlements of either incompatible pair.",
+        "expected": "entitlements does not contain paiements.saisie + paiements.validation nor credit.instruction + credit.decision where enabled=true",
+        "severity": "critique",
+        "references": [
+          "RTS 21(1)(b)"
+        ],
+        "risk": "A single user could initiate and approve the same payment or credit, enabling fraud or undetected error.",
+        "recommendation": "Remove one of the conflicting entitlements and enforce preventive segregation checks at provisioning.",
+        "cause": "Missing segregation-of-duties matrix enforcement in the entitlement assignment process.",
+        "evidence_page": "/lifecycle/accounts",
+        "remediation": "manual"
+      },
+      "test": {
+        "script": "scripts/C4_PSI-5.4.py",
+        "sha256": "ba3e8ec374bebf1f7caa52f91117a51aa48eae8a07e72f5b184803a24e72735e",
+        "origin": "library",
+        "code": "# Attest — test PSI-5.4 (Segregation of duties)\n# Écrit par muse-spark-1.3 le 2026-11-12 — à relire avant validation.\nimport requests\nimport json\nimport os\nimport sys\nimport re\ntry:\n    base_url = os.environ[\"LAB_URL\"]\n    token = os.environ[\"LAB_TOKEN\"]\nexcept KeyError:\n    sys.stderr.write(\"missing env\\n\")\n    sys.exit(2)\nheaders = {\"Authorization\": \"Bearer \" + token}\nbase_url = base_url.rstrip(\"/\")\nurl = base_url + \"/api/lifecycle/accounts\"\nseen = {}\nwhile url:\n    try:\n        resp = requests.get(url, headers=headers)\n    except Exception:\n        sys.stderr.write(\"request failed\\n\")\n        sys.exit(2)\n    if resp.status_code != 200:\n        sys.stderr.write(\"bad status\\n\")\n        sys.exit(2)\n    try:\n        data = resp.json()\n    except Exception:\n        sys.stderr.write(\"bad json\\n\")\n        sys.exit(2)\n    if not isinstance(data, list):\n        sys.stderr.write(\"unexpected data\\n\")\n        sys.exit(2)\n    for item in data:\n        if not isinstance(item, dict):\n            sys.stderr.write(\"unexpected data\\n\")\n            sys.exit(2)\n        if \"login\" not in item or \"enabled\" not in item or \"entitlements\" not in item:\n            sys.stderr.write(\"unexpected data\\n\")\n            sys.exit(2)\n        login = item[\"login\"]\n        enabled = item[\"enabled\"]\n        ents = item[\"entitlements\"]\n        if not isinstance(login, str) or not isinstance(enabled, bool) or not isinstance(ents, list):\n            sys.stderr.write(\"unexpected data\\n\")\n            sys.exit(2)\n        for e in ents:\n            if not isinstance(e, str):\n                sys.stderr.write(\"unexpected data\\n\")\n                sys.exit(2)\n        if login not in seen:\n            seen[login] = item\n    try:\n        links = resp.links\n    except Exception:\n        sys.stderr.write(\"bad links\\n\")\n        sys.exit(2)\n    if \"next\" in links:\n        nxt = links[\"next\"]\n        if \"url\" in nxt:\n            raw_next = nxt[\"url\"]\n            if not isinstance(raw_next, str):\n                sys.stderr.write(\"bad next url\\n\")\n                sys.exit(2)\n            if raw_next.startswith(\"http://\") or raw_next.startswith(\"https://\"):\n                url = raw_next\n            else:\n                if raw_next.startswith(\"/\"):\n                    url = base_url + raw_next\n                else:\n                    url = base_url + \"/\" + raw_next\n        else:\n            url = None\n    else:\n        url = None\ntry:\n    ev_resp = requests.get(base_url + \"/lifecycle/accounts\", headers=headers)\nexcept Exception:\n    sys.stderr.write(\"evidence request failed\\n\")\n    sys.exit(2)\nif ev_resp.status_code != 200:\n    sys.stderr.write(\"evidence bad status\\n\")\n    sys.exit(2)\noff = []\nenabled_count = 0\nfor login in seen:\n    item = seen[login]\n    if item[\"enabled\"] is True:\n        enabled_count = enabled_count + 1\n        ents = item[\"entitlements\"]\n        has_p = \"paiements.saisie\" in ents and \"paiements.validation\" in ents\n        has_c = \"credit.instruction\" in ents and \"credit.decision\" in ents\n        if has_p or has_c:\n            off.append(login)\noff = sorted(off)\ntotal = len(seen)\nif off:\n    status = \"fail\"\nelse:\n    status = \"pass\"\nexpected = \"entitlements does not contain paiements.saisie + paiements.validation nor credit.instruction + credit.decision where enabled=true\"\ndetail = \"Checked \" + str(enabled_count) + \" enabled accounts among \" + str(total) + \" total accounts; \" + str(len(off)) + \" enabled accounts hold both entitlements of an incompatible pair.\"\nprint(json.dumps({\"status\": status, \"observed\": off, \"expected\": expected, \"detail\": detail, \"evidence_page\": \"/lifecycle/accounts\"}))\n",
+        "requests": 4
+      },
+      "before": {
+        "status": "fail",
+        "observed": [
+          "i.abgrall"
+        ],
+        "expected": "entitlements does not contain paiements.saisie + paiements.validation nor credit.instruction + credit.decision where enabled=true",
+        "detail": "Checked 235 enabled accounts among 253 total accounts; 1 enabled accounts hold both entitlements of an incompatible pair.",
+        "evidence_page": "/lifecycle/accounts"
+      },
+      "evidence_before": {
+        "image": "evidence/C4_before.png",
+        "sha256": "7e8ba2bb309a889986f6e738ce84ffe41e58a51e1b5b69dac66953c72086b0c1",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "i.abgrall E10884 Actif 2026-10-21 commun.messagerie, credit.decision, credit.instruction —",
+          "field_boxes": [
+            [
+              14,
+              690,
+              1086,
+              765
+            ]
+          ],
+          "comment": "Enabled account i.abgrall holds both credit.instruction and credit.decision, confirming the reported violation.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 0,
+          "pii_masked": 0,
+          "pii_found_by_model": 0
+        },
+        "page": "/lifecycle/accounts?page=2&per_page=100",
+        "page_verified": null,
+        "ts": "2026-11-12 13:05:25"
+      },
+      "status_before": "fail",
+      "finding": {
+        "id": "F-02",
+        "severity": "critique",
+        "status": "open",
+        "owner": "IT department — IAM team; HR for the register",
+        "due": "2026-12-12"
+      }
+    },
+    {
+      "control": {
+        "id": "C5",
+        "rule": "PSI-5.5",
+        "title": "Movers - removal of prior rights",
+        "objective": "At as_of, no enabled account retains more than 30 days after transfer_date an entitlement whose department equals the holder's previous_department, with exactly 30 days remaining compliant; entitlements with department=null are out of scope.",
+        "test_procedure": "Join enabled accounts to HR employees and entitlement metadata and flag accounts where as_of minus transfer_date > 30 and entitlements includes a name whose department equals previous_department.",
+        "expected": "entitlements with department=previous_department removed where as_of minus transfer_date > 30 and enabled=true",
+        "severity": "elevee",
+        "references": [
+          "RTS 21(1)(a)",
+          "RTS 21(1)(e)"
+        ],
+        "risk": "Transferred employees accumulate excessive rights from successive departments, violating least privilege and enabling unauthorized actions.",
+        "recommendation": "Remove entitlements tied to the previous department for movers exceeding 30 days.",
+        "cause": "Mover process failure where prior department rights are never revoked after transfer.",
+        "evidence_page": "/lifecycle/reconciliation",
+        "remediation": "manual"
+      },
+      "test": {
+        "script": "scripts/C5_PSI-5.5.py",
+        "sha256": "c944adae55f83f4c73e896331e43bcbacce33c3f5fc4725e707419e17215eca7",
+        "origin": "library",
+        "code": "# Attest — test PSI-5.5 (Movers - removal of prior rights)\n# Écrit par muse-spark-1.3 le 2026-11-12 — à relire avant validation.\nimport requests\nimport json\nimport os\nimport sys\nimport re\ntry:\n  base = os.environ[\"LAB_URL\"]\n  token = os.environ[\"LAB_TOKEN\"]\nexcept Exception:\n  sys.stderr.write(\"missing env\\n\")\n  sys.exit(2)\nheaders = {\"Authorization\": \"Bearer \" + token}\nbase = base.rstrip(\"/\")\nif not isinstance(base, str) or base == \"\":\n  sys.stderr.write(\"bad base\\n\")\n  sys.exit(2)\nif not isinstance(token, str) or token == \"\":\n  sys.stderr.write(\"bad token\\n\")\n  sys.exit(2)\ndate_pat = re.compile(r\"^(\\d{4})-(\\d{2})-(\\d{2})$\")\ndef parse_date(s):\n  m = date_pat.match(s)\n  if m is None:\n    sys.stderr.write(\"bad date \" + str(s) + \"\\n\")\n    sys.exit(2)\n  y = int(m.group(1))\n  mo = int(m.group(2))\n  d = int(m.group(3))\n  if mo < 1 or mo > 12:\n    sys.stderr.write(\"bad date \" + str(s) + \"\\n\")\n    sys.exit(2)\n  leap = (y % 4 == 0 and y % 100 != 0) or (y % 400 == 0)\n  if mo == 2:\n    dim = 29 if leap else 28\n  elif mo == 4 or mo == 6 or mo == 9 or mo == 11:\n    dim = 30\n  else:\n    dim = 31\n  if d < 1 or d > dim:\n    sys.stderr.write(\"bad date \" + str(s) + \"\\n\")\n    sys.exit(2)\n  yy = y\n  if mo <= 2:\n    yy = y - 1\n  if mo > 2:\n    mp = mo - 3\n  else:\n    mp = mo + 9\n  era = yy // 400\n  yoe = yy - era * 400\n  doy = (153 * mp + 2) // 5 + d - 1\n  doe = yoe * 365 + yoe // 4 - yoe // 100 + doy\n  return era * 146097 + doe\ndef fetch_list(path):\n  url = base + path\n  out = []\n  while True:\n    try:\n      r = requests.get(url, headers=headers)\n    except Exception as e:\n      sys.stderr.write(\"request failed \" + str(e) + \"\\n\")\n      sys.exit(2)\n    if r.status_code != 200:\n      sys.stderr.write(\"bad status \" + str(r.status_code) + \" for \" + url + \"\\n\")\n      sys.exit(2)\n    try:\n      data = r.json()\n    except Exception:\n      sys.stderr.write(\"bad json for \" + url + \"\\n\")\n      sys.exit(2)\n    if not isinstance(data, list):\n      sys.stderr.write(\"bad list for \" + url + \"\\n\")\n      sys.exit(2)\n    for item in data:\n      out.append(item)\n    links = r.links\n    nxt = None\n    if isinstance(links, dict):\n      if \"next\" in links:\n        nd = links[\"next\"]\n        if isinstance(nd, dict):\n          if \"url\" in nd:\n            nxt = nd[\"url\"]\n    if nxt is None:\n      break\n    if not isinstance(nxt, str):\n      sys.stderr.write(\"bad next link\\n\")\n      sys.exit(2)\n    if nxt.startswith(\"http://\") or nxt.startswith(\"https://\"):\n      url = nxt\n    else:\n      if nxt.startswith(\"/\"):\n        url = base + nxt\n      else:\n        url = base + \"/\" + nxt\n  return out\ntry:\n  meta_r = requests.get(base + \"/api/lifecycle/meta\", headers=headers)\nexcept Exception:\n  sys.stderr.write(\"meta request failed\\n\")\n  sys.exit(2)\nif meta_r.status_code != 200:\n  sys.stderr.write(\"meta bad status\\n\")\n  sys.exit(2)\ntry:\n  meta = meta_r.json()\nexcept Exception:\n  sys.stderr.write(\"meta bad json\\n\")\n  sys.exit(2)\nif not isinstance(meta, dict):\n  sys.stderr.write(\"meta bad data\\n\")\n  sys.exit(2)\nif \"as_of\" not in meta:\n  sys.stderr.write(\"meta missing as_of\\n\")\n  sys.exit(2)\nas_of_s = meta[\"as_of\"]\nif not isinstance(as_of_s, str):\n  sys.stderr.write(\"meta bad as_of\\n\")\n  sys.exit(2)\nas_of_days = parse_date(as_of_s)\ntry:\n  ev_r = requests.get(base + \"/lifecycle/reconciliation\", headers=headers)\nexcept Exception:\n  sys.stderr.write(\"evidence request failed\\n\")\n  sys.exit(2)\nif ev_r.status_code != 200:\n  sys.stderr.write(\"evidence bad status\\n\")\n  sys.exit(2)\nemp_list = fetch_list(\"/api/hr/employees\")\nacc_list = fetch_list(\"/api/lifecycle/accounts\")\nent_list = fetch_list(\"/api/lifecycle/entitlements\")\nent_map = {}\nfor e in ent_list:\n  if not isinstance(e, dict):\n    sys.stderr.write(\"bad entitlement entry\\n\")\n    sys.exit(2)\n  if \"name\" not in e or \"department\" not in e:\n    sys.stderr.write(\"bad entitlement fields\\n\")\n    sys.exit(2)\n  n = e[\"name\"]\n  dept = e[\"department\"]\n  if not isinstance(n, str):\n    sys.stderr.write(\"bad entitlement name\\n\")\n    sys.exit(2)\n  if dept is not None and not isinstance(dept, str):\n    sys.stderr.write(\"bad entitlement department\\n\")\n    sys.exit(2)\n  if n not in ent_map:\n    ent_map[n] = dept\nemp_map = {}\nfor e in emp_list:\n  if not isinstance(e, dict):\n    sys.stderr.write(\"bad employee entry\\n\")\n    sys.exit(2)\n  if \"employee_id\" not in e or \"previous_department\" not in e or \"transfer_date\" not in e:\n    sys.stderr.write(\"bad employee fields\\n\")\n    sys.exit(2)\n  eid = e[\"employee_id\"]\n  prev = e[\"previous_department\"]\n  tdate = e[\"transfer_date\"]\n  if not isinstance(eid, str):\n    sys.stderr.write(\"bad employee id\\n\")\n    sys.exit(2)\n  if prev is not None and not isinstance(prev, str):\n    sys.stderr.write(\"bad previous department\\n\")\n    sys.exit(2)\n  if tdate is not None and not isinstance(tdate, str):\n    sys.stderr.write(\"bad transfer date\\n\")\n    sys.exit(2)\n  if prev is None and tdate is None:\n    if eid not in emp_map:\n      emp_map[eid] = (None, None)\n    continue\n  if prev is None or tdate is None:\n    sys.stderr.write(\"incomplete mover data for \" + eid + \"\\n\")\n    sys.exit(2)\n  parse_date(tdate)\n  if eid not in emp_map:\n    emp_map[eid] = (prev, tdate)\nacc_map = {}\nfor a in acc_list:\n  if not isinstance(a, dict):\n    sys.stderr.write(\"bad account entry\\n\")\n    sys.exit(2)\n  if \"login\" not in a or \"type\" not in a or \"employee_id\" not in a or \"owner_employee_id\" not in a or \"enabled\" not in a or \"entitlements\" not in a:\n    sys.stderr.write(\"bad account fields\\n\")\n    sys.exit(2)\n  login = a[\"login\"]\n  typ = a[\"type\"]\n  en = a[\"enabled\"]\n  ents = a[\"entitlements\"]\n  if not isinstance(login, str):\n    sys.stderr.write(\"bad login\\n\")\n    sys.exit(2)\n  if not isinstance(typ, str):\n    sys.stderr.write(\"bad type\\n\")\n    sys.exit(2)\n  if typ != \"person\" and typ != \"service\":\n    sys.stderr.write(\"bad account type \" + typ + \"\\n\")\n    sys.exit(2)\n  if not isinstance(en, bool):\n    sys.stderr.write(\"bad enabled for \" + login + \"\\n\")\n    sys.exit(2)\n  if not isinstance(ents, list):\n    sys.stderr.write(\"bad entitlements for \" + login + \"\\n\")\n    sys.exit(2)\n  for ename in ents:\n    if not isinstance(ename, str):\n      sys.stderr.write(\"bad entitlement name for \" + login + \"\\n\")\n      sys.exit(2)\n  holder_tmp = None\n  if typ == \"person\":\n    holder_tmp = a[\"employee_id\"]\n  else:\n    holder_tmp = a[\"owner_employee_id\"]\n  if holder_tmp is not None and not isinstance(holder_tmp, str):\n    sys.stderr.write(\"bad holder for \" + login + \"\\n\")\n    sys.exit(2)\n  if login not in acc_map:\n    acc_map[login] = a\nbad = []\nenabled_total = 0\nbeyond_total = 0\nfor login in acc_map:\n  a = acc_map[login]\n  typ = a[\"type\"]\n  en = a[\"enabled\"]\n  ents = a[\"entitlements\"]\n  if en is False:\n    continue\n  enabled_total = enabled_total + 1\n  if typ == \"person\":\n    holder = a[\"employee_id\"]\n  else:\n    holder = a[\"owner_employee_id\"]\n  if holder is None:\n    continue\n  if holder not in emp_map:\n    continue\n  prev = emp_map[holder][0]\n  tdate = emp_map[holder][1]\n  if prev is None:\n    continue\n  tdays = parse_date(tdate)\n  diff = as_of_days - tdays\n  if diff <= 30:\n    continue\n  beyond_total = beyond_total + 1\n  hit = False\n  for ename in ents:\n    if ename not in ent_map:\n      sys.stderr.write(\"unknown entitlement \" + ename + \"\\n\")\n      sys.exit(2)\n    edept = ent_map[ename]\n    if edept is None:\n      continue\n    if edept == prev:\n      hit = True\n      break\n  if hit:\n    bad.append(login)\nbad = sorted(bad)\nif len(bad) == 0:\n  status = \"pass\"\nelse:\n  status = \"fail\"\nexpected_s = \"entitlements with department=previous_department removed where as_of minus transfer_date > 30 and enabled=true\"\ndetail = \"Checked \" + str(enabled_total) + \" enabled accounts (\" + str(beyond_total) + \" beyond 30 days after transfer) at as_of \" + as_of_s + \", found \" + str(len(bad)) + \" retaining prior-department entitlements.\"\nprint(json.dumps({\"status\": status, \"observed\": bad, \"expected\": expected_s, \"detail\": detail, \"evidence_page\": \"/lifecycle/reconciliation\"}))\n",
+        "requests": 9
+      },
+      "before": {
+        "status": "pass",
+        "observed": [],
+        "expected": "entitlements with department=previous_department removed where as_of minus transfer_date > 30 and enabled=true",
+        "detail": "Checked 235 enabled accounts (1 beyond 30 days after transfer) at as_of 2026-11-02, found 0 retaining prior-department entitlements.",
+        "evidence_page": "/lifecycle/reconciliation"
+      },
+      "evidence_before": {
+        "image": "evidence/C5_before.png",
+        "sha256": "b0f52fd612f79874b2b80a6364af7b2d44d89e4fa7c62a73164cf83053f07d30",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "e.quillien Personne Actif E11237 Actif — credit paiements 2026-04-16 2026-09-23 commun.messagerie, credit.instruction —",
+          "field_boxes": [
+            [
+              12,
+              3524,
+              1187,
+              3572
+            ]
+          ],
+          "comment": "The single mover beyond 30 days e.quillien transferred 2026-04-16 holds only credit rights with no paiements entitlement.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 0,
+          "pii_masked": 0,
+          "pii_found_by_model": 0
+        },
+        "page": "/lifecycle/reconciliation",
+        "page_verified": null,
+        "ts": "2026-11-12 13:05:51"
+      },
+      "status_before": "pass"
+    },
+    {
+      "control": {
+        "id": "C6",
+        "rule": "PSI-5.6",
+        "title": "Privileged access review",
+        "objective": "At as_of, every enabled account holding at least one entitlement with privileged=true has a last_access_review within the last 365 days; null or older review is non-compliant.",
+        "test_procedure": "Join enabled accounts to entitlement metadata on privileged flag and flag accounts holding a privileged entitlement whose last_access_review is null or more than 365 days before as_of.",
+        "expected": "last_access_review within 365 days before as_of where enabled=true and entitlements includes privileged=true",
+        "severity": "moyenne",
+        "references": [
+          "RTS 21(1)(e)(iv)"
+        ],
+        "risk": "Unreviewed privileged rights persist beyond business need and may grant excessive critical access without oversight.",
+        "recommendation": "Perform an access review for each privileged account and enforce annual recertification.",
+        "cause": "Missing or incomplete annual privileged access recertification process.",
+        "evidence_page": "/lifecycle/accounts",
+        "remediation": "manual"
+      },
+      "test": {
+        "script": "scripts/C6_PSI-5.6.py",
+        "sha256": "dac719bfc783b20fd8ba3bcde3908ad97378e3daa69d622e01115e8cb3d744d4",
+        "origin": "library",
+        "code": "# Attest — test PSI-5.6 (Privileged access review)\n# Écrit par muse-spark-1.3 le 2026-11-12 — à relire avant validation.\nimport requests\nimport json\nimport os\nimport sys\nimport re\n\ntry:\n    base = os.environ[\"LAB_URL\"]\n    token = os.environ[\"LAB_TOKEN\"]\nexcept KeyError:\n    sys.stderr.write(\"missing env\\n\")\n    sys.exit(2)\n\nif base.endswith(\"/\"):\n    base = base[:-1]\n\nheaders = {\"Authorization\": \"Bearer \" + token}\n\ndef fail(msg):\n    sys.stderr.write(msg + \"\\n\")\n    sys.exit(2)\n\npat = re.compile(r\"^(\\d{4})-(\\d{2})-(\\d{2})$\")\n\ndef parse_ymd(s):\n    mt = pat.match(s)\n    if mt is None:\n        fail(\"bad date: \" + s)\n    y = int(mt.group(1))\n    m = int(mt.group(2))\n    d = int(mt.group(3))\n    if m < 1 or m > 12:\n        fail(\"bad date: \" + s)\n    leap = 0\n    if y % 400 == 0:\n        leap = 1\n    elif y % 100 == 0:\n        leap = 0\n    elif y % 4 == 0:\n        leap = 1\n    else:\n        leap = 0\n    ml = [31, 28 + leap, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]\n    div = ml[m - 1]\n    if d < 1 or d > div:\n        fail(\"bad date: \" + s)\n    return y, m, d\n\ndef to_days(y, m, d):\n    leap = 0\n    if y % 400 == 0:\n        leap = 1\n    elif y % 100 == 0:\n        leap = 0\n    elif y % 4 == 0:\n        leap = 1\n    else:\n        leap = 0\n    ml = [31, 28 + leap, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]\n    before_year = (y - 1) * 365 + (y - 1) // 4 - (y - 1) // 100 + (y - 1) // 400\n    before_month = 0\n    idx = 0\n    while idx < m - 1:\n        before_month = before_month + ml[idx]\n        idx = idx + 1\n    return before_year + before_month + (d - 1)\n\ndef fetch_list(start_url, idkey):\n    out = []\n    seen = {}\n    url = start_url\n    while url is not None:\n        try:\n            resp = requests.get(url, headers=headers)\n        except Exception as ex:\n            fail(\"request failed: \" + str(ex))\n        if resp.status_code != 200:\n            fail(\"request failed status: \" + str(resp.status_code))\n        try:\n            payload = resp.json()\n        except Exception as ex:\n            fail(\"json failed: \" + str(ex))\n        if not isinstance(payload, list):\n            fail(\"unexpected payload\")\n        for item in payload:\n            if not isinstance(item, dict):\n                fail(\"unexpected item\")\n            if idkey not in item:\n                fail(\"missing id\")\n            ident = item[idkey]\n            if not isinstance(ident, str):\n                fail(\"bad id\")\n            if ident not in seen:\n                seen[ident] = True\n                out.append(item)\n        links = resp.links\n        if isinstance(links, dict) and \"next\" in links:\n            nxt = links[\"next\"]\n            if not isinstance(nxt, dict) or \"url\" not in nxt:\n                fail(\"bad link\")\n            nxturl = nxt[\"url\"]\n            if not isinstance(nxturl, str) or len(nxturl) == 0:\n                fail(\"bad link url\")\n            if nxturl.startswith(\"http://\") or nxturl.startswith(\"https://\"):\n                url = nxturl\n            else:\n                if nxturl.startswith(\"/\"):\n                    url = base + nxturl\n                else:\n                    url = base + \"/\" + nxturl\n        else:\n            url = None\n    return out\n\nmeta_url = base + \"/api/lifecycle/meta\"\ntry:\n    meta_resp = requests.get(meta_url, headers=headers)\nexcept Exception as ex:\n    fail(\"meta request failed: \" + str(ex))\nif meta_resp.status_code != 200:\n    fail(\"meta status: \" + str(meta_resp.status_code))\ntry:\n    meta_data = meta_resp.json()\nexcept Exception as ex:\n    fail(\"meta json failed\")\nif not isinstance(meta_data, dict):\n    fail(\"bad meta\")\nif \"as_of\" not in meta_data:\n    fail(\"missing as_of\")\nas_of_s = meta_data[\"as_of\"]\nif not isinstance(as_of_s, str):\n    fail(\"bad as_of\")\nay, am, ad = parse_ymd(as_of_s)\nas_of_days = to_days(ay, am, ad)\n\naccounts = fetch_list(base + \"/api/lifecycle/accounts\", \"login\")\nents = fetch_list(base + \"/api/lifecycle/entitlements\", \"name\")\n\npriv = {}\nfor e in ents:\n    if \"name\" not in e or \"privileged\" not in e:\n        fail(\"bad entitlement\")\n    n = e[\"name\"]\n    p = e[\"privileged\"]\n    if not isinstance(n, str) or not isinstance(p, bool):\n        fail(\"bad entitlement types\")\n    if p:\n        priv[n] = True\n\nev_url = base + \"/lifecycle/accounts\"\ntry:\n    ev_resp = requests.get(ev_url, headers=headers)\nexcept Exception as ex:\n    fail(\"evidence request failed: \" + str(ex))\nif ev_resp.status_code != 200:\n    fail(\"evidence status: \" + str(ev_resp.status_code))\n\nbad = []\nscoped = 0\nfor a in accounts:\n    if \"login\" not in a or \"enabled\" not in a or \"entitlements\" not in a or \"last_access_review\" not in a:\n        fail(\"bad account\")\n    login = a[\"login\"]\n    enabled = a[\"enabled\"]\n    elist = a[\"entitlements\"]\n    rev = a[\"last_access_review\"]\n    if not isinstance(login, str) or not isinstance(enabled, bool) or not isinstance(elist, list):\n        fail(\"bad account types\")\n    for en in elist:\n        if not isinstance(en, str):\n            fail(\"bad entitlement entry\")\n    if rev is not None and not isinstance(rev, str):\n        fail(\"bad review type\")\n    holds = False\n    for en in elist:\n        if en in priv:\n            holds = True\n    if enabled and holds:\n        scoped = scoped + 1\n        if rev is None:\n            bad.append(login)\n        else:\n            ry, rm, rd = parse_ymd(rev)\n            rdays = to_days(ry, rm, rd)\n            diff = as_of_days - rdays\n            if diff > 365:\n                bad.append(login)\n\nbad = sorted(bad)\nexpected = \"last_access_review within 365 days before as_of where enabled=true and entitlements includes privileged=true\"\nif len(bad) == 0:\n    detail = \"Checked \" + str(scoped) + \" enabled accounts holding privileged entitlements at as_of \" + as_of_s + \", all with last_access_review within 365 days.\"\n    print(json.dumps({\"status\": \"pass\", \"observed\": [], \"expected\": expected, \"detail\": detail, \"evidence_page\": \"/lifecycle/accounts\"}))\nelse:\n    detail = \"Checked \" + str(scoped) + \" enabled accounts holding privileged entitlements at as_of \" + as_of_s + \", found \" + str(len(bad)) + \" with null or stale review over 365 days.\"\n    print(json.dumps({\"status\": \"fail\", \"observed\": bad, \"expected\": expected, \"detail\": detail, \"evidence_page\": \"/lifecycle/accounts\"}))\n",
+        "requests": 6
+      },
+      "before": {
+        "status": "pass",
+        "observed": [],
+        "expected": "last_access_review within 365 days before as_of where enabled=true and entitlements includes privileged=true",
+        "detail": "Checked 7 enabled accounts holding privileged entitlements at as_of 2026-11-02, all with last_access_review within 365 days.",
+        "evidence_page": "/lifecycle/accounts"
+      },
+      "evidence_before": {
+        "image": "evidence/C6_before.png",
+        "sha256": "d26a1cb81ed9ebeaa7723f50384b13fbbf7e9315103962abb372700ecd6190df",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "a.madec E11152 Actif 2026-09-23 commun.messagerie, paiements.admin, paiements.saisie 2026-05-21; g.jaouen E11526 Actif 2026-09-20 commun.messagerie, tresorerie.admin, tresorerie.operations 2026-04-05; h.cloarec2 E10792 Actif 2026-10-14 commun.messagerie, tresorerie.admin, tresorerie.operations 2026-02-09",
+          "field_boxes": [
+            [
+              12,
+              1130,
+              1088,
+              1200
+            ],
+            [
+              12,
+              5700,
+              1088,
+              5775
+            ],
+            [
+              12,
+              6490,
+              1088,
+              6565
+            ]
+          ],
+          "comment": "Page 1 shows three enabled admin accounts each with a review date in 2026 within 365 days of 2026-11-02 and no privileged violation is visible.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 0,
+          "pii_masked": 0,
+          "pii_found_by_model": 0
+        },
+        "page": "/lifecycle/accounts",
+        "page_verified": null,
+        "ts": "2026-11-12 13:06:04"
+      },
+      "status_before": "pass"
+    }
+  ],
+  "running": false,
+  "decisions": [],
+  "remediation_requested": false,
+  "usage": {
+    "rows": [
+      {
+        "model": "muse-spark-1.3",
+        "calls": 6,
+        "input": 28373,
+        "output": 24413,
+        "seconds": 163.27841806411743,
+        "images": 0,
+        "cost_usd": 0.1392215
+      },
+      {
+        "model": "sam-3.1",
+        "calls": 4,
+        "input": 0,
+        "output": 0,
+        "seconds": 7.972824573516846,
+        "images": 4,
+        "cost_usd": null
+      }
+    ],
+    "total_usd": 0.1392215,
+    "unpriced": [
+      "sam-3.1"
+    ],
+    "estimated": false
+  },
+  "duration_s": 63,
+  "catalogue": {
+    "source": "catalogue",
+    "reviewed": false,
+    "path": "controls/AUD-2026-JML-01.en.json"
+  },
+  "interpretation": null,
+  "inconclusive": 0,
+  "opinion_initial": "insuffisant",
+  "opinion_final": "insuffisant",
+  "injection_detected": false,
+  "trail_head": "4faf46622e8bfee6808263fe46504578d9a9b82dcf71ba52915ff7ba8b20235d"
+}
