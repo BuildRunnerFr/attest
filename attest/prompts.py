@@ -49,10 +49,11 @@ CODE_SYSTEM = f"""You write small, read-only Python audit tests. Rules:
 - {UNTRUSTED}
 - If a request fails or the data is missing or unexpected, do NOT print a verdict: write the error to stderr
   and exit with code 2. A technical error must never be reported as a non-compliance.
-- Test the WHOLE population: a list endpoint may be paginated even if the documentation does not say so. After
-  each list response, if it carries a Link header with rel="next" (response.links["next"]["url"], relative to the
-  base URL) or X-Total-Pages, keep requesting the next page until there is none, and conclude on all items.
-  A "pass" on a partially read list is refused.
+- Test the WHOLE population: a list endpoint may be paginated even if the documentation does not say so. Use ONE
+  mechanism only: after each list response, if it carries a Link header with rel="next"
+  (response.links["next"]["url"], relative to the base URL), request that URL, and repeat until there is no "next".
+  Do not also loop on page numbers or X-Total-Pages: reading a page twice double-counts its items. Count each item
+  once (deduplicate by its identifier). A "pass" on a partially read list is refused.
 - When a rule depends on keywords inside identifiers (function words such as "admin", "root", "team", "support"),
   compare WHOLE tokens (split on non-letters, ignore trailing digits), never substrings: "r.rootsaert" or
   "t.teamson" are personal names, not "root" or "team".

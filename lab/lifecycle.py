@@ -156,7 +156,7 @@ class _Edit:
     def service_owner_left(self, name, domain):
         a, e = self.pick()
         e["status"], e["end_date"] = "left", self.day(40)
-        a["enabled"] = False                                                         # son compte personnel est bien fermé
+        a["enabled"], a["last_login"] = False, self.day(41)                          # son compte personnel est bien fermé
         self.acc.append({"login": name, "email": f"{name}@{domain}", "type": "service", "employee_id": None,
                          "owner_employee_id": e["employee_id"], "enabled": True, "created": self.day(700),
                          "last_login": None, "entitlements": ["commun.messagerie"], "last_access_review": None})
@@ -173,7 +173,7 @@ class _Edit:
         e["department"] = dept
         a["entitlements"], a["enabled"] = sorted({"commun.messagerie", *pair}), enabled
         if not enabled:
-            e["status"], e["end_date"] = "left", self.day(12)
+            e["status"], e["end_date"], a["last_login"] = "left", self.day(12), self.day(13)
         return a["login"]
 
     def cross(self):

@@ -29,11 +29,10 @@ def expected(settings: dict, users: list) -> dict:
     s, pol = settings, password_policy(settings.get("passwordPolicy"))
     ok = lambda b: "pass" if b else "fail"
     admins = [u for u in users if u["role"] == "admin"]
-    others = [u for u in users if u["role"] != "admin"]
     complexity = all(pol.get(k, 0) >= 1 for k in ("upperCase", "lowerCase", "digits", "specialChars"))
     return {
         "PSI-4.1": ok(all(u["totp"] for u in admins)),
-        "PSI-4.2": ok(all(u["totp"] for u in others)),
+        "PSI-4.2": ok(all(u["totp"] for u in users)),          # « les utilisateurs » : tout compte, administrateurs compris
         "PSI-4.3": ok(pol.get("length", 0) >= 12 and complexity),
         "PSI-4.4": ok(s["bruteForceProtected"] is True and 1 <= s["failureFactor"] <= 5),
         "PSI-4.5": ok(1 <= s["ssoSessionIdleTimeout"] <= 900),
@@ -78,6 +77,7 @@ def build() -> list:
                     "expected": expected(settings, users), "expected_generic_admins": sorted(generic_admins(users)),
                     "expected_offenders": {
                         "PSI-4.1": sorted(u["login"] for u in users if u["role"] == "admin" and not u["totp"]),
+                        "PSI-4.2": sorted(u["login"] for u in users if not u["totp"]),
                         "PSI-4.7": sorted(generic_admins(users))}})
 
     # 1. Tout est non conforme ; le seul administrateur générique est servi après la 2e page de 100 comptes.
@@ -113,8 +113,8 @@ def build() -> list:
     add("kc-03-menhir", "menhir", "Royaume Keycloak mixte, un administrateur sans MFA", "Menhir Finance (fictive)",
         {"passwordPolicy": "length(14)", "bruteForceProtected": True, "failureFactor": 3,
          "ssoSessionIdleTimeout": 1800, "adminEventsEnabled": True},
-        users, "3 non-conformités : un administrateur sur quatre sans MFA (y.tanguy), mot de passe long mais sans "
-               "complexité, session inactive de 30 minutes. Le reste est conforme.")
+        users, "4 non-conformités : un administrateur sur quatre sans MFA (y.tanguy), qui est aussi le seul compte du "
+               "royaume sans MFA, mot de passe long mais sans complexité, session inactive de 30 minutes.")
     return out
 
 

@@ -109,7 +109,7 @@ def test_evidence_page_shows_the_offender(lab):
     from attest import evidence
     _reset(lab, "lc-03-menhir")
     who = lifecycle.load()["lc-03-menhir"]["expected_offenders"]["PSI-5.1"][0]
-    url = evidence.locate(lab + "/lifecycle/accounts", "audit-ro-demo", {who})
+    url = evidence.locate(lab + "/lifecycle/reconciliation", "audit-ro-demo", {who})
     assert "page=" in url and f'id="user-{who}"' in requests.get(url, headers=AUDIT).text
 
 

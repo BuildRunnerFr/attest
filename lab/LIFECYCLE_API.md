@@ -8,6 +8,9 @@ Every request needs the header `Authorization: Bearer <token>`.
 Audit tests run with the READ-ONLY audit token, available in the environment variable `LAB_TOKEN`.
 
 ## HTML pages (used as visual evidence)
+- `/lifecycle/reconciliation`: each account next to the HR record of its holder (or owner): account state, employee
+  id, HR status, contract end, department, previous department and transfer date, last login, entitlements, last
+  review. Use this page as evidence for rules that compare accounts with the HR register.
 - `/lifecycle/accounts`: accounts with login, employee id (or owner), state, last login, entitlements, last review
 - `/lifecycle/hr`: HR register with employee id, name, department, status, contract end, previous department, transfer date
 

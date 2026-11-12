@@ -50,7 +50,7 @@ def test_scenario_files_match_generator_and_ground_truth():
     assert set(k1["expected"].values()) == {"fail"} and k1["expected_generic_admins"] == ["support-n2"]
     assert [u["login"] for u in k1["users"]].index("support-n2") >= 200
     assert set(k2["expected"].values()) == {"pass"} and not k2["expected_generic_admins"]
-    assert [r for r, v in k3["expected"].items() if v == "fail"] == ["PSI-4.1", "PSI-4.3", "PSI-4.5"]
+    assert [r for r, v in k3["expected"].items() if v == "fail"] == ["PSI-4.1", "PSI-4.2", "PSI-4.3", "PSI-4.5"]
 
 
 def test_oracle_thresholds():

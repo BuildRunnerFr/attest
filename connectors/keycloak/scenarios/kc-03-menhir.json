@@ -4,7 +4,7 @@
  "label": "Royaume Keycloak mixte, un administrateur sans MFA",
  "entity": "Menhir Finance (fictive)",
  "system": "Keycloak — royaume menhir (fournisseur d'identité)",
- "tests": "3 non-conformités : un administrateur sur quatre sans MFA (y.tanguy), mot de passe long mais sans complexité, session inactive de 30 minutes. Le reste est conforme.",
+ "tests": "4 non-conformités : un administrateur sur quatre sans MFA (y.tanguy), qui est aussi le seul compte du royaume sans MFA, mot de passe long mais sans complexité, session inactive de 30 minutes.",
  "settings": {
   "passwordPolicy": "length(14)",
   "bruteForceProtected": true,
@@ -1457,7 +1457,7 @@
  "notes": [],
  "expected": {
   "PSI-4.1": "fail",
-  "PSI-4.2": "pass",
+  "PSI-4.2": "fail",
   "PSI-4.3": "fail",
   "PSI-4.4": "pass",
   "PSI-4.5": "fail",
@@ -1467,6 +1467,9 @@
  "expected_generic_admins": [],
  "expected_offenders": {
   "PSI-4.1": [
+   "y.tanguy"
+  ],
+  "PSI-4.2": [
    "y.tanguy"
   ],
   "PSI-4.7": []

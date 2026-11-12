@@ -42,7 +42,7 @@ TARGETS = {
         "system_en": "HR register and application entitlements",
         "owner_en": "IT department — IAM team; HR for the register",
         "doc": "lab/LIFECYCLE_API.md",
-        "default_page": "/lifecycle/accounts",
+        "default_page": "/lifecycle/reconciliation",
         "probe": "/api/lifecycle/meta",
         "remediable": False,                 # retraits de droits et désactivations : décision des propriétaires
     },

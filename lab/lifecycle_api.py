@@ -105,6 +105,33 @@ def register(app, caller, page_template: str):
                       "<table><tr><th>Identifiant</th><th>Matricule (ou responsable)</th><th>État</th>"
                       f"<th>Dernière connexion</th><th>Droits</th><th>Dernière revue</th></tr>{body}</table>")
 
+    @app.get("/lifecycle/reconciliation")
+    def lc_reconciliation_page():
+        """Chaque compte à côté de la fiche RH de son titulaire (ou du responsable d'un compte de service)."""
+        caller()
+        sc = scenario()
+        emp = {e["employee_id"]: e for e in sc["employees"]}
+        rows, info = _slice(sc["accounts"], "/lifecycle/reconciliation")
+        body = ""
+        for a in rows:
+            ref = a["employee_id"] or a["owner_employee_id"]
+            e = emp.get(ref)
+            hr = ("<td>Absent du registre</td><td>—</td><td>—</td><td>—</td>" if e is None else
+                  f'<td>{"Parti" if e["status"] == "left" else "Actif"}</td><td>{e["end_date"] or "—"}</td>'
+                  f'<td>{e["department"]}</td>'
+                  f'<td>{(e["previous_department"] + " → " + e["transfer_date"]) if e["transfer_date"] else "—"}</td>')
+            body += (f'<tr id="user-{escape(a["login"])}" data-role="{a["type"]}"><td>{escape(a["login"])}</td>'
+                     f'<td>{"Personne" if a["type"] == "person" else "Service"}</td>'
+                     f'<td class="v {"ok" if a["enabled"] else "ko"}">{"Actif" if a["enabled"] else "Désactivé"}</td>'
+                     f'<td>{escape(ref or "—")}</td>{hr}<td>{a["last_login"] or "—"}</td>'
+                     f'<td>{escape(", ".join(a["entitlements"]))}</td><td>{a["last_access_review"] or "—"}</td></tr>')
+        return render("Rapprochement comptes ↔ registre RH", f"Situation au {sc['as_of']}",
+                      _nav(info, "/lifecycle/reconciliation") +
+                      "<style>main{max-width:1500px} td,th{padding:8px 10px;font-size:13px}</style>"
+                      "<table><tr><th>Identifiant</th><th>Type</th><th>État du compte</th><th>Matricule / responsable</th>"
+                      "<th>Statut RH</th><th>Fin de contrat</th><th>Service</th><th>Ancien service → mutation</th>"
+                      f"<th>Dernière connexion</th><th>Droits</th><th>Dernière revue</th></tr>{body}</table>")
+
     @app.get("/lifecycle/hr")
     def lc_hr_page():
         caller()
