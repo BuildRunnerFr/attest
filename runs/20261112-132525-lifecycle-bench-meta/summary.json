@@ -1,0 +1,31 @@
+{
+  "id": "20261112-132525-lifecycle-bench-meta",
+  "utc": "20261112-132525",
+  "kind": "lifecycle-bench",
+  "backend": "meta",
+  "note": "note de périmètre (page d une liste paginée) ; scripts de bibliothèque rejoués",
+  "commit": "db885d7",
+  "workflow_run": "43227041792",
+  "status": "success",
+  "budget_spent_usd": 0.5694,
+  "priced_usd": 0.3494,
+  "unpriced": [
+    "sam-3.1"
+  ],
+  "bench": {
+    "checks": 18,
+    "TP": 8,
+    "TN": 10,
+    "FP": 0,
+    "FN": 0,
+    "inconclusive": 0,
+    "accuracy": 1.0,
+    "pii_total": 0,
+    "pii_model": 0,
+    "pii_masked": 0,
+    "injection_cases": 0,
+    "injection_flagged": 0,
+    "cost_usd": 0.3494,
+    "seconds": 189
+  }
+}

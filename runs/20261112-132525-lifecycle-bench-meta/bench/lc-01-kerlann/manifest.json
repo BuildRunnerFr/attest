@@ -1,0 +1,69 @@
+{
+  "mission": "AUD-2026-JML-01",
+  "run_id": "20261112-132525-lifecycle-bench-meta",
+  "issued_at": "2026-11-12T13:26:36",
+  "trail_head": "271c1cbce4819549ba73244c90d8b6a4704b727ac580da01900175afc2bdc9aa",
+  "aborted": null,
+  "files": [
+    {
+      "path": "evidence/C1_before.png",
+      "sha256": "dc42ea1c7b23c3d6146ea250827e4f38c33cf1d9de740bdd3a3b7eae9f7fecc5"
+    },
+    {
+      "path": "evidence/C2_before.png",
+      "sha256": "84b7ebc0ef4f701b464908e396536097fae527de0a2a4ae8d8b78b47c8d9b99d"
+    },
+    {
+      "path": "evidence/C3_before.png",
+      "sha256": "195594042a198d8080104d31da13824a465e165f9fcb6571aee75a94a70c2222"
+    },
+    {
+      "path": "evidence/C4_before.png",
+      "sha256": "ba27a4dde3751f537017667dd31bf5b7acddc5394414a0da64e4ebbc1f775b7e"
+    },
+    {
+      "path": "evidence/C5_before.png",
+      "sha256": "642df0fce2bd86de1e2d88798fd05f5abc93bfa776eb238c43ea1d35c2fe5ac9"
+    },
+    {
+      "path": "evidence/C6_before.png",
+      "sha256": "f34ab4c0839b7e0965af0bf5dae94fd62a456c251254becc28545a0b6517f2c7"
+    },
+    {
+      "path": "report.html",
+      "sha256": "4faeec5f2c933aced1f9ec46194ff3526f5909e639f613a54efc0b87c1438da7"
+    },
+    {
+      "path": "report.pdf",
+      "sha256": "6656bf8685abee8885445d748281ef82e7d12e3aa8fa730b7a863f0a18a4a0cf"
+    },
+    {
+      "path": "result.json",
+      "sha256": "2e282960d6f743251ea693d8c4b756bd60152ec890d976b2d5fe1ec79de5174a"
+    },
+    {
+      "path": "scripts/C1_PSI-5.1.py",
+      "sha256": "adc2fd67d80130c0f6d75bb7ee8ef4e71271f82313f22315a3444cf38dfb6e90"
+    },
+    {
+      "path": "scripts/C2_PSI-5.2.py",
+      "sha256": "d02ca45f487d05898fe2eb615f5720d2b6e22249754c0494b02895fc9d28bcc6"
+    },
+    {
+      "path": "scripts/C3_PSI-5.3.py",
+      "sha256": "9c60b963af04edaeaaebd684f4120629d91834be7f091761302698abd3b4c382"
+    },
+    {
+      "path": "scripts/C4_PSI-5.4.py",
+      "sha256": "ba3e8ec374bebf1f7caa52f91117a51aa48eae8a07e72f5b184803a24e72735e"
+    },
+    {
+      "path": "scripts/C5_PSI-5.5.py",
+      "sha256": "c944adae55f83f4c73e896331e43bcbacce33c3f5fc4725e707419e17215eca7"
+    },
+    {
+      "path": "scripts/C6_PSI-5.6.py",
+      "sha256": "dac719bfc783b20fd8ba3bcde3908ad97378e3daa69d622e01115e8cb3d744d4"
+    }
+  ]
+}
