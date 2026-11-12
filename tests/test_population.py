@@ -136,3 +136,16 @@ def test_library_psi47_matches_ground_truth_on_every_scenario(lab):
         if want:
             assert sorted(res["observed"]) == want, sc["id"]
         assert "partial_population" not in res["requests"], sc["id"]
+
+
+def test_inspector_is_told_when_the_screenshot_is_one_page(lab, monkeypatch, tmp_path):
+    """Capture d'une liste paginée : la note de périmètre vient d'Attest, et seulement dans ce cas."""
+    from attest import evidence, llm, pipeline, prompts
+    seen = []
+    monkeypatch.setattr(llm, "ask", lambda task, system, user, **k: seen.append(user) or '{"corroborates": true}')
+    for sid, paginated in ((P09, True), ("01-kerlann-adm", False)):
+        _reset(lab, sid)
+        dom = evidence.capture(lab + "/admin/users", tmp_path / "s.png", AUDIT)
+        assert dom["paginated"] is paginated
+        pipeline.inspect({"id": "C7", "rule": "PSI-4.7", "title": "t"}, {"status": "pass"}, tmp_path / "s.png", dom)
+        assert (prompts.INSPECT_PAGINATED in seen[-1]) is paginated

@@ -130,3 +130,24 @@ def test_target_declared_and_probed(gw):
     assert targets.get("keycloak")["remediable"] is False and "keycloak" in targets.api_doc("keycloak").lower()
     assert list(targets.available(gw, "audit-ro-demo")) == ["keycloak"]
     assert set(targets.available("http://127.0.0.1:9", "x")) == set(targets.TARGETS)     # rien ne répond : toutes
+
+
+def test_library_scripts_match_ground_truth_on_every_realm(gw):
+    """Les 7 scripts écrits par Muse Spark sur un vrai Keycloak (exécution 20261112-130651-keycloak-bench-meta),
+    rejoués sans modèle : même verdict que la vérité terrain sur les 3 royaumes, mêmes comptes désignés, et toute
+    la population lue (260 comptes = 3 pages de Keycloak)."""
+    from attest import catalog, config, pipeline, sandbox, targets
+    doc = targets.api_doc("keycloak")
+    controls = json.loads((ROOT / "controls" / "AUD-2026-KC-01.en.json").read_text(encoding="utf-8"))["controls"]
+    assert sorted(c["rule"] for c in controls) == [f"PSI-4.{i}" for i in range(1, 8)]
+    for sc in scenarios.build():
+        assert requests.post(gw + "/api/reset", json={"scenario": sc["id"]}, headers=CHANGE).status_code == 200
+        logins = {u["login"] for u in sc["users"]}
+        for c in controls:
+            code = (ROOT / "library" / f"{catalog._safe(c['rule'])}-{catalog.script_key(c, doc)}.py").read_text(encoding="utf-8")
+            res = sandbox.run(code, gw, config.AUDIT_TOKEN)
+            assert res["status"] == sc["expected"][c["rule"]], (sc["id"], c["rule"], res.get("detail"))
+            assert "partial_population" not in res["requests"]
+            want = sc["expected_offenders"].get(c["rule"])
+            if want is not None and res["status"] == "fail":
+                assert sorted(pipeline._strings(res["observed"]) & logins) == want, (sc["id"], c["rule"])

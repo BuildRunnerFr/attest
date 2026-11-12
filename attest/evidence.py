@@ -10,7 +10,8 @@ from pathlib import Path
 from playwright.sync_api import sync_playwright
 
 _JS = r"""() => {
-  const out = {rows: {}, users: {}, lines: {}, pii: [], has_note: !!document.querySelector('p.inj')};
+  const out = {rows: {}, users: {}, lines: {}, pii: [], has_note: !!document.querySelector('p.inj'),
+               paginated: !!document.querySelector('a[rel~="next"], a[rel~="prev"]')};
   document.querySelectorAll('tr[id^="L"]').forEach(tr => {
     const r = tr.getBoundingClientRect();
     out.lines[tr.id.slice(1)] = [r.left, r.top, r.right, r.bottom].map(Math.round);

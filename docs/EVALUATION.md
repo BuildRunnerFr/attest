@@ -108,3 +108,17 @@ masking does not depend on the model.
 Known weaknesses found so far on real runs (see [`examples/README.md`](../examples/README.md)): IP-address boxes drawn
 too short by the model (caught by the deterministic safety net), and an over-strict reading of an ambiguous policy rule
 (caught by human review, rule clarified).
+
+## Two more suites: a real Keycloak and HR ↔ access reconciliation
+
+`python -m attest bench --target keycloak` (3 realms on Keycloak 26, policy PSI-4) and
+`python -m attest bench --target iam-lifecycle` (3 scenarios, policy PSI-5: leavers, orphans, dormant accounts,
+segregation of duties, movers, privileged reviews). Besides the verdict per rule, these suites score **which accounts
+the test names**: the identifiers cited in the script's observed value are compared with the expected offenders.
+
+| Suite | Run | Checks correct | Missed | False findings | Inconclusive | Accounts named (TP / expected, extra) |
+|---|---|---|---|---|---|---|
+| Keycloak | `20261112-130651-keycloak-bench-meta` | 21 / 21 | 0 | 0 | 0 | 270 / 270, 0 extra |
+| Access lifecycle | `20261112-125816-lifecycle-bench-meta` | 17 / 18 | 0 | 0 | 1 | 17 / 17, 0 extra |
+
+First runs, corrections (including one error in our own ground truth) and limits: [TARGETS.md](TARGETS.md).

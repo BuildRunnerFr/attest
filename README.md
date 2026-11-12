@@ -78,6 +78,19 @@ model API makes that API an ICT third-party provider under DORA. See [docs/BUSIN
 ![A finding with sealed before/after evidence and an approved change](docs/img/finding.png)
 *A finding with sealed before/after evidence and a (demo) pre-approved change, from real run `20261104-063210-iam-meta`.*
 
+## Beyond the demo console
+
+- **A real Keycloak.** Attest audits Keycloak 26 through a read-only gateway (GET only, service account limited to
+  `view-realm` and `view-users`). On three fictitious realms of 180 to 260 accounts: **21 / 21 checks correct**, 0 missed,
+  0 false findings, and the 270 offending accounts named exactly (`20261112-130651-keycloak-bench-meta`). The first
+  run scored 19 / 21; the one "false finding" turned out to be an error in our own ground truth.
+- **HR ↔ access reconciliation.** Leavers still enabled, orphan and dormant accounts, segregation-of-duties conflicts,
+  movers keeping old rights, overdue privileged reviews: six rules that each join the HR register with the accounts.
+  **17 / 18 checks correct**, 0 missed, 0 false findings, 1 inconclusive, 17 / 17 offending accounts named with no extra
+  (`20261112-125816-lifecycle-bench-meta`).
+
+Details, how to run them, and what the first runs got wrong: [docs/TARGETS.md](docs/TARGETS.md).
+
 ## Built the way a bank would have to run it
 
 - **Independence and least privilege**: tests use a read-only token; even if a generated script tried to write, the
@@ -164,7 +177,9 @@ safety net masked 256/256 every time. Each ledger run cost $0.50–0.53 and took
 attest/          the agent: Studio, grounded interpretation, pipeline, prompts, sandbox, SAM client, evidence,
                  audit trail, report, evaluation bench
 lab/             the audited systems behind one read-only gateway: fictitious IAM console (read-only and change
-                 accounts), fictitious code repository (lab/repos), and the 8 evaluation scenarios
+                 accounts), fictitious code repository (lab/repos), HR register and entitlements (access lifecycle),
+                 and the evaluation scenarios
+connectors/      real systems: read-only audit gateway for Keycloak, test realms and their ground truth
 exigences/       the framework: verified excerpts of DORA and RTS 2024/1774 (library/) and fictitious internal policies
 mission/         engagement letter (scope, owner, auditor, classification, remediation deadlines)
 controls/        work programmes drafted by AI, kept for auditor review
@@ -177,8 +192,9 @@ tests/           unit and end-to-end tests (mock mode, also run in CI)
 
 - Tests read configuration through an API; they do not test the strength of MFA factors themselves.
 - AI-drafted work programmes and scripts must be reviewed by an auditor before they count as validated; the report says so.
-- The audited systems are demos behind a read-only gateway. Real connectors (Entra ID, Okta, CyberArk, cloud IAM,
-  GitHub/GitLab) are the next step; adding a target means describing its read-only interface in `attest/targets.py`.
+- Apart from Keycloak (a real product, on test realms), the audited systems are demos behind a read-only gateway.
+  Other connectors (Entra ID, Okta, CyberArk, cloud IAM, GitHub/GitLab) are the next step; adding a target means
+  describing its read-only interface in `attest/targets.py`, as `connectors/keycloak` does.
 - Regulation excerpts are quoted from the official English text; check EUR-Lex before external use.
 
 ## Disclosure

@@ -1,0 +1,116 @@
+{
+  "mission": "AUD-2026-JML-01",
+  "framework_sha256": "d99fc43d518f17ac529921fff0f6ff4fe4fc1467a86d0f5fa04adf7c2dfa45ef",
+  "generated_by": "muse-spark-1.3",
+  "generated_at": "20261112-125816-lifecycle-bench-meta",
+  "reviewed": false,
+  "review_note": "Passer 'reviewed' à true après relecture par un auditeur.",
+  "controls": [
+    {
+      "id": "C1",
+      "rule": "PSI-5.1",
+      "title": "Leavers - timely deactivation",
+      "objective": "At as_of, no enabled person account belongs to an employee whose end_date is strictly before as_of; end_date equal to or after as_of remains compliant and only accounts with enabled=true are in scope.",
+      "test_procedure": "Join GET /api/lifecycle/accounts to GET /api/hr/employees on employee_id and flag any account with type=person and enabled=true where end_date is not null and end_date < meta.as_of.",
+      "expected": "enabled=false where type=person and end_date < as_of",
+      "severity": "critique",
+      "references": [
+        "DORA 9(4)(c)",
+        "RTS 21(1)(e)"
+      ],
+      "risk": "A former employee retains logical access after contract end and could access or alter information assets without authorization.",
+      "recommendation": "Disable the non-compliant accounts and enforce automatic deactivation on contract end date.",
+      "cause": "Leaver process failure or missing synchronization between the HR register and account provisioning.",
+      "evidence_page": "/lifecycle/reconciliation",
+      "remediation": "manual"
+    },
+    {
+      "id": "C2",
+      "rule": "PSI-5.2",
+      "title": "Account ownership",
+      "objective": "At as_of, every enabled person account has an employee_id present in the HR register, and every enabled service account has an owner_employee_id present in the HR register with status=active; person accounts present but with status=left are excluded from this rule.",
+      "test_procedure": "Join enabled accounts to HR employees and flag type=person with employee_id not found and type=service with owner_employee_id not found or with status=left.",
+      "expected": "employee_id in employees.employee_id for enabled person accounts; owner_employee_id in employees.employee_id with status=active for enabled service accounts",
+      "severity": "elevee",
+      "references": [
+        "DORA 9(4)(c)",
+        "RTS 21(1)(e)"
+      ],
+      "risk": "Orphan or ownerless active accounts cannot be attributed or reviewed and may be abused without detection.",
+      "recommendation": "Attach each orphan account to a known active responsible person or disable it.",
+      "cause": "Missing ownership control at account creation or unsynchronised HR departures for service account owners.",
+      "evidence_page": "/lifecycle/reconciliation",
+      "remediation": "manual"
+    },
+    {
+      "id": "C3",
+      "rule": "PSI-5.3",
+      "title": "Dormant person accounts",
+      "objective": "At as_of, no enabled person account has been inactive for more than 90 days measured as as_of minus last_login, or created if last_login is null, with exactly 90 days remaining compliant; service accounts are out of scope.",
+      "test_procedure": "For all accounts with type=person and enabled=true, compute days between as_of and last_login or created if null and flag those exceeding 90 days.",
+      "expected": "as_of minus (last_login or created if null) <= 90 where type=person and enabled=true",
+      "severity": "moyenne",
+      "references": [
+        "DORA 9(4)(c)",
+        "RTS 21(1)(a)"
+      ],
+      "risk": "Unused accounts can be compromised and exploited without detection because no legitimate user monitors them.",
+      "recommendation": "Disable or recertify dormant accounts and enforce automatic deactivation after 90 days of inactivity.",
+      "cause": "Missing periodic review or automated deactivation for inactive accounts.",
+      "evidence_page": "/lifecycle/accounts",
+      "remediation": "manual"
+    },
+    {
+      "id": "C4",
+      "rule": "PSI-5.4",
+      "title": "Segregation of duties",
+      "objective": "At as_of, no enabled account simultaneously holds paiements.saisie and paiements.validation, nor credit.instruction and credit.decision.",
+      "test_procedure": "For all accounts with enabled=true, inspect entitlements and flag accounts containing both entitlements of either incompatible pair.",
+      "expected": "entitlements does not contain paiements.saisie + paiements.validation nor credit.instruction + credit.decision where enabled=true",
+      "severity": "critique",
+      "references": [
+        "RTS 21(1)(b)"
+      ],
+      "risk": "A single user could initiate and approve the same payment or credit, enabling fraud or undetected error.",
+      "recommendation": "Remove one of the conflicting entitlements and enforce preventive segregation checks at provisioning.",
+      "cause": "Missing segregation-of-duties matrix enforcement in the entitlement assignment process.",
+      "evidence_page": "/lifecycle/accounts",
+      "remediation": "manual"
+    },
+    {
+      "id": "C5",
+      "rule": "PSI-5.5",
+      "title": "Movers - removal of prior rights",
+      "objective": "At as_of, no enabled account retains more than 30 days after transfer_date an entitlement whose department equals the holder's previous_department, with exactly 30 days remaining compliant; entitlements with department=null are out of scope.",
+      "test_procedure": "Join enabled accounts to HR employees and entitlement metadata and flag accounts where as_of minus transfer_date > 30 and entitlements includes a name whose department equals previous_department.",
+      "expected": "entitlements with department=previous_department removed where as_of minus transfer_date > 30 and enabled=true",
+      "severity": "elevee",
+      "references": [
+        "RTS 21(1)(a)",
+        "RTS 21(1)(e)"
+      ],
+      "risk": "Transferred employees accumulate excessive rights from successive departments, violating least privilege and enabling unauthorized actions.",
+      "recommendation": "Remove entitlements tied to the previous department for movers exceeding 30 days.",
+      "cause": "Mover process failure where prior department rights are never revoked after transfer.",
+      "evidence_page": "/lifecycle/reconciliation",
+      "remediation": "manual"
+    },
+    {
+      "id": "C6",
+      "rule": "PSI-5.6",
+      "title": "Privileged access review",
+      "objective": "At as_of, every enabled account holding at least one entitlement with privileged=true has a last_access_review within the last 365 days; null or older review is non-compliant.",
+      "test_procedure": "Join enabled accounts to entitlement metadata on privileged flag and flag accounts holding a privileged entitlement whose last_access_review is null or more than 365 days before as_of.",
+      "expected": "last_access_review within 365 days before as_of where enabled=true and entitlements includes privileged=true",
+      "severity": "moyenne",
+      "references": [
+        "RTS 21(1)(e)(iv)"
+      ],
+      "risk": "Unreviewed privileged rights persist beyond business need and may grant excessive critical access without oversight.",
+      "recommendation": "Perform an access review for each privileged account and enforce annual recertification.",
+      "cause": "Missing or incomplete annual privileged access recertification process.",
+      "evidence_page": "/lifecycle/accounts",
+      "remediation": "manual"
+    }
+  ]
+}

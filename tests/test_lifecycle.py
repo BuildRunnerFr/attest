@@ -127,3 +127,22 @@ def test_bench_scores_named_offenders_and_any_rule_set():
     cells = bench.score({"PSI-5.1": "fail", "PSI-5.10": "pass", "PSI-5.2": "pass"}, [e("PSI-5.1", "fail")])
     assert bench._rules([{"cells": cells}]) == ["PSI-5.1", "PSI-5.2", "PSI-5.10"]
     assert len(bench.select(None, bench.SUITES["iam-lifecycle"][0])) == 3
+
+
+def test_library_scripts_match_ground_truth_on_every_scenario(lab):
+    """Les 6 scripts PSI-5 écrits par Muse Spark (exécution 20261112-125816-lifecycle-bench-meta), rejoués sans
+    modèle : même verdict que la vérité terrain et exactement les comptes fautifs attendus, sur les 3 scénarios."""
+    from attest import catalog, config, pipeline, sandbox, targets
+    doc = targets.api_doc("iam-lifecycle")
+    controls = json.loads((ROOT / "controls" / "AUD-2026-JML-01.en.json").read_text(encoding="utf-8"))["controls"]
+    assert sorted(c["rule"] for c in controls) == lifecycle.RULES
+    for sid, sc in lifecycle.load().items():
+        _reset(lab, sid)
+        logins = {a["login"] for a in sc["accounts"]}
+        for c in controls:
+            code = (ROOT / "library" / f"{catalog._safe(c['rule'])}-{catalog.script_key(c, doc)}.py").read_text(encoding="utf-8")
+            res = sandbox.run(code, lab, config.AUDIT_TOKEN)
+            assert res["status"] == sc["expected"][c["rule"]], (sid, c["rule"], res.get("detail"))
+            assert "partial_population" not in res["requests"]
+            if res["status"] == "fail":
+                assert sorted(pipeline._strings(res["observed"]) & logins) == sc["expected_offenders"][c["rule"]], (sid, c["rule"])

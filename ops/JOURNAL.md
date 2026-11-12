@@ -14,6 +14,32 @@ suite prévue. Les chiffres cités viennent tous de `ledger.jsonl` (branche `rea
 - Gel du code le 4 novembre 2026 à 18:00 (Paris) : ensuite, documentation, texte de soumission et vérifications
   seulement. Soumission : 5 novembre 2026, 03:00 (Paris) = 4 novembre 21:00 (ET).
 
+## Keycloak réel et cycle de vie des accès — 11 et 12 novembre 2026 (session avec Ethan)
+
+Demande d'Ethan : licence, audit d'un vrai logiciel, cas RH ↔ IAM.
+- 60943cc : cible Keycloak (passerelle lecture seule `connectors/keycloak`, 3 royaumes fictifs, vérité terrain PSI-4,
+  `ops/keycloak_up.sh`, workflow `keycloak` / `keycloak-bench`) ; LICENSE MIT.
+- d492b72 : cible `iam-lifecycle` (registre RH, comptes, droits ; politique PSI-5, 6 règles ; 3 scénarios et leurs cas
+  presque fautifs) ; banc par jeu de règles, score des comptes désignés (`expected_offenders`).
+- b1e9a93 : corrections tirées des premières exécutions (vérité terrain PSI-4.2 de Keycloak, renvoi PSI-5.2 → PSI-5.1,
+  page de rapprochement, un seul mécanisme de pagination).
+- Programmes de travail et scripts des exécutions réussies adoptés (`ops/adopt_run.py`) : `controls/AUD-2026-KC-01.en.json`,
+  `controls/AUD-2026-JML-01.en.json`, `library/PSI-4.*` (Keycloak), `library/PSI-5.*`. Non relus (« reviewed » : false).
+  Rejoués sans modèle contre la vérité terrain dans `tests/test_keycloak.py` et `tests/test_lifecycle.py`.
+- Note de périmètre transmise au contrôle visuel quand la capture est une page d'une liste paginée.
+
+Exécutions réelles :
+- `20261111-121909-keycloak-bench-meta` (60943cc) : 19/21, 0 manqué, 1 « faux constat » qui était une erreur de notre
+  vérité terrain (PSI-4.2 excluait les administrateurs), 1 à revoir. 0,72 $ mesurés.
+- `20261111-123208-lifecycle-bench-meta` (d492b72) : 14/18, 0 manqué, 1 faux constat (partant compté aussi comme
+  orphelin), 3 à revoir ; comptes désignés 17/17, précision 81 % (pages lues deux fois). 0,99 $.
+- `20261112-125816-lifecycle-bench-meta` (b1e9a93) : 17/18, 0 manqué, 0 faux constat, 1 à revoir ; comptes désignés
+  17/17, précision 100 %. 0,77 $.
+- `20261112-130651-keycloak-bench-meta` (b1e9a93) : 21/21 ; comptes désignés 270/270, précision 100 %. 0,66 $.
+
+Idée écartée : faire réécrire le script quand le contrôle visuel le contredit. Un vrai constat mal illustré pourrait
+alors basculer en « conforme » : c'est un chemin vers un faux négatif. « À revoir » reste l'issue prudente.
+
 ## Reprise après la soumission — 11 novembre 2026 (session avec Ethan)
 
 Faux négatif du scénario 09 corrigé (laissé documenté pendant le gel) :

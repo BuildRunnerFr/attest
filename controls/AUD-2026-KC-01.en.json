@@ -1,0 +1,133 @@
+{
+  "mission": "AUD-2026-KC-01",
+  "framework_sha256": "79fa799a9cca69c2f89e5d7d5da7fb8220d004c66eb9f558b732848dc64608a8",
+  "generated_by": "muse-spark-1.3",
+  "generated_at": "20261112-130651-keycloak-bench-meta",
+  "reviewed": false,
+  "review_note": "Passer 'reviewed' à true après relecture par un auditeur.",
+  "controls": [
+    {
+      "id": "C1",
+      "rule": "PSI-4.1",
+      "title": "MFA enforced for privileged administrator accounts",
+      "objective": "Every account holding the realm role admin has multi-factor authentication configured.",
+      "test_procedure": "Retrieve all members of the realm role admin via paginated GET /api/kc/roles/admin/users and verify totp is true for each account.",
+      "expected": "totp=true for every object from GET /api/kc/roles/admin/users",
+      "severity": "critique",
+      "references": [
+        "DORA 9(4)(d)",
+        "RTS 21(1)(f)(ii)"
+      ],
+      "risk": "Without MFA, a single stolen privileged password allows full takeover of the identity provider and all connected critical functions.",
+      "recommendation": "Require OTP enrollment for all admin accounts and enforce MFA for the admin authentication flow.",
+      "cause": "MFA was likely left optional in the realm authentication configuration or administrator onboarding process.",
+      "evidence_page": "/kc/roles/admin/users",
+      "remediation": "manual"
+    },
+    {
+      "id": "C2",
+      "rule": "PSI-4.2",
+      "title": "MFA enforced for users of critical system",
+      "objective": "Every user account in the realm, which supports critical or important functions, has multi-factor authentication configured.",
+      "test_procedure": "Retrieve all users via paginated GET /api/kc/users and verify totp is true for each account.",
+      "expected": "totp=true for every object from GET /api/kc/users",
+      "severity": "elevee",
+      "references": [
+        "DORA 9(4)(d)",
+        "RTS 21(1)(f)(ii)"
+      ],
+      "risk": "Without MFA, password-only authentication exposes critical functions to account takeover by phishing or credential stuffing.",
+      "recommendation": "Require OTP enrollment for all realm users and enforce MFA for the user authentication flow.",
+      "cause": "MFA was likely not made mandatory in the realm authentication flow or user lifecycle process.",
+      "evidence_page": "/kc/users",
+      "remediation": "manual"
+    },
+    {
+      "id": "C3",
+      "rule": "PSI-4.3",
+      "title": "Strong password policy with length and complexity",
+      "objective": "The realm passwordPolicy requires minimum length of 12 characters with complexity requirements.",
+      "test_procedure": "Retrieve GET /api/kc/realm and parse passwordPolicy to verify length and complexity items are present.",
+      "expected": "passwordPolicy contains length(12) or greater and upperCase(1), lowerCase(1), digits(1) and specialChars(1)",
+      "severity": "moyenne",
+      "references": [
+        "DORA 9(4)(d)"
+      ],
+      "risk": "Weak passwords can be guessed or brute-forced, leading to unauthorized access to critical identity services.",
+      "recommendation": "Set the realm password policy to enforce at least 12 characters with upper-case, lower-case, digit and special-character complexity.",
+      "cause": "The realm password policy was likely left at Keycloak defaults and never hardened to the internal standard.",
+      "evidence_page": "/kc/realm",
+      "remediation": "config"
+    },
+    {
+      "id": "C4",
+      "rule": "PSI-4.4",
+      "title": "Account lockout after repeated login failures",
+      "objective": "Account lockout on repeated login failures is enabled and triggers after at most 5 failures.",
+      "test_procedure": "Retrieve GET /api/kc/realm and verify bruteForceProtected is true and failureFactor is less than or equal to 5.",
+      "expected": "bruteForceProtected=true and failureFactor<=5",
+      "severity": "moyenne",
+      "references": [
+        "DORA 9(4)(c)"
+      ],
+      "risk": "Without lockout, attackers can perform unlimited online password-guessing attacks against all accounts.",
+      "recommendation": "Enable brute-force protection in the realm and set the failure threshold to 5 or fewer attempts.",
+      "cause": "Brute-force protection was likely never enabled or was configured with a permissive threshold.",
+      "evidence_page": "/kc/realm",
+      "remediation": "config"
+    },
+    {
+      "id": "C5",
+      "rule": "PSI-4.5",
+      "title": "Idle session timeout limited to 15 minutes",
+      "objective": "Idle SSO sessions expire after at most 15 minutes and idle timeout is not disabled.",
+      "test_procedure": "Retrieve GET /api/kc/realm and verify ssoSessionIdleTimeout is set to 900 seconds or less.",
+      "expected": "ssoSessionIdleTimeout<=900 (seconds) and not disabled or zero",
+      "severity": "moyenne",
+      "references": [
+        "DORA 9(4)(c)"
+      ],
+      "risk": "Overly long idle sessions allow session hijacking and unauthorized use of unattended workstations.",
+      "recommendation": "Set the realm idle session timeout to 900 seconds or less.",
+      "cause": "The realm session timeout was likely left at the Keycloak default value exceeding 15 minutes.",
+      "evidence_page": "/kc/realm",
+      "remediation": "config"
+    },
+    {
+      "id": "C6",
+      "rule": "PSI-4.6",
+      "title": "Logging of administration actions",
+      "objective": "All administration actions are recorded as admin events in the realm.",
+      "test_procedure": "Retrieve GET /api/kc/realm and verify adminEventsEnabled is true.",
+      "expected": "adminEventsEnabled=true",
+      "severity": "elevee",
+      "references": [
+        "RTS 12(2)(c)(i)"
+      ],
+      "risk": "Without admin audit logging, malicious or erroneous privileged changes cannot be detected, investigated or attributed.",
+      "recommendation": "Enable admin events recording in the realm and retain the logs in the central SIEM.",
+      "cause": "Admin event logging was likely never enabled during realm hardening.",
+      "evidence_page": "/kc/realm",
+      "remediation": "config"
+    },
+    {
+      "id": "C7",
+      "rule": "PSI-4.7",
+      "title": "No generic or shared administrator accounts",
+      "objective": "No holder of the realm role admin is a generic or shared account, with each admin having a nominative username of form initiale.nom and a personal email.",
+      "test_procedure": "Retrieve all members of the realm role admin via paginated GET /api/kc/roles/admin/users and verify username and email are nominative and not function or shared-mailbox values.",
+      "expected": "username matches initiale.nom pattern and email is personal (not ops, admin, root or ops-partage@, admin@) for every object from GET /api/kc/roles/admin/users",
+      "severity": "elevee",
+      "references": [
+        "DORA 9(4)(c)",
+        "RTS 21(1)(c)",
+        "RTS 21(1)(e)(ii)"
+      ],
+      "risk": "Shared privileged accounts destroy accountability and allow uncontrolled, non-attributable administrator access.",
+      "recommendation": "Remove admin rights from all generic or shared accounts and replace them with nominative accounts.",
+      "cause": "Operational convenience likely led to creation of function accounts with admin rights without enforcing nominative provisioning.",
+      "evidence_page": "/kc/roles/admin/users",
+      "remediation": "manual"
+    }
+  ]
+}

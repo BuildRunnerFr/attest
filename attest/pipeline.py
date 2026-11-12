@@ -144,19 +144,17 @@ def run_test(e: dict, ctx: Ctx):
 
 def inspect(control: dict, result: dict, shot: Path, dom: dict) -> dict:
     w, h = Image.open(shot).size
-    txt = llm.ask("inspect", prompts.INSPECT_SYSTEM.format(w=w, h=h),
-                  prompts.INSPECT_USER.format(control=json.dumps(shown(control), ensure_ascii=False),
-                                              result=_untrusted_json(result),
-                                              lang=config.lang_name()),
+    user = prompts.INSPECT_USER.format(control=json.dumps(shown(control), ensure_ascii=False),
+                                       result=_untrusted_json(result), lang=config.lang_name())
+    if dom.get("paginated"):                           # une page parmi d'autres : ce qui n'y figure pas n'est pas un désaccord
+        user += prompts.INSPECT_PAGINATED
+    txt = llm.ask("inspect", prompts.INSPECT_SYSTEM.format(w=w, h=h), user,
                   image=shot, mock_ctx={"control": control, "result": result, "dom": dom})
     try:
         insp = llm.extract_json(txt)
     except ValueError:                                  # une seconde chance : JSON seul, rien d'autre
         txt = llm.ask("inspect", prompts.INSPECT_SYSTEM.format(w=w, h=h),
-                      prompts.INSPECT_USER.format(control=json.dumps(shown(control), ensure_ascii=False),
-                                                  result=_untrusted_json(result),
-                                                  lang=config.lang_name())
-                      + "\n\nYour previous answer was not valid JSON. Return ONLY the JSON object.",
+                      user + "\n\nYour previous answer was not valid JSON. Return ONLY the JSON object.",
                       image=shot, mock_ctx={"control": control, "result": result, "dom": dom})
         insp = llm.extract_json(txt)
     if not isinstance(insp, dict):

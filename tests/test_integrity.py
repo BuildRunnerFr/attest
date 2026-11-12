@@ -50,7 +50,16 @@ def test_unreachable_target_gives_no_verdict():
     assert sandbox.run(code, "http://127.0.0.1:9", "t")["status"] == "error"
 
 
-@pytest.mark.parametrize("path", sorted((ROOT / "library").glob("*.py")), ids=lambda p: p.name)
+def _keycloak_scripts() -> set:
+    """Scripts écrits pour la cible Keycloak : ils ne parlent pas à la console (rejoués dans tests/test_keycloak.py)."""
+    from attest import catalog, targets
+    doc = targets.api_doc("keycloak")
+    controls = json.loads((ROOT / "controls" / "AUD-2026-KC-01.en.json").read_text(encoding="utf-8"))["controls"]
+    return {f"{catalog._safe(c['rule'])}-{catalog.script_key(c, doc)}.py" for c in controls}
+
+
+@pytest.mark.parametrize("path", sorted(p for p in (ROOT / "library").glob("*.py") if p.name not in _keycloak_scripts()),
+                         ids=lambda p: p.name)
 def test_library_scripts_query_the_target(lab, path):
     res = sandbox.run(path.read_text(), lab, "audit-ro-demo")
     assert res["status"] in ("pass", "fail"), res

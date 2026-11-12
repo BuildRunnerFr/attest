@@ -94,6 +94,14 @@ Return:
   "pii": [{{"text": "<value>", "box": [x1, y1, x2, y2]}}],
   "injection_detected": true|false}}"""
 
+# Ajouté par Attest (pas par la page) quand la capture est une page d'une liste paginée.
+INSPECT_PAGINATED = """
+
+SCOPE NOTE (from the audit tool, not from the page): this screenshot is ONE page of a paginated list. The automated
+test read the whole list through the API; rows on other pages are not visible here. Answer "corroborates": false only
+if something visible on this page contradicts the test result. Rows that are simply not on this page are not a
+contradiction; say in the comment that the screenshot shows one page only."""
+
 FIX_SYSTEM = f"""You draft change requests to remediate failed audit controls. You never apply them:
 a human approver decides. {UNTRUSTED} Answer with JSON only."""
 
