@@ -1,0 +1,446 @@
+{
+  "backend": "meta",
+  "model": "muse-spark-1.3",
+  "lang": "en",
+  "target": "keycloak",
+  "date": "2026-11-12 13:17",
+  "premask": false,
+  "summary": {
+    "checks": 21,
+    "TP": 11,
+    "TN": 10,
+    "FP": 0,
+    "FN": 0,
+    "inconclusive": 0,
+    "missing": 0,
+    "accuracy": 1.0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "recall_concluded": 1.0,
+    "undetected_inconclusive": 0,
+    "per_rule": {
+      "PSI-4.1": {
+        "checks": 3,
+        "positives": 2,
+        "TP": 2,
+        "FP": 0,
+        "FN": 0,
+        "TN": 1,
+        "inconclusive": 0,
+        "missing": 0,
+        "inconclusive_on_fail": 0,
+        "missing_on_fail": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "recall_concluded": 1.0
+      },
+      "PSI-4.2": {
+        "checks": 3,
+        "positives": 2,
+        "TP": 2,
+        "FP": 0,
+        "FN": 0,
+        "TN": 1,
+        "inconclusive": 0,
+        "missing": 0,
+        "inconclusive_on_fail": 0,
+        "missing_on_fail": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "recall_concluded": 1.0
+      },
+      "PSI-4.3": {
+        "checks": 3,
+        "positives": 2,
+        "TP": 2,
+        "FP": 0,
+        "FN": 0,
+        "TN": 1,
+        "inconclusive": 0,
+        "missing": 0,
+        "inconclusive_on_fail": 0,
+        "missing_on_fail": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "recall_concluded": 1.0
+      },
+      "PSI-4.4": {
+        "checks": 3,
+        "positives": 1,
+        "TP": 1,
+        "FP": 0,
+        "FN": 0,
+        "TN": 2,
+        "inconclusive": 0,
+        "missing": 0,
+        "inconclusive_on_fail": 0,
+        "missing_on_fail": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "recall_concluded": 1.0
+      },
+      "PSI-4.5": {
+        "checks": 3,
+        "positives": 2,
+        "TP": 2,
+        "FP": 0,
+        "FN": 0,
+        "TN": 1,
+        "inconclusive": 0,
+        "missing": 0,
+        "inconclusive_on_fail": 0,
+        "missing_on_fail": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "recall_concluded": 1.0
+      },
+      "PSI-4.6": {
+        "checks": 3,
+        "positives": 1,
+        "TP": 1,
+        "FP": 0,
+        "FN": 0,
+        "TN": 2,
+        "inconclusive": 0,
+        "missing": 0,
+        "inconclusive_on_fail": 0,
+        "missing_on_fail": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "recall_concluded": 1.0
+      },
+      "PSI-4.7": {
+        "checks": 3,
+        "positives": 1,
+        "TP": 1,
+        "FP": 0,
+        "FN": 0,
+        "TN": 2,
+        "inconclusive": 0,
+        "missing": 0,
+        "inconclusive_on_fail": 0,
+        "missing_on_fail": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "recall_concluded": 1.0
+      }
+    },
+    "accounts_generic": {
+      "rule": "PSI-4.7",
+      "scenarios": 3,
+      "admins": 19,
+      "TP": 1,
+      "FP": 0,
+      "FN": 0,
+      "TN": 18,
+      "undetermined": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "sources": [
+        "evidence",
+        "verdict"
+      ],
+      "count_mismatch": []
+    },
+    "offenders": {
+      "expected": 270,
+      "TP": 270,
+      "FP": 0,
+      "FN": 0,
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    "pii_total": 318,
+    "pii_model": 302,
+    "pii_masked": 318,
+    "injection_cases": 0,
+    "injection_flagged": 0,
+    "cost_usd": 0.6633,
+    "seconds": 594
+  },
+  "scenarios": [
+    {
+      "id": "kc-01-kerlann",
+      "label": "Royaume Keycloak non conforme, 260 comptes",
+      "tests": "7 non-conformités sur un vrai Keycloak ; l'administrateur générique « support-n2 » n'est pas dans les 100 premiers comptes (taille de page par défaut de Keycloak).",
+      "accounts": 260,
+      "offenders": {
+        "PSI-4.1": {
+          "expected": 7,
+          "TP": 7,
+          "FP": 0,
+          "FN": 0,
+          "determined": true,
+          "missed": [],
+          "extra": []
+        },
+        "PSI-4.2": {
+          "expected": 260,
+          "TP": 260,
+          "FP": 0,
+          "FN": 0,
+          "determined": true,
+          "missed": [],
+          "extra": []
+        },
+        "PSI-4.7": {
+          "expected": 1,
+          "TP": 1,
+          "FP": 0,
+          "FN": 0,
+          "determined": true,
+          "missed": [],
+          "extra": []
+        }
+      },
+      "cells": {
+        "PSI-4.1": {
+          "expected": "fail",
+          "got": "fail",
+          "verdict": "TP"
+        },
+        "PSI-4.2": {
+          "expected": "fail",
+          "got": "fail",
+          "verdict": "TP"
+        },
+        "PSI-4.3": {
+          "expected": "fail",
+          "got": "fail",
+          "verdict": "TP"
+        },
+        "PSI-4.4": {
+          "expected": "fail",
+          "got": "fail",
+          "verdict": "TP"
+        },
+        "PSI-4.5": {
+          "expected": "fail",
+          "got": "fail",
+          "verdict": "TP"
+        },
+        "PSI-4.6": {
+          "expected": "fail",
+          "got": "fail",
+          "verdict": "TP"
+        },
+        "PSI-4.7": {
+          "expected": "fail",
+          "got": "fail",
+          "verdict": "TP"
+        }
+      },
+      "accounts_generic": {
+        "admins": 7,
+        "expected": [
+          "support-n2"
+        ],
+        "got": [
+          "support-n2"
+        ],
+        "source": "evidence",
+        "declared": null,
+        "TP": 1,
+        "FP": 0,
+        "FN": 0,
+        "TN": 6,
+        "undetermined": 0
+      },
+      "pii_total": 114,
+      "pii_model": 108,
+      "pii_masked": 114,
+      "injection_expected": false,
+      "injection_flagged": false,
+      "cost_usd": 0.4577,
+      "calls": 15,
+      "seconds": 354,
+      "report": "kc-01-kerlann/report.html"
+    },
+    {
+      "id": "kc-02-oceane",
+      "label": "Royaume Keycloak conforme, valeurs aux seuils",
+      "tests": "Aucun constat attendu : seuils exacts (12, 5, 900 s), administrateurs nommés opsomer, teamson, rootsaert, comptes de fonction sans droits d'administration.",
+      "accounts": 243,
+      "offenders": {
+        "PSI-4.1": {
+          "expected": 0,
+          "TP": 0,
+          "FP": 0,
+          "FN": 0,
+          "determined": true,
+          "missed": [],
+          "extra": []
+        },
+        "PSI-4.2": {
+          "expected": 0,
+          "TP": 0,
+          "FP": 0,
+          "FN": 0,
+          "determined": true,
+          "missed": [],
+          "extra": []
+        },
+        "PSI-4.7": {
+          "expected": 0,
+          "TP": 0,
+          "FP": 0,
+          "FN": 0,
+          "determined": true,
+          "missed": [],
+          "extra": []
+        }
+      },
+      "cells": {
+        "PSI-4.1": {
+          "expected": "pass",
+          "got": "pass",
+          "verdict": "TN"
+        },
+        "PSI-4.2": {
+          "expected": "pass",
+          "got": "pass",
+          "verdict": "TN"
+        },
+        "PSI-4.3": {
+          "expected": "pass",
+          "got": "pass",
+          "verdict": "TN"
+        },
+        "PSI-4.4": {
+          "expected": "pass",
+          "got": "pass",
+          "verdict": "TN"
+        },
+        "PSI-4.5": {
+          "expected": "pass",
+          "got": "pass",
+          "verdict": "TN"
+        },
+        "PSI-4.6": {
+          "expected": "pass",
+          "got": "pass",
+          "verdict": "TN"
+        },
+        "PSI-4.7": {
+          "expected": "pass",
+          "got": "pass",
+          "verdict": "TN"
+        }
+      },
+      "accounts_generic": {
+        "admins": 8,
+        "expected": [],
+        "got": [],
+        "source": "verdict",
+        "declared": null,
+        "TP": 0,
+        "FP": 0,
+        "FN": 0,
+        "TN": 8,
+        "undetermined": 0
+      },
+      "pii_total": 116,
+      "pii_model": 108,
+      "pii_masked": 116,
+      "injection_expected": false,
+      "injection_flagged": false,
+      "cost_usd": 0.1093,
+      "calls": 7,
+      "seconds": 145,
+      "report": "kc-02-oceane/report.html"
+    },
+    {
+      "id": "kc-03-menhir",
+      "label": "Royaume Keycloak mixte, un administrateur sans MFA",
+      "tests": "4 non-conformités : un administrateur sur quatre sans MFA (y.tanguy), qui est aussi le seul compte du royaume sans MFA, mot de passe long mais sans complexité, session inactive de 30 minutes.",
+      "accounts": 180,
+      "offenders": {
+        "PSI-4.1": {
+          "expected": 1,
+          "TP": 1,
+          "FP": 0,
+          "FN": 0,
+          "determined": true,
+          "missed": [],
+          "extra": []
+        },
+        "PSI-4.2": {
+          "expected": 1,
+          "TP": 1,
+          "FP": 0,
+          "FN": 0,
+          "determined": true,
+          "missed": [],
+          "extra": []
+        },
+        "PSI-4.7": {
+          "expected": 0,
+          "TP": 0,
+          "FP": 0,
+          "FN": 0,
+          "determined": true,
+          "missed": [],
+          "extra": []
+        }
+      },
+      "cells": {
+        "PSI-4.1": {
+          "expected": "fail",
+          "got": "fail",
+          "verdict": "TP"
+        },
+        "PSI-4.2": {
+          "expected": "fail",
+          "got": "fail",
+          "verdict": "TP"
+        },
+        "PSI-4.3": {
+          "expected": "fail",
+          "got": "fail",
+          "verdict": "TP"
+        },
+        "PSI-4.4": {
+          "expected": "pass",
+          "got": "pass",
+          "verdict": "TN"
+        },
+        "PSI-4.5": {
+          "expected": "fail",
+          "got": "fail",
+          "verdict": "TP"
+        },
+        "PSI-4.6": {
+          "expected": "pass",
+          "got": "pass",
+          "verdict": "TN"
+        },
+        "PSI-4.7": {
+          "expected": "pass",
+          "got": "pass",
+          "verdict": "TN"
+        }
+      },
+      "accounts_generic": {
+        "admins": 4,
+        "expected": [],
+        "got": [],
+        "source": "verdict",
+        "declared": null,
+        "TP": 0,
+        "FP": 0,
+        "FN": 0,
+        "TN": 4,
+        "undetermined": 0
+      },
+      "pii_total": 88,
+      "pii_model": 86,
+      "pii_masked": 88,
+      "injection_expected": false,
+      "injection_flagged": false,
+      "cost_usd": 0.0963,
+      "calls": 7,
+      "seconds": 95,
+      "report": "kc-03-menhir/report.html"
+    }
+  ]
+}

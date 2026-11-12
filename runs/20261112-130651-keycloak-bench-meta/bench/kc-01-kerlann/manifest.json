@@ -1,0 +1,77 @@
+{
+  "mission": "AUD-2026-KC-01",
+  "run_id": "20261112-130651-keycloak-bench-meta",
+  "issued_at": "2026-11-12T13:13:23",
+  "trail_head": "5b6830f9527e2f25f73ae0a83022ccef844eb02fc295c40705aef5bcc0ec315a",
+  "aborted": null,
+  "files": [
+    {
+      "path": "evidence/C1_before.png",
+      "sha256": "a81ff5a8a145e8c436141ee04c06b139c86076eaff12c2ff5654f3bc225abc44"
+    },
+    {
+      "path": "evidence/C2_before.png",
+      "sha256": "831d74a4a7e641f43c85153ce8acd30aba2db0ee419e8dd035333065e5fcfd6d"
+    },
+    {
+      "path": "evidence/C3_before.png",
+      "sha256": "0da5a4d8e337ab901abf295d28d1a8ec74737e4d04fac90de5b934dfd080f61a"
+    },
+    {
+      "path": "evidence/C4_before.png",
+      "sha256": "0fb1d09d20e66857909336e66ccb6df9e13b2dea5c18c6d931772729ac82caca"
+    },
+    {
+      "path": "evidence/C5_before.png",
+      "sha256": "cd2e6cf4cef2c93ef120ff47347508bf7d002dff5562f265d863eb06972b122c"
+    },
+    {
+      "path": "evidence/C6_before.png",
+      "sha256": "7fb90aeb38941b5aaf6c90b781babc58cb0043350ec28e372da0ba552fa00a82"
+    },
+    {
+      "path": "evidence/C7_before.png",
+      "sha256": "5322bb14a0246676e6b945d81b536ef92f7cba14609f04291ccd9a1b685bb8c8"
+    },
+    {
+      "path": "report.html",
+      "sha256": "cb62223ed07af77cd71fa7aa06e9eb18c0f5c923a63173015542abaab3049446"
+    },
+    {
+      "path": "report.pdf",
+      "sha256": "f9d6e9a2da570f16b168586bb5548f3b03fd37959403a7b183a85d64a6a732b5"
+    },
+    {
+      "path": "result.json",
+      "sha256": "cc6d2a635ff0bea2d6de37c778ff6c18a9f893d070428cdb8bc1161984112623"
+    },
+    {
+      "path": "scripts/C1_PSI-4.1.py",
+      "sha256": "9fa33ed1913fff997dfce59993ef781bbf0c3753a32391d0d585473ef9a7110e"
+    },
+    {
+      "path": "scripts/C2_PSI-4.2.py",
+      "sha256": "a3a93c09f9e4841e9cdfc034b6dda17d9cf307f1fa8b517d3178905b9b61a817"
+    },
+    {
+      "path": "scripts/C3_PSI-4.3.py",
+      "sha256": "f68b831a9eaf64e10c6c7624beb2983d3dffabed3976b0b259ebcf22eadf7d83"
+    },
+    {
+      "path": "scripts/C4_PSI-4.4.py",
+      "sha256": "c9a1e15280e49977233500a78db8fcb210cd34bab53c115f5a46ee2a5bf3c98b"
+    },
+    {
+      "path": "scripts/C5_PSI-4.5.py",
+      "sha256": "8f2905c677d5572122789b38a074e9bd2c2f961ed8b9b665665a94409f3a0c7b"
+    },
+    {
+      "path": "scripts/C6_PSI-4.6.py",
+      "sha256": "90d35a527b9a83dd8d014879eac06a6763f878757157c80a7197da5db153f414"
+    },
+    {
+      "path": "scripts/C7_PSI-4.7.py",
+      "sha256": "abb50391184fc2ef7c9c102f1d7f073db0655321224b9ae9bd994fa9fb5fb744"
+    }
+  ]
+}

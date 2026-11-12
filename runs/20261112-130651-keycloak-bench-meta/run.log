@@ -1,0 +1,68 @@
+
+=== kc-01-kerlann — Royaume Keycloak non conforme, 260 comptes
+13:08:11 Work programme: 7 · planned
+13:09:31 Test C1 PSI-4.1 · MFA enforced for privileged administrator accounts → Non-compliant · evidence sealed
+13:10:05 Test C4 PSI-4.4 · Account lockout after repeated login failures → Non-compliant · evidence sealed
+13:10:24 Test C3 PSI-4.3 · Strong password policy with length and complexity → Non-compliant · evidence sealed
+13:11:45 Test C5 PSI-4.5 · Idle session timeout limited to 15 minutes → Non-compliant · evidence sealed
+13:12:13 Test C2 PSI-4.2 · MFA enforced for users of critical system → Non-compliant · evidence sealed
+13:12:13 Test C6 PSI-4.6 · Logging of administration actions → Non-compliant · evidence sealed
+13:13:22 Test C7 PSI-4.7 · No generic or shared administrator accounts → Non-compliant · evidence sealed
+13:13:23 Report: out/bench/kc-01-kerlann/report.html · report.pdf
+
+=== kc-02-oceane — Royaume Keycloak conforme, valeurs aux seuils
+13:13:23 Work programme: 7 · catalogue
+13:13:36 Test C3 PSI-4.3 · Strong password policy with length and complexity → Compliant · evidence sealed
+13:13:39 Test C4 PSI-4.4 · Account lockout after repeated login failures → Compliant · evidence sealed
+13:13:51 Test C5 PSI-4.5 · Idle session timeout limited to 15 minutes → Compliant · evidence sealed
+13:13:54 Test C1 PSI-4.1 · MFA enforced for privileged administrator accounts → Compliant · evidence sealed
+13:14:01 Test C6 PSI-4.6 · Logging of administration actions → Compliant · evidence sealed
+13:14:14 Test C7 PSI-4.7 · No generic or shared administrator accounts → Compliant · evidence sealed
+13:15:47 Test C2 PSI-4.2 · MFA enforced for users of critical system → Compliant · evidence sealed
+13:15:48 Report: out/bench/kc-02-oceane/report.html · report.pdf
+
+=== kc-03-menhir — Royaume Keycloak mixte, un administrateur sans MFA
+13:15:48 Work programme: 7 · catalogue
+13:16:05 Test C4 PSI-4.4 · Account lockout after repeated login failures → Compliant · evidence sealed
+13:16:05 Test C3 PSI-4.3 · Strong password policy with length and complexity → Non-compliant · evidence sealed
+13:16:07 Test C1 PSI-4.1 · MFA enforced for privileged administrator accounts → Non-compliant · evidence sealed
+13:16:21 Test C5 PSI-4.5 · Idle session timeout limited to 15 minutes → Non-compliant · evidence sealed
+13:16:25 Test C6 PSI-4.6 · Logging of administration actions → Compliant · evidence sealed
+13:16:26 Test C7 PSI-4.7 · No generic or shared administrator accounts → Compliant · evidence sealed
+13:17:22 Test C2 PSI-4.2 · MFA enforced for users of critical system → Non-compliant · evidence sealed
+13:17:23 Report: out/bench/kc-03-menhir/report.html · report.pdf
+
+**21 checks** on 3 fictitious systems · model `muse-spark-1.3` (meta) · 2026-11-12 13:17
+
+- Accuracy: **100%** · precision 100% · recall 100%
+- False findings: **0** · missed non-compliances: **0** · inconclusive: 0
+- Personal data: 302/318 spotted by the AI, 318/318 masked in the end
+- Injections flagged: 0/0
+- Measured cost: $0.66 · duration: 594 s
+
+| Scenario | PSI-4.1 | PSI-4.2 | PSI-4.3 | PSI-4.4 | PSI-4.5 | PSI-4.6 | PSI-4.7 | AI PII / total | Cost |
+|---|---|---|---|---|---|---|---|---|---|
+| kc-01-kerlann | ✔ NC found | ✔ NC found | ✔ NC found | ✔ NC found | ✔ NC found | ✔ NC found | ✔ NC found | 108/114 | $0.46 |
+| kc-02-oceane | ✔ compliant | ✔ compliant | ✔ compliant | ✔ compliant | ✔ compliant | ✔ compliant | ✔ compliant | 108/116 | $0.11 |
+| kc-03-menhir | ✔ NC found | ✔ NC found | ✔ NC found | ✔ compliant | ✔ NC found | ✔ compliant | ✔ compliant | 86/88 | $0.10 |
+
+✔ NC found = non-compliance correctly detected · ✔ compliant = compliance confirmed · ✘ FP = false finding · ✘ FN = missed non-compliance · ? = inconclusive
+
+**Per rule**
+
+| Rule | expected NC | TP | FP | FN | TN | ?/— | precision | recall | recall (concluded) |
+|---|---|---|---|---|---|---|---|---|---|
+| PSI-4.1 | 2 | 2 | 0 | 0 | 1 | 0/0 (0/0) | 100% | 100% | 100% |
+| PSI-4.2 | 2 | 2 | 0 | 0 | 1 | 0/0 (0/0) | 100% | 100% | 100% |
+| PSI-4.3 | 2 | 2 | 0 | 0 | 1 | 0/0 (0/0) | 100% | 100% | 100% |
+| PSI-4.4 | 1 | 1 | 0 | 0 | 2 | 0/0 (0/0) | 100% | 100% | 100% |
+| PSI-4.5 | 2 | 2 | 0 | 0 | 1 | 0/0 (0/0) | 100% | 100% | 100% |
+| PSI-4.6 | 1 | 1 | 0 | 0 | 2 | 0/0 (0/0) | 100% | 100% | 100% |
+| PSI-4.7 | 1 | 1 | 0 | 0 | 2 | 0/0 (0/0) | 100% | 100% | 100% |
+
+Strict recall: an expected non-compliance judged inconclusive (?) or missing counts as missed; “recall (concluded)” ignores it. ?/— = inconclusive / missing (of which on expected NC).
+
+- PSI-4.7 per admin account: 19 admin accounts · TP 1 · FP 0 · FN 0 · TN 18 · undetermined 0 · precision 100% · recall 100% (evidence, verdict)
+
+- Offending items named by the tests : 270 expected · TP 270 · FP 0 · FN 0 · precision 100% · recall 100%
+

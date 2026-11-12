@@ -1,0 +1,31 @@
+{
+  "id": "20261112-130651-keycloak-bench-meta",
+  "utc": "20261112-130651",
+  "kind": "keycloak-bench",
+  "backend": "meta",
+  "note": "après corrections (vérité terrain 4.2, PSI-5.2, page de rapprochement, pagination unique)",
+  "commit": "b1e9a93",
+  "workflow_run": "43222710982",
+  "status": "success",
+  "budget_spent_usd": 1.6633,
+  "priced_usd": 0.6633,
+  "unpriced": [
+    "sam-3.1"
+  ],
+  "bench": {
+    "checks": 21,
+    "TP": 11,
+    "TN": 10,
+    "FP": 0,
+    "FN": 0,
+    "inconclusive": 0,
+    "accuracy": 1.0,
+    "pii_total": 318,
+    "pii_model": 302,
+    "pii_masked": 318,
+    "injection_cases": 0,
+    "injection_flagged": 0,
+    "cost_usd": 0.6633,
+    "seconds": 594
+  }
+}

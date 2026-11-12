@@ -1,0 +1,2507 @@
+{
+  "mission": {
+    "id": "AUD-2026-KC-01",
+    "title": "Strong authentication and privileged access — Keycloak",
+    "entity": "Banque Kerlann (fictive)",
+    "system": "Keycloak — royaume kerlann (fournisseur d'identité)",
+    "system_criticality": "Supports critical or important functions (DORA)",
+    "environment": "Test Keycloak (fictitious realm)",
+    "owner": "IT department — IAM team",
+    "lead_auditor": "Attest CI (automated run, no human auditor)",
+    "classification": "TLP:AMBER+STRICT",
+    "requirement_path": "exigences/keycloak_authentification.md",
+    "lab_url": "http://127.0.0.1:5050",
+    "scope_in": [
+      "Security settings of the Keycloak realm (password, lockout, session, logging)",
+      "Realm accounts and members of the admin role"
+    ],
+    "scope_out": [
+      "Intrinsic strength of MFA factors and custom authentication flows",
+      "Clients, identity federation and connected applications",
+      "Hosting and operation of the Keycloak server"
+    ],
+    "sla_days": {
+      "critique": 30,
+      "elevee": 90,
+      "moyenne": 180,
+      "faible": 365
+    },
+    "target": "keycloak",
+    "framework_label": "DORA art. 9(4) · RTS (UE) 2024/1774 art. 12, 21 · PSI-4",
+    "requirement_text": null
+  },
+  "run_id": "20261112-130651-keycloak-bench-meta",
+  "started": "2026-11-12 13:07",
+  "lang": "en",
+  "target": "keycloak",
+  "target_label": "Keycloak (open-source identity provider), through the read-only gateway",
+  "backend": "meta",
+  "models": {
+    "reason": "muse-spark-1.3",
+    "code": "muse-spark-1.3",
+    "segmentation": "sam-3.1"
+  },
+  "entries": [
+    {
+      "control": {
+        "id": "C1",
+        "rule": "PSI-4.1",
+        "title": "MFA enforced for privileged administrator accounts",
+        "objective": "Every account holding the realm role admin has multi-factor authentication configured.",
+        "test_procedure": "Retrieve all members of the realm role admin via paginated GET /api/kc/roles/admin/users and verify totp is true for each account.",
+        "expected": "totp=true for every object from GET /api/kc/roles/admin/users",
+        "severity": "critique",
+        "references": [
+          "DORA 9(4)(d)",
+          "RTS 21(1)(f)(ii)"
+        ],
+        "risk": "Without MFA, a single stolen privileged password allows full takeover of the identity provider and all connected critical functions.",
+        "recommendation": "Require OTP enrollment for all admin accounts and enforce MFA for the admin authentication flow.",
+        "cause": "MFA was likely left optional in the realm authentication configuration or administrator onboarding process.",
+        "evidence_page": "/kc/roles/admin/users",
+        "remediation": "manual"
+      },
+      "test": {
+        "script": "scripts/C1_PSI-4.1.py",
+        "sha256": "9fa33ed1913fff997dfce59993ef781bbf0c3753a32391d0d585473ef9a7110e",
+        "origin": "generated",
+        "code": "import requests\nimport json\nimport os\nimport sys\nimport re\n\ntry:\n    base_url = os.environ[\"LAB_URL\"]\nexcept Exception:\n    sys.stderr.write(\"missing LAB_URL\\n\")\n    sys.exit(2)\n\ntry:\n    token = os.environ[\"LAB_TOKEN\"]\nexcept Exception:\n    sys.stderr.write(\"missing LAB_TOKEN\\n\")\n    sys.exit(2)\n\nif not isinstance(base_url, str) or base_url == \"\":\n    sys.stderr.write(\"bad LAB_URL\\n\")\n    sys.exit(2)\n\nif not isinstance(token, str) or token == \"\":\n    sys.stderr.write(\"bad LAB_TOKEN\\n\")\n    sys.exit(2)\n\nheaders = {\"Authorization\": \"Bearer \" + token}\nbase = base_url.rstrip(\"/\")\nurl = base + \"/api/kc/roles/admin/users\"\nseen = {}\n\nwhile True:\n    try:\n        resp = requests.get(url, headers=headers)\n    except Exception as e:\n        sys.stderr.write(\"request failed: \" + str(e) + \"\\n\")\n        sys.exit(2)\n    if resp.status_code != 200:\n        sys.stderr.write(\"bad status for list request\\n\")\n        sys.exit(2)\n    try:\n        data = resp.json()\n    except Exception as e:\n        sys.stderr.write(\"bad json: \" + str(e) + \"\\n\")\n        sys.exit(2)\n    if not isinstance(data, list):\n        sys.stderr.write(\"unexpected data not list\\n\")\n        sys.exit(2)\n    for item in data:\n        if not isinstance(item, dict):\n            sys.stderr.write(\"unexpected item not object\\n\")\n            sys.exit(2)\n        if \"id\" not in item or \"username\" not in item or \"totp\" not in item:\n            sys.stderr.write(\"missing fields in admin user object\\n\")\n            sys.exit(2)\n        totp_val = item[\"totp\"]\n        if not isinstance(totp_val, bool):\n            sys.stderr.write(\"unexpected totp type\\n\")\n            sys.exit(2)\n        uid = item[\"id\"]\n        if uid not in seen:\n            seen[uid] = item\n    links = resp.links\n    if not isinstance(links, dict):\n        sys.stderr.write(\"bad links\\n\")\n        sys.exit(2)\n    if \"next\" not in links:\n        break\n    nxt = links[\"next\"]\n    if not isinstance(nxt, dict) or \"url\" not in nxt:\n        break\n    raw_next = nxt[\"url\"]\n    if not isinstance(raw_next, str) or raw_next == \"\":\n        break\n    if raw_next.startswith(\"http://\") or raw_next.startswith(\"https://\"):\n        url = raw_next\n    else:\n        url = base + \"/\" + raw_next.lstrip(\"/\")\n\nev_path = \"/kc/roles/admin/users\"\nev_url = base + ev_path\ntry:\n    ev_resp = requests.get(ev_url, headers=headers)\nexcept Exception as e:\n    sys.stderr.write(\"evidence request failed: \" + str(e) + \"\\n\")\n    sys.exit(2)\nif ev_resp.status_code != 200:\n    sys.stderr.write(\"bad status for evidence page\\n\")\n    sys.exit(2)\n\ntotal = len(seen)\nbad = []\nfor uid in seen:\n    obj = seen[uid]\n    if not obj[\"totp\"]:\n        bad.append(obj[\"username\"])\nbad.sort()\n\nexpected = \"totp=true for every object from GET /api/kc/roles/admin/users\"\nif len(bad) == 0:\n    status = \"pass\"\n    observed = []\n    detail = \"Checked \" + str(total) + \" admin accounts, all have totp=true.\"\nelse:\n    status = \"fail\"\n    observed = bad\n    detail = \"Checked \" + str(total) + \" admin accounts, \" + str(len(bad)) + \" lack MFA.\"\n\nprint(json.dumps({\"status\": status, \"observed\": observed, \"expected\": expected, \"detail\": detail, \"evidence_page\": ev_path}))\n",
+        "requests": 2
+      },
+      "before": {
+        "status": "fail",
+        "observed": [
+          "a.abgrall",
+          "b.cariou",
+          "c.denis",
+          "e.floch",
+          "g.herve",
+          "j.kermarrec",
+          "support-n2"
+        ],
+        "expected": "totp=true for every object from GET /api/kc/roles/admin/users",
+        "detail": "Checked 7 admin accounts, 7 lack MFA.",
+        "evidence_page": "/kc/roles/admin/users"
+      },
+      "evidence_before": {
+        "image": "evidence/C1_before.png",
+        "sha256": "a81ff5a8a145e8c436141ee04c06b139c86076eaff12c2ff5654f3bc225abc44",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "a.abgrall adele.abgrall@kerlann-banque.example admin yes no; b.cariou bleuenn.cariou@kerlann-banque.example admin yes no; c.denis corentin.denis@kerlann-banque.example admin yes no; e.floch erwan.floch@kerlann-banque.example admin yes no; g.herve gwenael.herve@kerlann-banque.example admin yes no; j.kermarrec jeanne.kermarrec@kerlann-banque.example admin yes no; support-n2 support-n2@kerlann-banque.example admin yes no",
+          "field_boxes": [
+            [
+              27,
+              163,
+              1045,
+              194
+            ],
+            [
+              27,
+              194,
+              1045,
+              225
+            ],
+            [
+              27,
+              225,
+              1045,
+              255
+            ],
+            [
+              27,
+              256,
+              1045,
+              286
+            ],
+            [
+              27,
+              287,
+              1045,
+              317
+            ],
+            [
+              27,
+              318,
+              1045,
+              349
+            ],
+            [
+              27,
+              350,
+              1045,
+              380
+            ]
+          ],
+          "comment": "All seven admin accounts show MFA as no, matching the automated test failure of 7 accounts lacking MFA.",
+          "pii": [
+            {
+              "text": "adele.abgrall@kerlann-banque.example",
+              "box": [
+                174,
+                169,
+                438,
+                187
+              ]
+            },
+            {
+              "text": "bleuenn.cariou@kerlann-banque.example",
+              "box": [
+                174,
+                200,
+                448,
+                218
+              ]
+            },
+            {
+              "text": "corentin.denis@kerlann-banque.example",
+              "box": [
+                174,
+                231,
+                460,
+                249
+              ]
+            },
+            {
+              "text": "erwan.floch@kerlann-banque.example",
+              "box": [
+                174,
+                261,
+                449,
+                280
+              ]
+            },
+            {
+              "text": "gwenael.herve@kerlann-banque.example",
+              "box": [
+                174,
+                292,
+                450,
+                311
+              ]
+            },
+            {
+              "text": "jeanne.kermarrec@kerlann-banque.example",
+              "box": [
+                174,
+                323,
+                465,
+                342
+              ]
+            },
+            {
+              "text": "support-n2@kerlann-banque.example",
+              "box": [
+                174,
+                354,
+                418,
+                373
+              ]
+            }
+          ],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 7,
+          "pii_masked": 7,
+          "pii_found_by_model": 7
+        },
+        "page": "/kc/roles/admin/users",
+        "page_verified": null,
+        "ts": "2026-11-12 13:09:31"
+      },
+      "status_before": "fail",
+      "finding": {
+        "id": "F-01",
+        "severity": "critique",
+        "status": "open",
+        "owner": "IT department — IAM team",
+        "due": "2026-12-12"
+      }
+    },
+    {
+      "control": {
+        "id": "C2",
+        "rule": "PSI-4.2",
+        "title": "MFA enforced for users of critical system",
+        "objective": "Every user account in the realm, which supports critical or important functions, has multi-factor authentication configured.",
+        "test_procedure": "Retrieve all users via paginated GET /api/kc/users and verify totp is true for each account.",
+        "expected": "totp=true for every object from GET /api/kc/users",
+        "severity": "elevee",
+        "references": [
+          "DORA 9(4)(d)",
+          "RTS 21(1)(f)(ii)"
+        ],
+        "risk": "Without MFA, password-only authentication exposes critical functions to account takeover by phishing or credential stuffing.",
+        "recommendation": "Require OTP enrollment for all realm users and enforce MFA for the user authentication flow.",
+        "cause": "MFA was likely not made mandatory in the realm authentication flow or user lifecycle process.",
+        "evidence_page": "/kc/users",
+        "remediation": "manual"
+      },
+      "test": {
+        "script": "scripts/C2_PSI-4.2.py",
+        "sha256": "a3a93c09f9e4841e9cdfc034b6dda17d9cf307f1fa8b517d3178905b9b61a817",
+        "origin": "generated",
+        "code": "import requests\nimport json\nimport os\nimport sys\nimport re\n\ntry:\n    base_url = os.environ[\"LAB_URL\"]\n    token = os.environ[\"LAB_TOKEN\"]\nexcept KeyError:\n    print(\"missing LAB_URL or LAB_TOKEN\", file=sys.stderr)\n    sys.exit(2)\n\nif not base_url or not token:\n    print(\"empty LAB_URL or LAB_TOKEN\", file=sys.stderr)\n    sys.exit(2)\n\nbase_url = base_url.rstrip(\"/\")\nheaders = {\"Authorization\": \"Bearer \" + token}\n\nusers_by_id = {}\nurl = base_url + \"/api/kc/users\"\nvisited = set()\n\nwhile url:\n    if url in visited:\n        break\n    visited.add(url)\n    try:\n        resp = requests.get(url, headers=headers)\n    except Exception:\n        print(\"request failed for users list\", file=sys.stderr)\n        sys.exit(2)\n    if resp.status_code != 200:\n        print(\"users list status not 200\", file=sys.stderr)\n        sys.exit(2)\n    try:\n        data = resp.json()\n    except Exception:\n        print(\"users list invalid json\", file=sys.stderr)\n        sys.exit(2)\n    if not isinstance(data, list):\n        print(\"users list not a list\", file=sys.stderr)\n        sys.exit(2)\n    for item in data:\n        if not isinstance(item, dict):\n            print(\"user entry not an object\", file=sys.stderr)\n            sys.exit(2)\n        if \"id\" not in item or \"username\" not in item or \"totp\" not in item:\n            print(\"user entry missing field\", file=sys.stderr)\n            sys.exit(2)\n        uid = item[\"id\"]\n        uname = item[\"username\"]\n        totp = item[\"totp\"]\n        if not isinstance(uid, str) or not isinstance(uname, str) or not isinstance(totp, bool):\n            print(\"user entry invalid field type\", file=sys.stderr)\n            sys.exit(2)\n        if uid not in users_by_id:\n            users_by_id[uid] = item\n    nxt = None\n    try:\n        links = resp.links\n    except Exception:\n        links = {}\n    if isinstance(links, dict) and \"next\" in links:\n        nxt_info = links[\"next\"]\n        if isinstance(nxt_info, dict) and \"url\" in nxt_info:\n            nxt = nxt_info[\"url\"]\n    if nxt:\n        if not isinstance(nxt, str):\n            print(\"invalid next link\", file=sys.stderr)\n            sys.exit(2)\n        if nxt.startswith(\"http\"):\n            url = nxt\n        else:\n            if nxt.startswith(\"/\"):\n                url = base_url + nxt\n            else:\n                url = base_url + \"/\" + nxt\n    else:\n        url = None\n\ntry:\n    ev_resp = requests.get(base_url + \"/kc/users\", headers=headers)\nexcept Exception:\n    print(\"request failed for evidence page\", file=sys.stderr)\n    sys.exit(2)\nif ev_resp.status_code != 200:\n    print(\"evidence page status not 200\", file=sys.stderr)\n    sys.exit(2)\n\ntotal = len(users_by_id)\noffenders = sorted([v[\"username\"] for v in users_by_id.values() if v[\"totp\"] is not True])\nexpected = \"totp=true for every object from GET /api/kc/users\"\n\nif offenders:\n    result = {\"status\": \"fail\", \"observed\": offenders, \"expected\": expected, \"detail\": str(len(offenders)) + \" of \" + str(total) + \" users have totp=false.\", \"evidence_page\": \"/kc/users\"}\nelse:\n    result = {\"status\": \"pass\", \"observed\": [], \"expected\": expected, \"detail\": \"All \" + str(total) + \" users have totp=true.\", \"evidence_page\": \"/kc/users\"}\n\nprint(json.dumps(result))\n",
+        "requests": 4
+      },
+      "before": {
+        "status": "fail",
+        "observed": [
+          "a.abgrall",
+          "a.allain",
+          "a.bertrand",
+          "a.briand",
+          "a.derrien",
+          "a.floch",
+          "a.fournier",
+          "a.jegou",
+          "a.kerjean",
+          "a.kervella",
+          "a.le-roux",
+          "a.lefebvre",
+          "a.lefloch",
+          "a.madec",
+          "a.mercier",
+          "a.pennec",
+          "a.quere",
+          "a.quere2",
+          "a.quillien",
+          "a.raoul",
+          "a.robert",
+          "a.roux",
+          "a.roux2",
+          "b.bihan",
+          "b.bonnet",
+          "b.cariou",
+          "b.cloarec",
+          "b.dupont",
+          "b.even",
+          "b.kerbrat",
+          "b.kerjean",
+          "b.madec",
+          "b.morel",
+          "b.quillien",
+          "b.roux",
+          "b.uguen",
+          "c.abgrall",
+          "c.bertrand",
+          "c.denis",
+          "c.durand",
+          "c.floch",
+          "c.guillou",
+          "c.jacq",
+          "c.lagadec",
+          "c.lambert",
+          "c.le-bihan",
+          "c.leroy",
+          "c.madec",
+          "c.quillien",
+          "c.quillien2",
+          "c.raoul",
+          "c.raoul2",
+          "c.robert",
+          "c.roux",
+          "c.uguen",
+          "d.jaouen",
+          "d.madec",
+          "d.martin",
+          "d.roux",
+          "e.david",
+          "e.dubois",
+          "e.floch",
+          "e.girard",
+          "e.le-gall",
+          "e.le-gall2",
+          "e.lefloch",
+          "e.michel",
+          "e.morel",
+          "e.nedelec",
+          "e.petit",
+          "e.robert",
+          "e.salaun",
+          "e.tanguy",
+          "e.toullec",
+          "e.vincent",
+          "e.vincent2",
+          "f.daniel",
+          "f.guillou",
+          "f.kerjean",
+          "g.bernard",
+          "g.bertrand",
+          "g.even",
+          "g.gourvennec",
+          "g.henaff",
+          "g.herve",
+          "g.kerjean",
+          "g.lambert",
+          "g.lambert2",
+          "g.laurent",
+          "g.lefloch",
+          "g.morel",
+          "g.petit",
+          "g.richard",
+          "h.gourvennec",
+          "h.le-roux",
+          "h.moreau",
+          "h.robert",
+          "i.girard",
+          "i.gourmelen",
+          "i.jaouen",
+          "i.kerjean",
+          "i.robert",
+          "i.salaun",
+          "i.toullec",
+          "i.toullec2",
+          "j.bernard",
+          "j.bihan",
+          "j.briand",
+          "j.fournier",
+          "j.girard",
+          "j.kerbrat",
+          "j.kerjean",
+          "j.kermarrec",
+          "j.lagadec",
+          "j.le-meur",
+          "j.le-roux",
+          "j.lefebvre",
+          "j.mercier",
+          "j.michel",
+          "j.olier",
+          "j.toullec",
+          "k.allain",
+          "k.bihan",
+          "k.jaouen",
+          "k.lambert",
+          "k.nedelec",
+          "k.richard",
+          "k.salaun",
+          "k.thepaut",
+          "l.bihan",
+          "l.bonnet",
+          "l.bonnet2",
+          "l.briand",
+          "l.daniel",
+          "l.daniel2",
+          "l.derrien",
+          "l.henaff",
+          "l.jacq",
+          "l.jegou",
+          "l.lambert",
+          "l.lambert2",
+          "l.le-meur",
+          "l.le-meur2",
+          "l.martin",
+          "l.michel",
+          "l.moreau",
+          "l.raoul",
+          "l.robert",
+          "l.toullec",
+          "l.vigouroux",
+          "m.abgrall",
+          "m.allain",
+          "m.bernard",
+          "m.bernard2",
+          "m.bertrand",
+          "m.cariou",
+          "m.even",
+          "m.garcia",
+          "m.jacq",
+          "m.kervella",
+          "m.kervella2",
+          "m.lambert",
+          "m.laurent",
+          "m.le-bihan",
+          "m.le-goff",
+          "m.leroy",
+          "m.madec",
+          "m.michel",
+          "m.morel",
+          "m.morel2",
+          "m.morvan",
+          "m.nedelec",
+          "m.quere",
+          "m.quillien",
+          "m.quillien2",
+          "m.raoul",
+          "m.riou",
+          "m.roux",
+          "m.salaun",
+          "m.toullec",
+          "n.bonnet",
+          "n.durand",
+          "n.fournier",
+          "n.laurent",
+          "n.le-meur",
+          "n.olier",
+          "n.richard",
+          "n.vincent",
+          "o.cariou",
+          "o.nedelec",
+          "o.pennec",
+          "o.petit",
+          "o.raoul",
+          "p.abgrall",
+          "p.bonnet",
+          "p.cloarec",
+          "p.derrien",
+          "p.guillou",
+          "p.guillou2",
+          "p.lambert",
+          "p.le-corre",
+          "p.le-gall",
+          "p.michel",
+          "p.nedelec",
+          "p.quere",
+          "p.quere2",
+          "p.raoul",
+          "p.richard",
+          "p.simon",
+          "p.tanguy",
+          "p.toullec",
+          "p.vigouroux",
+          "q.girard",
+          "q.lefloch",
+          "r.gourmelen",
+          "r.hamon",
+          "r.henaff",
+          "r.morel",
+          "r.salaun",
+          "r.uguen",
+          "s.cariou",
+          "s.even",
+          "s.fournier",
+          "s.jegou",
+          "s.kerjean",
+          "s.kervella",
+          "s.martin",
+          "s.morvan",
+          "s.quillien",
+          "s.quillien2",
+          "s.richard",
+          "s.simon",
+          "support-n2",
+          "t.cloarec",
+          "t.jegou",
+          "t.le-corre",
+          "t.le-gall",
+          "t.lefloch",
+          "t.quere",
+          "t.simon",
+          "u.floch",
+          "v.even",
+          "v.gourmelen",
+          "v.kerjean",
+          "x.gourmelen",
+          "x.quillien",
+          "y.bernard",
+          "y.cariou",
+          "y.dubois",
+          "y.floch",
+          "y.hamon",
+          "y.jaouen",
+          "y.le-roux",
+          "y.michel",
+          "y.nedelec",
+          "y.prigent",
+          "z.jegou",
+          "z.lefloch",
+          "z.morel",
+          "z.pennec"
+        ],
+        "expected": "totp=true for every object from GET /api/kc/users",
+        "detail": "260 of 260 users have totp=false.",
+        "evidence_page": "/kc/users"
+      },
+      "evidence_before": {
+        "image": "evidence/C2_before.png",
+        "sha256": "831d74a4a7e641f43c85153ce8acd30aba2db0ee419e8dd035333065e5fcfd6d",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "a.abgrall adele.abgrall@kerlann-banque.example admin yes no; a.allain anne.allain@kerlann-banque.example - yes no; a.bertrand antoine.bertrand@kerlann-banque.example - yes no; a.briand anne.briand@kerlann-banque.example - yes no; a.derrien anne.derrien@kerlann-banque.example - yes no; a.floch alexandre.floch@kerlann-banque.example - yes no; a.fournier adele.fournier@kerlann-banque.example - yes no; a.jegou alexandre.jegou@kerlann-banque.example - yes no; a.kerjean antoine.kerjean@kerlann-banque.example - yes no; a.kervella alexandre.kervella@kerlann-banque.example - yes no; a.le-roux antoine.le-roux@kerlann-banque.example - yes no; a.lefebvre alexandre.lefebvre@kerlann-banque.example - yes no; a.lefloch arthur.lefloch@kerlann-banque.example - yes no; a.madec alexandre.madec@kerlann-banque.example - yes no; a.mercier arthur.mercier@kerlann-banque.example - yes no; a.pennec anne.pennec@kerlann-banque.example - yes no; a.quere alexandre.quere@kerlann-banque.example - yes no; a.quere2 arthur.quere2@kerlann-banque.example - yes no; a.quillien adele.quillien@kerlann-banque.example - yes no; a.raoul adele.raoul@kerlann-banque.example - yes no; a.robert arthur.robert@kerlann-banque.example - yes no; a.roux anne.roux@kerlann-banque.example - yes no; a.roux2 arthur.roux2@kerlann-banque.example - yes no; b.bihan bastien.bihan@kerlann-banque.example - yes no; b.bonnet bastien.bonnet@kerlann-banque.example - yes no; b.cariou bleuenn.cariou@kerlann-banque.example admin yes no; b.cloarec bleuenn.cloarec@kerlann-banque.example - yes no; b.dupont bleuenn.dupont@kerlann-banque.example - yes no; b.even bleuenn.even@kerlann-banque.example - yes no; b.kerbrat bastien.kerbrat@kerlann-banque.example - yes no; b.kerjean bastien.kerjean@kerlann-banque.example - yes no; b.madec bastien.madec@kerlann-banque.example - yes no; b.morel bastien.morel@kerlann-banque.example - yes no; b.quillien bleuenn.quillien@kerlann-banque.example - yes no; b.roux bleuenn.roux@kerlann-banque.example - yes no; b.uguen bleuenn.uguen@kerlann-banque.example - yes no; c.abgrall corentin.abgrall@kerlann-banque.example - yes no; c.bertrand claire.bertrand@kerlann-banque.example - yes no; c.denis corentin.denis@kerlann-banque.example admin yes no; c.durand celine.durand@kerlann-banque.example - yes no; c.floch corentin.floch@kerlann-banque.example - yes no; c.guillou chloe.guillou@kerlann-banque.example - yes no; c.jacq claire.jacq@kerlann-banque.example - yes no; c.lagadec camille.lagadec@kerlann-banque.example - yes no; c.lambert chloe.lambert@kerlann-banque.example - yes no; c.le-bihan celine.le-bihan@kerlann-banque.example - yes no; c.leroy chloe.leroy@kerlann-banque.example - yes no; c.madec chloe.madec@kerlann-banque.example - yes no; c.quillien corentin.quillien@kerlann-banque.example - yes no; c.quillien2 claire.quillien2@kerlann-banque.example - yes no; c.raoul camille.raoul@kerlann-banque.example - yes no; c.raoul2 corentin.raoul2@kerlann-banque.example - yes no; c.robert celine.robert@kerlann-banque.example - yes no; c.roux chloe.roux@kerlann-banque.example - yes no; c.uguen celine.uguen@kerlann-banque.example - yes no; d.jaouen damien.jaouen@kerlann-banque.example - yes no; d.madec damien.madec@kerlann-banque.example - yes no; d.martin denez.martin@kerlann-banque.example - yes no; d.roux denez.roux@kerlann-banque.example - yes no; e.david enora.david@kerlann-banque.example - yes no; e.dubois elodie.dubois@kerlann-banque.example - yes no; e.floch erwan.floch@kerlann-banque.example admin yes no; e.girard elodie.girard@kerlann-banque.example - yes no; e.le-gall enora.le-gall@kerlann-banque.example - yes no; e.le-gall2 emma.le-gall2@kerlann-banque.example - yes no; e.lefloch emma.lefloch@kerlann-banque.example - yes no; e.michel emma.michel@kerlann-banque.example - yes no; e.morel erwan.morel@kerlann-banque.example - yes no; e.nedelec erwan.nedelec@kerlann-banque.example - yes no; e.petit erwan.petit@kerlann-banque.example - yes no; e.robert elodie.robert@kerlann-banque.example - yes no; e.salaun enora.salaun@kerlann-banque.example - yes no; e.tanguy erwan.tanguy@kerlann-banque.example - yes no; e.toullec elodie.toullec@kerlann-banque.example - yes no; e.vincent elodie.vincent@kerlann-banque.example - yes no; e.vincent2 emma.vincent2@kerlann-banque.example - yes no; f.daniel fabien.daniel@kerlann-banque.example - yes no; f.guillou fabien.guillou@kerlann-banque.example - yes no; f.kerjean fabien.kerjean@kerlann-banque.example - yes no; g.bernard gabriel.bernard@kerlann-banque.example - yes no; g.bertrand gabriel.bertrand@kerlann-banque.example - yes no; g.even gwen.even@kerlann-banque.example - yes no; g.gourvennec gwen.gourvennec@kerlann-banque.example - yes no; g.henaff gabriel.henaff@kerlann-banque.example - yes no; g.herve gwenael.herve@kerlann-banque.example admin yes no; g.kerjean gaelle.kerjean@kerlann-banque.example - yes no; g.lambert goulven.lambert@kerlann-banque.example - yes no; g.lambert2 gwen.lambert2@kerlann-banque.example - yes no; g.laurent gabriel.laurent@kerlann-banque.example - yes no; g.lefloch gwen.lefloch@kerlann-banque.example - yes no; g.morel gabriel.morel@kerlann-banque.example - yes no; g.petit gwen.petit@kerlann-banque.example - yes no; g.richard goulven.richard@kerlann-banque.example - yes no; h.gourvennec herve.gourvennec@kerlann-banque.example - yes no; h.le-roux herve.le-roux@kerlann-banque.example - yes no; h.moreau hugo.moreau@kerlann-banque.example - yes no; h.robert herve.robert@kerlann-banque.example - yes no; i.girard ivona.girard@kerlann-banque.example - yes no; i.gourmelen isabelle.gourmelen@kerlann-banque.example - yes no; i.jaouen isabelle.jaouen@kerlann-banque.example - yes no",
+          "field_boxes": [
+            [
+              20,
+              152,
+              1080,
+              183
+            ],
+            [
+              20,
+              183,
+              1080,
+              214
+            ],
+            [
+              20,
+              214,
+              1080,
+              245
+            ],
+            [
+              20,
+              245,
+              1080,
+              276
+            ],
+            [
+              20,
+              276,
+              1080,
+              307
+            ],
+            [
+              20,
+              307,
+              1080,
+              338
+            ],
+            [
+              20,
+              338,
+              1080,
+              369
+            ],
+            [
+              20,
+              369,
+              1080,
+              400
+            ],
+            [
+              20,
+              400,
+              1080,
+              431
+            ],
+            [
+              20,
+              431,
+              1080,
+              462
+            ],
+            [
+              20,
+              462,
+              1080,
+              493
+            ],
+            [
+              20,
+              493,
+              1080,
+              524
+            ],
+            [
+              20,
+              524,
+              1080,
+              555
+            ],
+            [
+              20,
+              555,
+              1080,
+              586
+            ],
+            [
+              20,
+              586,
+              1080,
+              617
+            ],
+            [
+              20,
+              617,
+              1080,
+              648
+            ],
+            [
+              20,
+              648,
+              1080,
+              679
+            ],
+            [
+              20,
+              679,
+              1080,
+              710
+            ],
+            [
+              20,
+              710,
+              1080,
+              741
+            ],
+            [
+              20,
+              741,
+              1080,
+              772
+            ],
+            [
+              20,
+              772,
+              1080,
+              803
+            ],
+            [
+              20,
+              803,
+              1080,
+              834
+            ],
+            [
+              20,
+              834,
+              1080,
+              865
+            ],
+            [
+              20,
+              865,
+              1080,
+              896
+            ],
+            [
+              20,
+              896,
+              1080,
+              927
+            ],
+            [
+              20,
+              927,
+              1080,
+              958
+            ],
+            [
+              20,
+              958,
+              1080,
+              989
+            ],
+            [
+              20,
+              989,
+              1080,
+              1020
+            ],
+            [
+              20,
+              1020,
+              1080,
+              1051
+            ],
+            [
+              20,
+              1051,
+              1080,
+              1082
+            ],
+            [
+              20,
+              1082,
+              1080,
+              1113
+            ],
+            [
+              20,
+              1113,
+              1080,
+              1144
+            ],
+            [
+              20,
+              1144,
+              1080,
+              1175
+            ],
+            [
+              20,
+              1175,
+              1080,
+              1206
+            ],
+            [
+              20,
+              1206,
+              1080,
+              1237
+            ],
+            [
+              20,
+              1237,
+              1080,
+              1268
+            ],
+            [
+              20,
+              1268,
+              1080,
+              1299
+            ],
+            [
+              20,
+              1299,
+              1080,
+              1330
+            ],
+            [
+              20,
+              1330,
+              1080,
+              1361
+            ],
+            [
+              20,
+              1361,
+              1080,
+              1392
+            ],
+            [
+              20,
+              1392,
+              1080,
+              1423
+            ],
+            [
+              20,
+              1423,
+              1080,
+              1454
+            ],
+            [
+              20,
+              1454,
+              1080,
+              1485
+            ],
+            [
+              20,
+              1485,
+              1080,
+              1516
+            ],
+            [
+              20,
+              1516,
+              1080,
+              1547
+            ],
+            [
+              20,
+              1547,
+              1080,
+              1578
+            ],
+            [
+              20,
+              1578,
+              1080,
+              1609
+            ],
+            [
+              20,
+              1609,
+              1080,
+              1640
+            ],
+            [
+              20,
+              1640,
+              1080,
+              1671
+            ],
+            [
+              20,
+              1671,
+              1080,
+              1702
+            ],
+            [
+              20,
+              1702,
+              1080,
+              1733
+            ],
+            [
+              20,
+              1733,
+              1080,
+              1764
+            ],
+            [
+              20,
+              1764,
+              1080,
+              1795
+            ],
+            [
+              20,
+              1795,
+              1080,
+              1826
+            ],
+            [
+              20,
+              1826,
+              1080,
+              1857
+            ],
+            [
+              20,
+              1857,
+              1080,
+              1888
+            ],
+            [
+              20,
+              1888,
+              1080,
+              1919
+            ],
+            [
+              20,
+              1919,
+              1080,
+              1950
+            ],
+            [
+              20,
+              1950,
+              1080,
+              1981
+            ],
+            [
+              20,
+              1981,
+              1080,
+              2012
+            ],
+            [
+              20,
+              2012,
+              1080,
+              2043
+            ],
+            [
+              20,
+              2043,
+              1080,
+              2074
+            ],
+            [
+              20,
+              2074,
+              1080,
+              2105
+            ],
+            [
+              20,
+              2105,
+              1080,
+              2136
+            ],
+            [
+              20,
+              2136,
+              1080,
+              2167
+            ],
+            [
+              20,
+              2167,
+              1080,
+              2198
+            ],
+            [
+              20,
+              2198,
+              1080,
+              2229
+            ],
+            [
+              20,
+              2229,
+              1080,
+              2260
+            ],
+            [
+              20,
+              2260,
+              1080,
+              2291
+            ],
+            [
+              20,
+              2291,
+              1080,
+              2322
+            ],
+            [
+              20,
+              2322,
+              1080,
+              2353
+            ],
+            [
+              20,
+              2353,
+              1080,
+              2384
+            ],
+            [
+              20,
+              2384,
+              1080,
+              2415
+            ],
+            [
+              20,
+              2415,
+              1080,
+              2446
+            ],
+            [
+              20,
+              2446,
+              1080,
+              2477
+            ],
+            [
+              20,
+              2477,
+              1080,
+              2508
+            ],
+            [
+              20,
+              2508,
+              1080,
+              2539
+            ],
+            [
+              20,
+              2539,
+              1080,
+              2570
+            ],
+            [
+              20,
+              2570,
+              1080,
+              2601
+            ],
+            [
+              20,
+              2601,
+              1080,
+              2632
+            ],
+            [
+              20,
+              2632,
+              1080,
+              2663
+            ],
+            [
+              20,
+              2663,
+              1080,
+              2694
+            ],
+            [
+              20,
+              2694,
+              1080,
+              2725
+            ],
+            [
+              20,
+              2725,
+              1080,
+              2756
+            ],
+            [
+              20,
+              2756,
+              1080,
+              2787
+            ],
+            [
+              20,
+              2787,
+              1080,
+              2818
+            ],
+            [
+              20,
+              2818,
+              1080,
+              2849
+            ],
+            [
+              20,
+              2849,
+              1080,
+              2880
+            ],
+            [
+              20,
+              2880,
+              1080,
+              2911
+            ],
+            [
+              20,
+              2911,
+              1080,
+              2942
+            ],
+            [
+              20,
+              2942,
+              1080,
+              2973
+            ],
+            [
+              20,
+              2973,
+              1080,
+              3004
+            ],
+            [
+              20,
+              3004,
+              1080,
+              3035
+            ],
+            [
+              20,
+              3035,
+              1080,
+              3066
+            ],
+            [
+              20,
+              3066,
+              1080,
+              3097
+            ],
+            [
+              20,
+              3097,
+              1080,
+              3128
+            ],
+            [
+              20,
+              3128,
+              1080,
+              3159
+            ],
+            [
+              20,
+              3159,
+              1080,
+              3190
+            ],
+            [
+              20,
+              3190,
+              1080,
+              3221
+            ],
+            [
+              20,
+              3221,
+              1080,
+              3252
+            ]
+          ],
+          "comment": "All 100 visible user rows show MFA (OTP CONFIGURED) as no, consistent with the automated finding that 260 of 260 users have totp=false.",
+          "pii": [
+            {
+              "text": "adele.abgrall@kerlann-banque.example",
+              "box": [
+                172,
+                160,
+                550,
+                175
+              ]
+            },
+            {
+              "text": "anne.allain@kerlann-banque.example",
+              "box": [
+                172,
+                191,
+                550,
+                206
+              ]
+            },
+            {
+              "text": "antoine.bertrand@kerlann-banque.example",
+              "box": [
+                172,
+                222,
+                550,
+                237
+              ]
+            },
+            {
+              "text": "anne.briand@kerlann-banque.example",
+              "box": [
+                172,
+                253,
+                550,
+                268
+              ]
+            },
+            {
+              "text": "anne.derrien@kerlann-banque.example",
+              "box": [
+                172,
+                284,
+                550,
+                299
+              ]
+            },
+            {
+              "text": "alexandre.floch@kerlann-banque.example",
+              "box": [
+                172,
+                315,
+                550,
+                330
+              ]
+            },
+            {
+              "text": "adele.fournier@kerlann-banque.example",
+              "box": [
+                172,
+                346,
+                550,
+                361
+              ]
+            },
+            {
+              "text": "alexandre.jegou@kerlann-banque.example",
+              "box": [
+                172,
+                377,
+                550,
+                392
+              ]
+            },
+            {
+              "text": "antoine.kerjean@kerlann-banque.example",
+              "box": [
+                172,
+                408,
+                550,
+                423
+              ]
+            },
+            {
+              "text": "alexandre.kervella@kerlann-banque.example",
+              "box": [
+                172,
+                439,
+                550,
+                454
+              ]
+            },
+            {
+              "text": "antoine.le-roux@kerlann-banque.example",
+              "box": [
+                172,
+                470,
+                550,
+                485
+              ]
+            },
+            {
+              "text": "alexandre.lefebvre@kerlann-banque.example",
+              "box": [
+                172,
+                501,
+                550,
+                516
+              ]
+            },
+            {
+              "text": "arthur.lefloch@kerlann-banque.example",
+              "box": [
+                172,
+                532,
+                550,
+                547
+              ]
+            },
+            {
+              "text": "alexandre.madec@kerlann-banque.example",
+              "box": [
+                172,
+                563,
+                550,
+                578
+              ]
+            },
+            {
+              "text": "arthur.mercier@kerlann-banque.example",
+              "box": [
+                172,
+                594,
+                550,
+                609
+              ]
+            },
+            {
+              "text": "anne.pennec@kerlann-banque.example",
+              "box": [
+                172,
+                625,
+                550,
+                640
+              ]
+            },
+            {
+              "text": "alexandre.quere@kerlann-banque.example",
+              "box": [
+                172,
+                656,
+                550,
+                671
+              ]
+            },
+            {
+              "text": "arthur.quere2@kerlann-banque.example",
+              "box": [
+                172,
+                687,
+                550,
+                702
+              ]
+            },
+            {
+              "text": "adele.quillien@kerlann-banque.example",
+              "box": [
+                172,
+                718,
+                550,
+                733
+              ]
+            },
+            {
+              "text": "adele.raoul@kerlann-banque.example",
+              "box": [
+                172,
+                749,
+                550,
+                764
+              ]
+            },
+            {
+              "text": "arthur.robert@kerlann-banque.example",
+              "box": [
+                172,
+                780,
+                550,
+                795
+              ]
+            },
+            {
+              "text": "anne.roux@kerlann-banque.example",
+              "box": [
+                172,
+                811,
+                550,
+                826
+              ]
+            },
+            {
+              "text": "arthur.roux2@kerlann-banque.example",
+              "box": [
+                172,
+                842,
+                550,
+                857
+              ]
+            },
+            {
+              "text": "bastien.bihan@kerlann-banque.example",
+              "box": [
+                172,
+                873,
+                550,
+                888
+              ]
+            },
+            {
+              "text": "bastien.bonnet@kerlann-banque.example",
+              "box": [
+                172,
+                904,
+                550,
+                919
+              ]
+            },
+            {
+              "text": "bleuenn.cariou@kerlann-banque.example",
+              "box": [
+                172,
+                935,
+                550,
+                950
+              ]
+            },
+            {
+              "text": "bleuenn.cloarec@kerlann-banque.example",
+              "box": [
+                172,
+                966,
+                550,
+                981
+              ]
+            },
+            {
+              "text": "bleuenn.dupont@kerlann-banque.example",
+              "box": [
+                172,
+                997,
+                550,
+                1012
+              ]
+            },
+            {
+              "text": "bleuenn.even@kerlann-banque.example",
+              "box": [
+                172,
+                1028,
+                550,
+                1043
+              ]
+            },
+            {
+              "text": "bastien.kerbrat@kerlann-banque.example",
+              "box": [
+                172,
+                1059,
+                550,
+                1074
+              ]
+            },
+            {
+              "text": "bastien.kerjean@kerlann-banque.example",
+              "box": [
+                172,
+                1090,
+                550,
+                1105
+              ]
+            },
+            {
+              "text": "bastien.madec@kerlann-banque.example",
+              "box": [
+                172,
+                1121,
+                550,
+                1136
+              ]
+            },
+            {
+              "text": "bastien.morel@kerlann-banque.example",
+              "box": [
+                172,
+                1152,
+                550,
+                1167
+              ]
+            },
+            {
+              "text": "bleuenn.quillien@kerlann-banque.example",
+              "box": [
+                172,
+                1183,
+                550,
+                1198
+              ]
+            },
+            {
+              "text": "bleuenn.roux@kerlann-banque.example",
+              "box": [
+                172,
+                1214,
+                550,
+                1229
+              ]
+            },
+            {
+              "text": "bleuenn.uguen@kerlann-banque.example",
+              "box": [
+                172,
+                1245,
+                550,
+                1260
+              ]
+            },
+            {
+              "text": "corentin.abgrall@kerlann-banque.example",
+              "box": [
+                172,
+                1276,
+                550,
+                1291
+              ]
+            },
+            {
+              "text": "claire.bertrand@kerlann-banque.example",
+              "box": [
+                172,
+                1307,
+                550,
+                1322
+              ]
+            },
+            {
+              "text": "corentin.denis@kerlann-banque.example",
+              "box": [
+                172,
+                1338,
+                550,
+                1353
+              ]
+            },
+            {
+              "text": "celine.durand@kerlann-banque.example",
+              "box": [
+                172,
+                1369,
+                550,
+                1384
+              ]
+            },
+            {
+              "text": "corentin.floch@kerlann-banque.example",
+              "box": [
+                172,
+                1400,
+                550,
+                1415
+              ]
+            },
+            {
+              "text": "chloe.guillou@kerlann-banque.example",
+              "box": [
+                172,
+                1431,
+                550,
+                1446
+              ]
+            },
+            {
+              "text": "claire.jacq@kerlann-banque.example",
+              "box": [
+                172,
+                1462,
+                550,
+                1477
+              ]
+            },
+            {
+              "text": "camille.lagadec@kerlann-banque.example",
+              "box": [
+                172,
+                1493,
+                550,
+                1508
+              ]
+            },
+            {
+              "text": "chloe.lambert@kerlann-banque.example",
+              "box": [
+                172,
+                1524,
+                550,
+                1539
+              ]
+            },
+            {
+              "text": "celine.le-bihan@kerlann-banque.example",
+              "box": [
+                172,
+                1555,
+                550,
+                1570
+              ]
+            },
+            {
+              "text": "chloe.leroy@kerlann-banque.example",
+              "box": [
+                172,
+                1586,
+                550,
+                1601
+              ]
+            },
+            {
+              "text": "chloe.madec@kerlann-banque.example",
+              "box": [
+                172,
+                1617,
+                550,
+                1632
+              ]
+            },
+            {
+              "text": "corentin.quillien@kerlann-banque.example",
+              "box": [
+                172,
+                1648,
+                550,
+                1663
+              ]
+            },
+            {
+              "text": "claire.quillien2@kerlann-banque.example",
+              "box": [
+                172,
+                1679,
+                550,
+                1694
+              ]
+            },
+            {
+              "text": "camille.raoul@kerlann-banque.example",
+              "box": [
+                172,
+                1710,
+                550,
+                1725
+              ]
+            },
+            {
+              "text": "corentin.raoul2@kerlann-banque.example",
+              "box": [
+                172,
+                1741,
+                550,
+                1756
+              ]
+            },
+            {
+              "text": "celine.robert@kerlann-banque.example",
+              "box": [
+                172,
+                1772,
+                550,
+                1787
+              ]
+            },
+            {
+              "text": "chloe.roux@kerlann-banque.example",
+              "box": [
+                172,
+                1803,
+                550,
+                1818
+              ]
+            },
+            {
+              "text": "celine.uguen@kerlann-banque.example",
+              "box": [
+                172,
+                1834,
+                550,
+                1849
+              ]
+            },
+            {
+              "text": "damien.jaouen@kerlann-banque.example",
+              "box": [
+                172,
+                1865,
+                550,
+                1880
+              ]
+            },
+            {
+              "text": "damien.madec@kerlann-banque.example",
+              "box": [
+                172,
+                1896,
+                550,
+                1911
+              ]
+            },
+            {
+              "text": "denez.martin@kerlann-banque.example",
+              "box": [
+                172,
+                1927,
+                550,
+                1942
+              ]
+            },
+            {
+              "text": "denez.roux@kerlann-banque.example",
+              "box": [
+                172,
+                1958,
+                550,
+                1973
+              ]
+            },
+            {
+              "text": "enora.david@kerlann-banque.example",
+              "box": [
+                172,
+                1989,
+                550,
+                2004
+              ]
+            },
+            {
+              "text": "elodie.dubois@kerlann-banque.example",
+              "box": [
+                172,
+                2020,
+                550,
+                2035
+              ]
+            },
+            {
+              "text": "erwan.floch@kerlann-banque.example",
+              "box": [
+                172,
+                2051,
+                550,
+                2066
+              ]
+            },
+            {
+              "text": "elodie.girard@kerlann-banque.example",
+              "box": [
+                172,
+                2082,
+                550,
+                2097
+              ]
+            },
+            {
+              "text": "enora.le-gall@kerlann-banque.example",
+              "box": [
+                172,
+                2113,
+                550,
+                2128
+              ]
+            },
+            {
+              "text": "emma.le-gall2@kerlann-banque.example",
+              "box": [
+                172,
+                2144,
+                550,
+                2159
+              ]
+            },
+            {
+              "text": "emma.lefloch@kerlann-banque.example",
+              "box": [
+                172,
+                2175,
+                550,
+                2190
+              ]
+            },
+            {
+              "text": "emma.michel@kerlann-banque.example",
+              "box": [
+                172,
+                2206,
+                550,
+                2221
+              ]
+            },
+            {
+              "text": "erwan.morel@kerlann-banque.example",
+              "box": [
+                172,
+                2237,
+                550,
+                2252
+              ]
+            },
+            {
+              "text": "erwan.nedelec@kerlann-banque.example",
+              "box": [
+                172,
+                2268,
+                550,
+                2283
+              ]
+            },
+            {
+              "text": "erwan.petit@kerlann-banque.example",
+              "box": [
+                172,
+                2299,
+                550,
+                2314
+              ]
+            },
+            {
+              "text": "elodie.robert@kerlann-banque.example",
+              "box": [
+                172,
+                2330,
+                550,
+                2345
+              ]
+            },
+            {
+              "text": "enora.salaun@kerlann-banque.example",
+              "box": [
+                172,
+                2361,
+                550,
+                2376
+              ]
+            },
+            {
+              "text": "erwan.tanguy@kerlann-banque.example",
+              "box": [
+                172,
+                2392,
+                550,
+                2407
+              ]
+            },
+            {
+              "text": "elodie.toullec@kerlann-banque.example",
+              "box": [
+                172,
+                2423,
+                550,
+                2438
+              ]
+            },
+            {
+              "text": "elodie.vincent@kerlann-banque.example",
+              "box": [
+                172,
+                2454,
+                550,
+                2469
+              ]
+            },
+            {
+              "text": "emma.vincent2@kerlann-banque.example",
+              "box": [
+                172,
+                2485,
+                550,
+                2500
+              ]
+            },
+            {
+              "text": "fabien.daniel@kerlann-banque.example",
+              "box": [
+                172,
+                2516,
+                550,
+                2531
+              ]
+            },
+            {
+              "text": "fabien.guillou@kerlann-banque.example",
+              "box": [
+                172,
+                2547,
+                550,
+                2562
+              ]
+            },
+            {
+              "text": "fabien.kerjean@kerlann-banque.example",
+              "box": [
+                172,
+                2578,
+                550,
+                2593
+              ]
+            },
+            {
+              "text": "gabriel.bernard@kerlann-banque.example",
+              "box": [
+                172,
+                2609,
+                550,
+                2624
+              ]
+            },
+            {
+              "text": "gabriel.bertrand@kerlann-banque.example",
+              "box": [
+                172,
+                2640,
+                550,
+                2655
+              ]
+            },
+            {
+              "text": "gwen.even@kerlann-banque.example",
+              "box": [
+                172,
+                2671,
+                550,
+                2686
+              ]
+            },
+            {
+              "text": "gwen.gourvennec@kerlann-banque.example",
+              "box": [
+                172,
+                2702,
+                550,
+                2717
+              ]
+            },
+            {
+              "text": "gabriel.henaff@kerlann-banque.example",
+              "box": [
+                172,
+                2733,
+                550,
+                2748
+              ]
+            },
+            {
+              "text": "gwenael.herve@kerlann-banque.example",
+              "box": [
+                172,
+                2764,
+                550,
+                2779
+              ]
+            },
+            {
+              "text": "gaelle.kerjean@kerlann-banque.example",
+              "box": [
+                172,
+                2795,
+                550,
+                2810
+              ]
+            },
+            {
+              "text": "goulven.lambert@kerlann-banque.example",
+              "box": [
+                172,
+                2826,
+                550,
+                2841
+              ]
+            },
+            {
+              "text": "gwen.lambert2@kerlann-banque.example",
+              "box": [
+                172,
+                2857,
+                550,
+                2872
+              ]
+            },
+            {
+              "text": "gabriel.laurent@kerlann-banque.example",
+              "box": [
+                172,
+                2888,
+                550,
+                2903
+              ]
+            },
+            {
+              "text": "gwen.lefloch@kerlann-banque.example",
+              "box": [
+                172,
+                2919,
+                550,
+                2934
+              ]
+            },
+            {
+              "text": "gabriel.morel@kerlann-banque.example",
+              "box": [
+                172,
+                2950,
+                550,
+                2965
+              ]
+            },
+            {
+              "text": "gwen.petit@kerlann-banque.example",
+              "box": [
+                172,
+                2981,
+                550,
+                2996
+              ]
+            },
+            {
+              "text": "goulven.richard@kerlann-banque.example",
+              "box": [
+                172,
+                3012,
+                550,
+                3027
+              ]
+            },
+            {
+              "text": "herve.gourvennec@kerlann-banque.example",
+              "box": [
+                172,
+                3043,
+                550,
+                3058
+              ]
+            },
+            {
+              "text": "herve.le-roux@kerlann-banque.example",
+              "box": [
+                172,
+                3074,
+                550,
+                3089
+              ]
+            },
+            {
+              "text": "hugo.moreau@kerlann-banque.example",
+              "box": [
+                172,
+                3105,
+                550,
+                3120
+              ]
+            },
+            {
+              "text": "herve.robert@kerlann-banque.example",
+              "box": [
+                172,
+                3136,
+                550,
+                3151
+              ]
+            },
+            {
+              "text": "ivona.girard@kerlann-banque.example",
+              "box": [
+                172,
+                3167,
+                550,
+                3182
+              ]
+            },
+            {
+              "text": "isabelle.gourmelen@kerlann-banque.example",
+              "box": [
+                172,
+                3198,
+                550,
+                3213
+              ]
+            },
+            {
+              "text": "isabelle.jaouen@kerlann-banque.example",
+              "box": [
+                172,
+                3229,
+                550,
+                3244
+              ]
+            }
+          ],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 100,
+          "pii_masked": 100,
+          "pii_found_by_model": 94
+        },
+        "page": "/kc/users",
+        "page_verified": null,
+        "ts": "2026-11-12 13:12:13"
+      },
+      "status_before": "fail",
+      "finding": {
+        "id": "F-02",
+        "severity": "elevee",
+        "status": "open",
+        "owner": "IT department — IAM team",
+        "due": "2027-02-10"
+      }
+    },
+    {
+      "control": {
+        "id": "C3",
+        "rule": "PSI-4.3",
+        "title": "Strong password policy with length and complexity",
+        "objective": "The realm passwordPolicy requires minimum length of 12 characters with complexity requirements.",
+        "test_procedure": "Retrieve GET /api/kc/realm and parse passwordPolicy to verify length and complexity items are present.",
+        "expected": "passwordPolicy contains length(12) or greater and upperCase(1), lowerCase(1), digits(1) and specialChars(1)",
+        "severity": "moyenne",
+        "references": [
+          "DORA 9(4)(d)"
+        ],
+        "risk": "Weak passwords can be guessed or brute-forced, leading to unauthorized access to critical identity services.",
+        "recommendation": "Set the realm password policy to enforce at least 12 characters with upper-case, lower-case, digit and special-character complexity.",
+        "cause": "The realm password policy was likely left at Keycloak defaults and never hardened to the internal standard.",
+        "evidence_page": "/kc/realm",
+        "remediation": "config"
+      },
+      "test": {
+        "script": "scripts/C3_PSI-4.3.py",
+        "sha256": "f68b831a9eaf64e10c6c7624beb2983d3dffabed3976b0b259ebcf22eadf7d83",
+        "origin": "generated",
+        "code": "import requests\nimport json\nimport os\nimport sys\nimport re\nif \"LAB_URL\" not in os.environ:\n    sys.stderr.write(\"missing LAB_URL\\n\")\n    sys.exit(2)\nif \"LAB_TOKEN\" not in os.environ:\n    sys.stderr.write(\"missing LAB_TOKEN\\n\")\n    sys.exit(2)\nbaseUrl = os.environ[\"LAB_URL\"]\ntokenVal = os.environ[\"LAB_TOKEN\"]\nbaseUrl = baseUrl.rstrip(\"/\")\nheaders = {\"Authorization\": \"Bearer \" + tokenVal}\ntry:\n    respRealm = requests.get(baseUrl + \"/api/kc/realm\", headers=headers)\nexcept Exception as ex:\n    sys.stderr.write(\"request failed for realm api: \" + str(ex) + \"\\n\")\n    sys.exit(2)\nif respRealm.status_code != 200:\n    sys.stderr.write(\"realm api returned status \" + str(respRealm.status_code) + \"\\n\")\n    sys.exit(2)\ntry:\n    respEvidence = requests.get(baseUrl + \"/kc/realm\", headers=headers)\nexcept Exception as ex:\n    sys.stderr.write(\"request failed for evidence page: \" + str(ex) + \"\\n\")\n    sys.exit(2)\nif respEvidence.status_code != 200:\n    sys.stderr.write(\"evidence page returned status \" + str(respEvidence.status_code) + \"\\n\")\n    sys.exit(2)\ntry:\n    dataRealm = respRealm.json()\nexcept Exception as ex:\n    sys.stderr.write(\"invalid json for realm: \" + str(ex) + \"\\n\")\n    sys.exit(2)\nif not isinstance(dataRealm, dict):\n    sys.stderr.write(\"unexpected realm data type\\n\")\n    sys.exit(2)\npolicyVal = dataRealm.get(\"passwordPolicy\")\nif policyVal is not None and not isinstance(policyVal, str):\n    sys.stderr.write(\"unexpected passwordPolicy type\\n\")\n    sys.exit(2)\nexpectedReq = \"passwordPolicy contains length(12) or greater and upperCase(1), lowerCase(1), digits(1) and specialChars(1)\"\nif policyVal is None:\n    statusVal = \"fail\"\n    observedVal = None\n    detailVal = \"Realm password policy is missing and does not satisfy length 12 or greater with upper-case, lower-case, digit and special-character requirements.\"\nelse:\n    foundPairs = re.findall(r\"([A-Za-z]+)\\s*\\(\\s*(\\d+)\\s*\\)\", policyVal)\n    parsedVals = {}\n    for pairName, pairNum in foundPairs:\n        parsedVals[pairName] = int(pairNum)\n    hasLength = \"length\" in parsedVals and parsedVals[\"length\"] >= 12\n    hasUpper = \"upperCase\" in parsedVals and parsedVals[\"upperCase\"] >= 1\n    hasLower = \"lowerCase\" in parsedVals and parsedVals[\"lowerCase\"] >= 1\n    hasDigits = \"digits\" in parsedVals and parsedVals[\"digits\"] >= 1\n    hasSpecial = \"specialChars\" in parsedVals and parsedVals[\"specialChars\"] >= 1\n    if hasLength and hasUpper and hasLower and hasDigits and hasSpecial:\n        statusVal = \"pass\"\n        observedVal = policyVal\n        detailVal = \"Realm password policy satisfies length 12 or greater with upper-case, lower-case, digit and special-character requirements.\"\n    else:\n        statusVal = \"fail\"\n        observedVal = policyVal\n        detailVal = \"Realm password policy does not satisfy length 12 or greater with upper-case, lower-case, digit and special-character requirements.\"\nprint(json.dumps({\"status\": statusVal, \"observed\": observedVal, \"expected\": expectedReq, \"detail\": detailVal, \"evidence_page\": \"/kc/realm\"}))\n",
+        "requests": 2
+      },
+      "before": {
+        "status": "fail",
+        "observed": "length(8)",
+        "expected": "passwordPolicy contains length(12) or greater and upperCase(1), lowerCase(1), digits(1) and specialChars(1)",
+        "detail": "Realm password policy does not satisfy length 12 or greater with upper-case, lower-case, digit and special-character requirements.",
+        "evidence_page": "/kc/realm"
+      },
+      "evidence_before": {
+        "image": "evidence/C3_before.png",
+        "sha256": "0da5a4d8e337ab901abf295d28d1a8ec74737e4d04fac90de5b934dfd080f61a",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "passwordPolicy length(8)",
+          "field_boxes": [
+            [
+              24,
+              228,
+              1076,
+              257
+            ]
+          ],
+          "comment": "The screenshot shows passwordPolicy as length(8), which lacks the required length 12 and complexity items.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 0,
+          "pii_masked": 0,
+          "pii_found_by_model": 0
+        },
+        "page": "/kc/realm",
+        "page_verified": null,
+        "ts": "2026-11-12 13:10:24"
+      },
+      "status_before": "fail",
+      "finding": {
+        "id": "F-05",
+        "severity": "moyenne",
+        "status": "open",
+        "owner": "IT department — IAM team",
+        "due": "2027-05-11"
+      }
+    },
+    {
+      "control": {
+        "id": "C4",
+        "rule": "PSI-4.4",
+        "title": "Account lockout after repeated login failures",
+        "objective": "Account lockout on repeated login failures is enabled and triggers after at most 5 failures.",
+        "test_procedure": "Retrieve GET /api/kc/realm and verify bruteForceProtected is true and failureFactor is less than or equal to 5.",
+        "expected": "bruteForceProtected=true and failureFactor<=5",
+        "severity": "moyenne",
+        "references": [
+          "DORA 9(4)(c)"
+        ],
+        "risk": "Without lockout, attackers can perform unlimited online password-guessing attacks against all accounts.",
+        "recommendation": "Enable brute-force protection in the realm and set the failure threshold to 5 or fewer attempts.",
+        "cause": "Brute-force protection was likely never enabled or was configured with a permissive threshold.",
+        "evidence_page": "/kc/realm",
+        "remediation": "config"
+      },
+      "test": {
+        "script": "scripts/C4_PSI-4.4.py",
+        "sha256": "c9a1e15280e49977233500a78db8fcb210cd34bab53c115f5a46ee2a5bf3c98b",
+        "origin": "generated",
+        "code": "import requests\nimport json\nimport os\nimport sys\nimport re\n\nif \"LAB_URL\" not in os.environ:\n    sys.stderr.write(\"missing LAB_URL\\n\")\n    sys.exit(2)\nif \"LAB_TOKEN\" not in os.environ:\n    sys.stderr.write(\"missing LAB_TOKEN\\n\")\n    sys.exit(2)\nbase_url = os.environ[\"LAB_URL\"]\ntoken = os.environ[\"LAB_TOKEN\"]\nbase_url = base_url.rstrip(\"/\")\nheaders = {\"Authorization\": \"Bearer \" + token}\nr = requests.get(base_url + \"/api/kc/realm\", headers=headers, timeout=20)\nif r.status_code != 200:\n    sys.stderr.write(\"GET /api/kc/realm failed with status \" + str(r.status_code) + \"\\n\")\n    sys.exit(2)\ntry:\n    data = r.json()\nexcept Exception:\n    sys.stderr.write(\"invalid json for /api/kc/realm\\n\")\n    sys.exit(2)\nif type(data) is not dict:\n    sys.stderr.write(\"unexpected data type for realm\\n\")\n    sys.exit(2)\nif \"bruteForceProtected\" not in data:\n    sys.stderr.write(\"missing bruteForceProtected\\n\")\n    sys.exit(2)\nif \"failureFactor\" not in data:\n    sys.stderr.write(\"missing failureFactor\\n\")\n    sys.exit(2)\nbrute = data[\"bruteForceProtected\"]\nfactor = data[\"failureFactor\"]\nif type(brute) is not bool:\n    sys.stderr.write(\"unexpected type for bruteForceProtected\\n\")\n    sys.exit(2)\nif type(factor) is not int:\n    sys.stderr.write(\"unexpected type for failureFactor\\n\")\n    sys.exit(2)\ne = requests.get(base_url + \"/kc/realm\", headers=headers, timeout=20)\nif e.status_code != 200:\n    sys.stderr.write(\"GET /kc/realm failed with status \" + str(e.status_code) + \"\\n\")\n    sys.exit(2)\npage_text = e.text\nif type(page_text) is not str:\n    sys.stderr.write(\"unexpected page type for /kc/realm\\n\")\n    sys.exit(2)\nobserved = {\"bruteForceProtected\": brute, \"failureFactor\": factor}\nexpected = \"bruteForceProtected=true and failureFactor<=5\"\ndetail = \"Checked 1 realm; bruteForceProtected is \" + str(brute).lower() + \" and failureFactor is \" + str(factor) + \".\"\nif brute and factor <= 5:\n    result = {\"status\": \"pass\", \"observed\": observed, \"expected\": expected, \"detail\": detail, \"evidence_page\": \"/kc/realm\"}\nelse:\n    result = {\"status\": \"fail\", \"observed\": observed, \"expected\": expected, \"detail\": detail, \"evidence_page\": \"/kc/realm\"}\nprint(json.dumps(result))\n",
+        "requests": 2
+      },
+      "before": {
+        "status": "fail",
+        "observed": {
+          "bruteForceProtected": false,
+          "failureFactor": 30
+        },
+        "expected": "bruteForceProtected=true and failureFactor<=5",
+        "detail": "Checked 1 realm; bruteForceProtected is false and failureFactor is 30.",
+        "evidence_page": "/kc/realm"
+      },
+      "evidence_before": {
+        "image": "evidence/C4_before.png",
+        "sha256": "0fb1d09d20e66857909336e66ccb6df9e13b2dea5c18c6d931772729ac82caca",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "bruteForceProtected False; failureFactor 30",
+          "field_boxes": [
+            [
+              26,
+              244,
+              1074,
+              279
+            ],
+            [
+              26,
+              314,
+              1074,
+              348
+            ]
+          ],
+          "comment": "Screenshot shows bruteForceProtected is False and failureFactor is 30, matching the automated failure.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 0,
+          "pii_masked": 0,
+          "pii_found_by_model": 0
+        },
+        "page": "/kc/realm",
+        "page_verified": null,
+        "ts": "2026-11-12 13:10:05"
+      },
+      "status_before": "fail",
+      "finding": {
+        "id": "F-06",
+        "severity": "moyenne",
+        "status": "open",
+        "owner": "IT department — IAM team",
+        "due": "2027-05-11"
+      }
+    },
+    {
+      "control": {
+        "id": "C5",
+        "rule": "PSI-4.5",
+        "title": "Idle session timeout limited to 15 minutes",
+        "objective": "Idle SSO sessions expire after at most 15 minutes and idle timeout is not disabled.",
+        "test_procedure": "Retrieve GET /api/kc/realm and verify ssoSessionIdleTimeout is set to 900 seconds or less.",
+        "expected": "ssoSessionIdleTimeout<=900 (seconds) and not disabled or zero",
+        "severity": "moyenne",
+        "references": [
+          "DORA 9(4)(c)"
+        ],
+        "risk": "Overly long idle sessions allow session hijacking and unauthorized use of unattended workstations.",
+        "recommendation": "Set the realm idle session timeout to 900 seconds or less.",
+        "cause": "The realm session timeout was likely left at the Keycloak default value exceeding 15 minutes.",
+        "evidence_page": "/kc/realm",
+        "remediation": "config"
+      },
+      "test": {
+        "script": "scripts/C5_PSI-4.5.py",
+        "sha256": "8f2905c677d5572122789b38a074e9bd2c2f961ed8b9b665665a94409f3a0c7b",
+        "origin": "generated",
+        "code": "import requests\nimport json\nimport os\nimport sys\nimport re\n\ntry:\n    base_url = os.environ[\"LAB_URL\"]\n    token_value = os.environ[\"LAB_TOKEN\"]\nexcept KeyError:\n    sys.stderr.write(\"missing LAB_URL or LAB_TOKEN\\n\")\n    sys.exit(2)\n\nheaders = {\"Authorization\": \"Bearer \" + token_value}\nbase_clean = base_url.rstrip(\"/\")\napi_url = base_clean + \"/api/kc/realm\"\nevidence_url = base_clean + \"/kc/realm\"\n\ntry:\n    resp = requests.get(api_url, headers=headers, timeout=30)\nexcept Exception:\n    sys.stderr.write(\"GET api/kc/realm request failed\\n\")\n    sys.exit(2)\n\nif resp.status_code != 200:\n    sys.stderr.write(\"GET api/kc/realm unexpected status\\n\")\n    sys.exit(2)\n\ntry:\n    realm_data = resp.json()\nexcept Exception:\n    sys.stderr.write(\"api/kc/realm invalid json\\n\")\n    sys.exit(2)\n\nif not isinstance(realm_data, dict):\n    sys.stderr.write(\"api/kc/realm unexpected data\\n\")\n    sys.exit(2)\n\nif \"ssoSessionIdleTimeout\" not in realm_data:\n    sys.stderr.write(\"ssoSessionIdleTimeout missing\\n\")\n    sys.exit(2)\n\ntimeout_value = realm_data[\"ssoSessionIdleTimeout\"]\n\nif isinstance(timeout_value, bool):\n    sys.stderr.write(\"ssoSessionIdleTimeout unexpected type\\n\")\n    sys.exit(2)\n\nif not isinstance(timeout_value, int):\n    sys.stderr.write(\"ssoSessionIdleTimeout unexpected type\\n\")\n    sys.exit(2)\n\ntry:\n    ev_resp = requests.get(evidence_url, headers=headers, timeout=30)\nexcept Exception:\n    sys.stderr.write(\"GET kc/realm request failed\\n\")\n    sys.exit(2)\n\nif ev_resp.status_code != 200:\n    sys.stderr.write(\"GET kc/realm unexpected status\\n\")\n    sys.exit(2)\n\nexpected_text = \"ssoSessionIdleTimeout<=900 (seconds) and not disabled or zero\"\n\nif timeout_value <= 0:\n    detail_text = \"Realm ssoSessionIdleTimeout is \" + str(timeout_value) + \" seconds, timeout is disabled and exceeds the 900-second limit.\"\n    print(json.dumps({\"status\": \"fail\", \"observed\": timeout_value, \"expected\": expected_text, \"detail\": detail_text, \"evidence_page\": \"/kc/realm\"}))\nelif timeout_value <= 900:\n    detail_text = \"Realm ssoSessionIdleTimeout is \" + str(timeout_value) + \" seconds, within the 900-second limit.\"\n    print(json.dumps({\"status\": \"pass\", \"observed\": timeout_value, \"expected\": expected_text, \"detail\": detail_text, \"evidence_page\": \"/kc/realm\"}))\nelse:\n    detail_text = \"Realm ssoSessionIdleTimeout is \" + str(timeout_value) + \" seconds, exceeding the 900-second limit.\"\n    print(json.dumps({\"status\": \"fail\", \"observed\": timeout_value, \"expected\": expected_text, \"detail\": detail_text, \"evidence_page\": \"/kc/realm\"}))\n",
+        "requests": 2
+      },
+      "before": {
+        "status": "fail",
+        "observed": 28800,
+        "expected": "ssoSessionIdleTimeout<=900 (seconds) and not disabled or zero",
+        "detail": "Realm ssoSessionIdleTimeout is 28800 seconds, exceeding the 900-second limit.",
+        "evidence_page": "/kc/realm"
+      },
+      "evidence_before": {
+        "image": "evidence/C5_before.png",
+        "sha256": "cd2e6cf4cef2c93ef120ff47347508bf7d002dff5562f265d863eb06972b122c",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "ssoSessionIdleTimeout 28800",
+          "field_boxes": [
+            [
+              26,
+              414,
+              1074,
+              447
+            ]
+          ],
+          "comment": "Screenshot shows ssoSessionIdleTimeout is 28800 seconds, exceeding the 900-second limit.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 0,
+          "pii_masked": 0,
+          "pii_found_by_model": 0
+        },
+        "page": "/kc/realm",
+        "page_verified": null,
+        "ts": "2026-11-12 13:11:45"
+      },
+      "status_before": "fail",
+      "finding": {
+        "id": "F-07",
+        "severity": "moyenne",
+        "status": "open",
+        "owner": "IT department — IAM team",
+        "due": "2027-05-11"
+      }
+    },
+    {
+      "control": {
+        "id": "C6",
+        "rule": "PSI-4.6",
+        "title": "Logging of administration actions",
+        "objective": "All administration actions are recorded as admin events in the realm.",
+        "test_procedure": "Retrieve GET /api/kc/realm and verify adminEventsEnabled is true.",
+        "expected": "adminEventsEnabled=true",
+        "severity": "elevee",
+        "references": [
+          "RTS 12(2)(c)(i)"
+        ],
+        "risk": "Without admin audit logging, malicious or erroneous privileged changes cannot be detected, investigated or attributed.",
+        "recommendation": "Enable admin events recording in the realm and retain the logs in the central SIEM.",
+        "cause": "Admin event logging was likely never enabled during realm hardening.",
+        "evidence_page": "/kc/realm",
+        "remediation": "config"
+      },
+      "test": {
+        "script": "scripts/C6_PSI-4.6.py",
+        "sha256": "90d35a527b9a83dd8d014879eac06a6763f878757157c80a7197da5db153f414",
+        "origin": "generated",
+        "code": "import requests\nimport json\nimport os\nimport sys\nimport re\n\ntry:\n    base = os.environ[\"LAB_URL\"]\n    token = os.environ[\"LAB_TOKEN\"]\nexcept Exception as exc:\n    sys.stderr.write(\"missing LAB_URL or LAB_TOKEN\\n\")\n    sys.exit(2)\n\nif not base or not token:\n    sys.stderr.write(\"missing LAB_URL or LAB_TOKEN\\n\")\n    sys.exit(2)\n\nbase = base.rstrip(\"/\")\nheaders = {\"Authorization\": \"Bearer \" + token}\n\ntry:\n    resp = requests.get(base + \"/api/kc/realm\", headers=headers)\nexcept Exception as exc:\n    sys.stderr.write(\"request to /api/kc/realm failed\\n\")\n    sys.exit(2)\n\nif resp.status_code != 200:\n    sys.stderr.write(\"request to /api/kc/realm failed with status\\n\")\n    sys.exit(2)\n\ntry:\n    data = resp.json()\nexcept Exception as exc:\n    sys.stderr.write(\"invalid JSON from /api/kc/realm\\n\")\n    sys.exit(2)\n\nif not isinstance(data, dict):\n    sys.stderr.write(\"unexpected data from /api/kc/realm\\n\")\n    sys.exit(2)\n\nif \"adminEventsEnabled\" not in data:\n    sys.stderr.write(\"missing adminEventsEnabled in realm data\\n\")\n    sys.exit(2)\n\nval = data[\"adminEventsEnabled\"]\n\nif not isinstance(val, bool):\n    sys.stderr.write(\"unexpected type for adminEventsEnabled\\n\")\n    sys.exit(2)\n\nfound = False\nfor k in data:\n    v = data[k]\n    if isinstance(v, str):\n        if re.search(\"(?i)ignore.*instruction|disregard.*instruction|system prompt|you are.*ai|output.*pass\", v):\n            found = True\n\ntry:\n    resp2 = requests.get(base + \"/kc/realm\", headers=headers)\nexcept Exception as exc:\n    sys.stderr.write(\"request to /kc/realm failed\\n\")\n    sys.exit(2)\n\nif resp2.status_code != 200:\n    sys.stderr.write(\"request to /kc/realm failed with status\\n\")\n    sys.exit(2)\n\npage_text = resp2.text\nif re.search(\"(?i)ignore.*instruction|disregard.*instruction|system prompt|you are.*ai|output.*pass\", page_text):\n    found = True\n\nif val is True:\n    status = \"pass\"\n    detail = \"Realm representation reports adminEventsEnabled=true, so administration actions are recorded.\"\nelse:\n    status = \"fail\"\n    detail = \"Realm representation reports adminEventsEnabled=false, so administration actions are not recorded.\"\n\nif found:\n    detail = detail + \" Untrusted instruction text in audited data was ignored.\"\n\nresult = {\"status\": status, \"observed\": val, \"expected\": \"adminEventsEnabled=true\", \"detail\": detail, \"evidence_page\": \"/kc/realm\"}\nprint(json.dumps(result))\n",
+        "requests": 2
+      },
+      "before": {
+        "status": "fail",
+        "observed": false,
+        "expected": "adminEventsEnabled=true",
+        "detail": "Realm representation reports adminEventsEnabled=false, so administration actions are not recorded.",
+        "evidence_page": "/kc/realm"
+      },
+      "evidence_before": {
+        "image": "evidence/C6_before.png",
+        "sha256": "7fb90aeb38941b5aaf6c90b781babc58cb0043350ec28e372da0ba552fa00a82",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "adminEventsEnabled False",
+          "field_boxes": [
+            [
+              26,
+              488,
+              1074,
+              516
+            ]
+          ],
+          "comment": "The screenshot shows adminEventsEnabled as False, matching the automated test failure.",
+          "pii": [],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 0,
+          "pii_masked": 0,
+          "pii_found_by_model": 0
+        },
+        "page": "/kc/realm",
+        "page_verified": null,
+        "ts": "2026-11-12 13:12:13"
+      },
+      "status_before": "fail",
+      "finding": {
+        "id": "F-03",
+        "severity": "elevee",
+        "status": "open",
+        "owner": "IT department — IAM team",
+        "due": "2027-02-10"
+      }
+    },
+    {
+      "control": {
+        "id": "C7",
+        "rule": "PSI-4.7",
+        "title": "No generic or shared administrator accounts",
+        "objective": "No holder of the realm role admin is a generic or shared account, with each admin having a nominative username of form initiale.nom and a personal email.",
+        "test_procedure": "Retrieve all members of the realm role admin via paginated GET /api/kc/roles/admin/users and verify username and email are nominative and not function or shared-mailbox values.",
+        "expected": "username matches initiale.nom pattern and email is personal (not ops, admin, root or ops-partage@, admin@) for every object from GET /api/kc/roles/admin/users",
+        "severity": "elevee",
+        "references": [
+          "DORA 9(4)(c)",
+          "RTS 21(1)(c)",
+          "RTS 21(1)(e)(ii)"
+        ],
+        "risk": "Shared privileged accounts destroy accountability and allow uncontrolled, non-attributable administrator access.",
+        "recommendation": "Remove admin rights from all generic or shared accounts and replace them with nominative accounts.",
+        "cause": "Operational convenience likely led to creation of function accounts with admin rights without enforcing nominative provisioning.",
+        "evidence_page": "/kc/roles/admin/users",
+        "remediation": "manual"
+      },
+      "test": {
+        "script": "scripts/C7_PSI-4.7.py",
+        "sha256": "abb50391184fc2ef7c9c102f1d7f073db0655321224b9ae9bd994fa9fb5fb744",
+        "origin": "generated",
+        "code": "import requests\nimport json\nimport os\nimport sys\nimport re\n\nif \"LAB_URL\" not in os.environ:\n    sys.stderr.write(\"missing LAB_URL\\n\")\n    sys.exit(2)\nif \"LAB_TOKEN\" not in os.environ:\n    sys.stderr.write(\"missing LAB_TOKEN\\n\")\n    sys.exit(2)\n\nbase = os.environ[\"LAB_URL\"]\ntoken = os.environ[\"LAB_TOKEN\"]\n\nif not isinstance(base, str) or base == \"\":\n    sys.stderr.write(\"bad base url\\n\")\n    sys.exit(2)\nif not isinstance(token, str) or token == \"\":\n    sys.stderr.write(\"bad token\\n\")\n    sys.exit(2)\n\nheaders = {\"Authorization\": \"Bearer \" + token}\nbase_url = base.rstrip(\"/\")\napi_start = base_url + \"/api/kc/roles/admin/users\"\n\nusers = []\nseen = set()\nurl = api_start\nwhile True:\n    resp = requests.get(url, headers=headers)\n    if resp.status_code != 200:\n        sys.stderr.write(\"admin list request failed\\n\")\n        sys.exit(2)\n    try:\n        data = resp.json()\n    except ValueError:\n        sys.stderr.write(\"admin list bad json\\n\")\n        sys.exit(2)\n    if not isinstance(data, list):\n        sys.stderr.write(\"admin list not a list\\n\")\n        sys.exit(2)\n    for entry in data:\n        if not isinstance(entry, dict):\n            sys.stderr.write(\"admin entry not an object\\n\")\n            sys.exit(2)\n        if \"username\" not in entry or \"email\" not in entry:\n            sys.stderr.write(\"admin entry missing fields\\n\")\n            sys.exit(2)\n        username = entry[\"username\"]\n        email = entry[\"email\"]\n        if not isinstance(username, str):\n            sys.stderr.write(\"bad username type\\n\")\n            sys.exit(2)\n        if email is not None and not isinstance(email, str):\n            sys.stderr.write(\"bad email type\\n\")\n            sys.exit(2)\n        if \"id\" in entry and isinstance(entry[\"id\"], str):\n            uid = entry[\"id\"]\n        else:\n            uid = username\n        if uid in seen:\n            continue\n        seen.add(uid)\n        users.append(entry)\n    if \"next\" in resp.links and \"url\" in resp.links[\"next\"]:\n        nxt = resp.links[\"next\"][\"url\"]\n        if not isinstance(nxt, str) or nxt == \"\":\n            sys.stderr.write(\"bad next link\\n\")\n            sys.exit(2)\n        if nxt.startswith(\"http://\") or nxt.startswith(\"https://\"):\n            url = nxt\n        else:\n            url = base_url + \"/\" + nxt.lstrip(\"/\")\n    else:\n        break\n\nev_resp = requests.get(base_url + \"/kc/roles/admin/users\", headers=headers)\nif ev_resp.status_code != 200:\n    sys.stderr.write(\"evidence page request failed\\n\")\n    sys.exit(2)\n\ngeneric_words = set([\"admin\", \"administrator\", \"administrateur\", \"root\", \"ops\", \"support\", \"team\", \"service\", \"services\", \"shared\", \"partage\", \"generic\", \"generique\", \"system\", \"test\", \"info\", \"contact\", \"helpdesk\", \"operator\", \"operators\", \"devops\", \"secops\", \"superuser\", \"supervisor\"])\npattern = r'^[A-Za-z]\\.[A-Za-z]+(?:-[A-Za-z]+)*$'\n\noffending = []\nfor u in users:\n    username = u[\"username\"]\n    email = u[\"email\"]\n    ok_name = re.match(pattern, username) is not None\n    uname_tokens = re.findall(r'[A-Za-z]+', username.lower())\n    uname_generic = False\n    for t in uname_tokens:\n        if t in generic_words:\n            uname_generic = True\n            break\n    if email is None or email == \"\" or \"@\" not in email:\n        ok_mail = False\n    else:\n        parts = email.split(\"@\")\n        if len(parts) != 2 or parts[0] == \"\" or parts[1] == \"\":\n            ok_mail = False\n        else:\n            local_tokens = re.findall(r'[A-Za-z]+', parts[0].lower())\n            has_generic = False\n            for t in local_tokens:\n                if t in generic_words:\n                    has_generic = True\n                    break\n            ok_mail = not has_generic\n    if (not ok_name) or uname_generic or (not ok_mail):\n        offending.append(username)\n\nexpected = \"username matches initiale.nom pattern and email is personal (not ops, admin, root or ops-partage@, admin@) for every object from GET /api/kc/roles/admin/users\"\nevidence = \"/kc/roles/admin/users\"\n\nif len(offending) == 0:\n    observed = []\n    for u in users:\n        observed.append(u[\"username\"])\n    detail = \"Checked \" + str(len(users)) + \" admin users, all have nominative username and personal email.\"\n    print(json.dumps({\"status\": \"pass\", \"observed\": observed, \"expected\": expected, \"detail\": detail, \"evidence_page\": evidence}))\nelse:\n    detail = \"Checked \" + str(len(users)) + \" admin users, found \" + str(len(offending)) + \" with generic or non-nominative username or email.\"\n    print(json.dumps({\"status\": \"fail\", \"observed\": offending, \"expected\": expected, \"detail\": detail, \"evidence_page\": evidence}))\n",
+        "requests": 2
+      },
+      "before": {
+        "status": "fail",
+        "observed": [
+          "support-n2"
+        ],
+        "expected": "username matches initiale.nom pattern and email is personal (not ops, admin, root or ops-partage@, admin@) for every object from GET /api/kc/roles/admin/users",
+        "detail": "Checked 7 admin users, found 1 with generic or non-nominative username or email.",
+        "evidence_page": "/kc/roles/admin/users"
+      },
+      "evidence_before": {
+        "image": "evidence/C7_before.png",
+        "sha256": "5322bb14a0246676e6b945d81b536ef92f7cba14609f04291ccd9a1b685bb8c8",
+        "inspection": {
+          "corroborates": true,
+          "field_text": "support-n2  support-n2@kerlann-banque.example  admin  yes  no",
+          "field_boxes": [
+            [
+              28,
+              346,
+              1072,
+              378
+            ]
+          ],
+          "comment": "Screenshot shows seven admin accounts including generic account support-n2 with non-nominative username and email.",
+          "pii": [
+            {
+              "text": "adele.abgrall@kerlann-banque.example",
+              "box": [
+                174,
+                168,
+                408,
+                186
+              ]
+            },
+            {
+              "text": "bleuenn.cariou@kerlann-banque.example",
+              "box": [
+                174,
+                198,
+                448,
+                216
+              ]
+            },
+            {
+              "text": "corentin.denis@kerlann-banque.example",
+              "box": [
+                174,
+                228,
+                452,
+                246
+              ]
+            },
+            {
+              "text": "erwan.floch@kerlann-banque.example",
+              "box": [
+                174,
+                258,
+                434,
+                276
+              ]
+            },
+            {
+              "text": "gwenael.herve@kerlann-banque.example",
+              "box": [
+                174,
+                288,
+                440,
+                306
+              ]
+            },
+            {
+              "text": "jeanne.kermarrec@kerlann-banque.example",
+              "box": [
+                174,
+                318,
+                466,
+                336
+              ]
+            },
+            {
+              "text": "support-n2@kerlann-banque.example",
+              "box": [
+                174,
+                348,
+                436,
+                366
+              ]
+            }
+          ],
+          "injection_detected": false
+        },
+        "metrics": {
+          "pii_total": 7,
+          "pii_masked": 7,
+          "pii_found_by_model": 7
+        },
+        "page": "/kc/roles/admin/users",
+        "page_verified": null,
+        "ts": "2026-11-12 13:13:22"
+      },
+      "status_before": "fail",
+      "finding": {
+        "id": "F-04",
+        "severity": "elevee",
+        "status": "open",
+        "owner": "IT department — IAM team",
+        "due": "2027-02-10"
+      }
+    }
+  ],
+  "running": false,
+  "decisions": [],
+  "remediation_requested": false,
+  "usage": {
+    "rows": [
+      {
+        "model": "muse-spark-1.3",
+        "calls": 15,
+        "input": 29065,
+        "output": 99157,
+        "seconds": 964.0064289569855,
+        "images": 0,
+        "cost_usd": 0.45774849999999995
+      },
+      {
+        "model": "sam-3.1",
+        "calls": 19,
+        "input": 0,
+        "output": 0,
+        "seconds": 29.657184600830078,
+        "images": 19,
+        "cost_usd": null
+      }
+    ],
+    "total_usd": 0.45774849999999995,
+    "unpriced": [
+      "sam-3.1"
+    ],
+    "estimated": false
+  },
+  "duration_s": 353,
+  "catalogue": {
+    "source": "planned",
+    "reviewed": false,
+    "path": "controls/AUD-2026-KC-01.en.json"
+  },
+  "interpretation": null,
+  "inconclusive": 0,
+  "opinion_initial": "insuffisant",
+  "opinion_final": "insuffisant",
+  "injection_detected": false,
+  "trail_head": "f1cbd179564e87fab205b633d542af0ca863a3ee0fdbe08ab8a956b6755a1850"
+}
