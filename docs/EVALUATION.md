@@ -119,6 +119,6 @@ the test names**: the identifiers cited in the script's observed value are compa
 | Suite | Run | Checks correct | Missed | False findings | Inconclusive | Accounts named (TP / expected, extra) |
 |---|---|---|---|---|---|---|
 | Keycloak | `20261112-130651-keycloak-bench-meta` | 21 / 21 | 0 | 0 | 0 | 270 / 270, 0 extra |
-| Access lifecycle | `20261112-125816-lifecycle-bench-meta` | 17 / 18 | 0 | 0 | 1 | 17 / 17, 0 extra |
+| Access lifecycle | `20261112-132525-lifecycle-bench-meta` | 18 / 18 | 0 | 0 | 0 | 17 / 17, 0 extra |
 
 First runs, corrections (including one error in our own ground truth) and limits: [TARGETS.md](TARGETS.md).

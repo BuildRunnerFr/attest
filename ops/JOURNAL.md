@@ -36,6 +36,8 @@ Exécutions réelles :
 - `20261112-125816-lifecycle-bench-meta` (b1e9a93) : 17/18, 0 manqué, 0 faux constat, 1 à revoir ; comptes désignés
   17/17, précision 100 %. 0,77 $.
 - `20261112-130651-keycloak-bench-meta` (b1e9a93) : 21/21 ; comptes désignés 270/270, précision 100 %. 0,66 $.
+- `20261112-132525-lifecycle-bench-meta` (db885d7, scripts de bibliothèque rejoués, note de périmètre) : 18/18,
+  comptes désignés 17/17. 0,35 $. Dépense cumulée au registre : 32,59 $ / 130 $.
 
 Idée écartée : faire réécrire le script quand le contrôle visuel le contredit. Un vrai constat mal illustré pourrait
 alors basculer en « conforme » : c'est un chemin vers un faux négatif. « À revoir » reste l'issue prudente.

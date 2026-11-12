@@ -86,8 +86,8 @@ model API makes that API an ICT third-party provider under DORA. See [docs/BUSIN
   run scored 19 / 21; the one "false finding" turned out to be an error in our own ground truth.
 - **HR ↔ access reconciliation.** Leavers still enabled, orphan and dormant accounts, segregation-of-duties conflicts,
   movers keeping old rights, overdue privileged reviews: six rules that each join the HR register with the accounts.
-  **17 / 18 checks correct**, 0 missed, 0 false findings, 1 inconclusive, 17 / 17 offending accounts named with no extra
-  (`20261112-125816-lifecycle-bench-meta`).
+  **18 / 18 checks correct**, 0 missed, 0 false findings, 17 / 17 offending accounts named with no extra
+  (`20261112-132525-lifecycle-bench-meta`; the first run scored 14 / 18 with one false finding).
 
 Details, how to run them, and what the first runs got wrong: [docs/TARGETS.md](docs/TARGETS.md).
 

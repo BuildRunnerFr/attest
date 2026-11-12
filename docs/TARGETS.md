@@ -82,6 +82,7 @@ python -m attest bench --target iam-lifecycle
 |---|---|---|---|---|---|---|
 | `20261111-123208-lifecycle-bench-meta` (first ever) | 14 / 18 | 0 | 1 | 3 | 17 / 17, precision 81 % | $0.99 |
 | `20261112-125816-lifecycle-bench-meta` | **17 / 18** | 0 | 0 | 1 | 17 / 17, precision 100 % | $0.77 |
+| `20261112-132525-lifecycle-bench-meta` (library scripts replayed) | **18 / 18** | 0 | 0 | 0 | 17 / 17, precision 100 % | $0.35 |
 
 What the first run showed, and what was changed:
 - **A false finding from double counting.** A leaver's account (PSI-5.1) was also reported as an orphan (PSI-5.2). The
@@ -92,8 +93,9 @@ What the first run showed, and what was changed:
 - **Compliant checks stuck at "needs review".** The evidence page listed accounts without the HR columns, so the visual
   cross-check could not confirm a join. A reconciliation page now shows each account next to its holder's HR record.
 - The remaining inconclusive check is a compliant mover rule: the screenshot is page 1 of 4 and the cross-check
-  refused to confirm from one page. Since then the cross-check is told when a screenshot is one page of a paginated
-  list (see `ops/JOURNAL.md` for the re-measurement).
+  refused to confirm from one page. The cross-check is now told when a screenshot is one page of a paginated list
+  and that rows on other pages are not a contradiction. The third run replays the second run's scripts from the
+  library (no script is rewritten, which is why it costs half as much) and ends 18 / 18.
 
 The work programme and six scripts of the second run are in `controls/AUD-2026-JML-01.en.json` and `library/PSI-5.*`
 (not yet reviewed by a human auditor); `tests/test_lifecycle.py` replays them without any model and checks that they
